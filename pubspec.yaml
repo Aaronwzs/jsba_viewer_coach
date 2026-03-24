@@ -1,0 +1,66 @@
+name: jsba_app
+description: "JSBA Badminton Academy App for Coaches and Parents"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.2
+  
+  # Navigations
+  auto_route: ^10.0.1
+  
+  # Firebase
+  firebase_core: ^3.11.0
+  firebase_auth: ^5.5.0
+  cloud_firestore: ^5.6.0
+  firebase_analytics: ^11.4.2
+  firebase_messaging: ^15.2.2
+  firebase_crashlytics: ^4.3.2
+  
+  # Notifications
+  flutter_local_notifications: ^17.2.4
+  
+  # Storage & Network
+  shared_preferences: ^2.5.2
+  dio: ^5.8.0
+  path_provider: ^2.1.5
+  
+  # UI Components
+  flutter_easyloading: ^3.0.5
+  cached_network_image: ^3.4.1
+  google_nav_bar: ^5.0.7
+  smooth_page_indicator: ^1.2.1
+  
+  # Utils
+  url_launcher: ^6.3.1
+  lottie: ^3.3.1
+  intl: ^0.20.2
+  
+  # Data Models
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.15
+  freezed: ^2.5.8
+  json_serializable: ^6.9.4
+  auto_route_generator: ^10.0.1
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/images/
+    - assets/lotties/
