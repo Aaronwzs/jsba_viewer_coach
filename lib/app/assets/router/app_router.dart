@@ -27,7 +27,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: SessionsRoute.page, maintainState: false),
         AutoRoute(page: PlayersRoute.page, maintainState: false),
         AutoRoute(page: CoachBillingRoute.page, maintainState: false),
-        AutoRoute(page: ProfileRoute.page, maintainState: false),
+        AutoRoute(page: SettingsRoute.page, maintainState: false),
       ],
     ),
     AutoRoute(
@@ -42,7 +42,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: MyReportsRoute.page, maintainState: false),
         AutoRoute(page: CourtBookingsRoute.page, maintainState: false),
         AutoRoute(page: ParentInvoicesRoute.page, maintainState: false),
-        AutoRoute(page: ProfileRoute.page, maintainState: false),
+        AutoRoute(page: SettingsRoute.page, maintainState: false),
       ],
     ),
     AutoRoute(page: VerificationRoute.page, path: '/verification'),

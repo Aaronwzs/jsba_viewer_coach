@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
+import 'package:flutter/material.dart'
+    show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 
@@ -21,7 +22,7 @@ class _ParentMainPageState extends State<ParentMainPage> {
         MyReportsRoute(),
         CourtBookingsRoute(),
         ParentInvoicesRoute(),
-        ProfileRoute(),
+        SettingsRoute(),
       ],
       builder: (context, child) {
         final tabRouter = AutoTabsRouter.of(context);
@@ -36,7 +37,9 @@ class _ParentMainPageState extends State<ParentMainPage> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: 20,
-                      vertical: MediaQuery.paddingOf(context).bottom > 0 ? 0 : 20,
+                      vertical: MediaQuery.paddingOf(context).bottom > 0
+                          ? 0
+                          : 20,
                     ),
                     child: Row(
                       children: [
@@ -140,7 +143,9 @@ class _ParentMainPageState extends State<ParentMainPage> {
             Icon(
               icon,
               size: 24,
-              color: isSelected ? CupertinoColors.white : AppTheme.primaryColor.withValues(alpha: 0.6),
+              color: isSelected
+                  ? CupertinoColors.white
+                  : AppTheme.primaryColor.withValues(alpha: 0.6),
             ),
             AnimatedSize(
               duration: const Duration(milliseconds: 200),
@@ -203,21 +208,33 @@ class _ParentMainPageState extends State<ParentMainPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Q: How do I register my child?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('A: Download the app and create an account to register your child.'),
+              Text(
+                'Q: How do I register my child?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'A: Download the app and create an account to register your child.',
+              ),
               SizedBox(height: 12),
-              Text('Q: What age groups do you accept?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Q: What age groups do you accept?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text('A: We accept students from 5 years old and above.'),
               SizedBox(height: 12),
-              Text('Q: Do you offer trial sessions?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Q: Do you offer trial sessions?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text('A: Yes! We offer a free trial session for new students.'),
               SizedBox(height: 12),
-              Text('Q: What should my child bring?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('A: Sports attire, badminton racket (optional), and water bottle.'),
+              Text(
+                'Q: What should my child bring?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'A: Sports attire, badminton racket (optional), and water bottle.',
+              ),
             ],
           ),
         ),

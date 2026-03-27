@@ -51,8 +51,13 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final credential = await _authService.signInWithEmailAndPassword(email, password);
-      _currentUser = await _databaseService.ensureUserDocumentExists(credential.user!.uid);
+      final credential = await _authService.signInWithEmailAndPassword(
+        email,
+        password,
+      );
+      _currentUser = await _databaseService.ensureUserDocumentExists(
+        credential.user!.uid,
+      );
       _isLoading = false;
       notifyListeners();
       return true;
@@ -64,13 +69,21 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String email, String password, String name, String role) async {
+  Future<bool> register(
+    String email,
+    String password,
+    String name,
+    String role,
+  ) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final credential = await _authService.createUserWithEmailAndPassword(email, password);
+      final credential = await _authService.createUserWithEmailAndPassword(
+        email,
+        password,
+      );
       await _authService.updateDisplayName(name);
       await _databaseService.createUserForRegistration(
         uid: credential.user!.uid,
@@ -104,6 +117,53 @@ class AuthViewModel extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<bool> updateUserName(String newName) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authService.updateDisplayName(newName);
+      await _databaseService.updateUserProfile(
+        _currentUser!.uid,
+        name: newName,
+      );
+      _currentUser = await _databaseService.getUser(_currentUser!.uid);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('No user signed in');
+      await _authService.reauthenticateWithPassword(user.email!, oldPassword);
+      await _authService.updatePassword(newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   void clearError() {

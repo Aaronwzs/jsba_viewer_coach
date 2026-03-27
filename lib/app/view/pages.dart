@@ -50,5 +50,6 @@ export 'package:jsba_app/app/view/parent/receipt_details_page.dart';
 export 'package:jsba_app/app/view/shared/announcements_page.dart';
 export 'package:jsba_app/app/view/shared/announcement_details_page.dart';
 export 'package:jsba_app/app/view/shared/profile_page.dart';
+export 'package:jsba_app/app/view/shared/settings_page.dart';
 export 'package:jsba_app/app/view/shared/edit_profile_page.dart';
 export 'package:jsba_app/app/view/shared/change_password_page.dart';

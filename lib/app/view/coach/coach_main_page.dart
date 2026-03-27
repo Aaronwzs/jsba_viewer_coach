@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
+import 'package:flutter/material.dart'
+    show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 
@@ -21,7 +22,7 @@ class _CoachMainPageState extends State<CoachMainPage> {
         SessionsRoute(),
         PlayersRoute(),
         CoachBillingRoute(),
-        ProfileRoute(),
+        SettingsRoute(),
       ],
       builder: (context, child) {
         final tabRouter = AutoTabsRouter.of(context);
@@ -36,7 +37,9 @@ class _CoachMainPageState extends State<CoachMainPage> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: 20,
-                      vertical: MediaQuery.paddingOf(context).bottom > 0 ? 0 : 20,
+                      vertical: MediaQuery.paddingOf(context).bottom > 0
+                          ? 0
+                          : 20,
                     ),
                     child: Row(
                       children: [
@@ -140,7 +143,9 @@ class _CoachMainPageState extends State<CoachMainPage> {
             Icon(
               icon,
               size: 24,
-              color: isSelected ? CupertinoColors.white : AppTheme.primaryColor.withValues(alpha: 0.6),
+              color: isSelected
+                  ? CupertinoColors.white
+                  : AppTheme.primaryColor.withValues(alpha: 0.6),
             ),
             AnimatedSize(
               duration: const Duration(milliseconds: 200),
@@ -203,21 +208,31 @@ class _CoachMainPageState extends State<CoachMainPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Q: How do I create a new session?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Q: How do I create a new session?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text('A: Go to Sessions tab and tap the + button.'),
               SizedBox(height: 12),
-              Text('Q: How do I mark attendance?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Q: How do I mark attendance?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text('A: Navigate to the session and tap on attendance.'),
               SizedBox(height: 12),
-              Text('Q: How do I add a new player?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                'Q: How do I add a new player?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text('A: Go to Players tab and tap Add Player.'),
               SizedBox(height: 12),
-              Text('Q: How do I record match results?',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('A: Go to Sessions, select a session, and use Record Match.'),
+              Text(
+                'Q: How do I record match results?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'A: Go to Sessions, select a session, and use Record Match.',
+              ),
             ],
           ),
         ),
