@@ -381,12 +381,16 @@ class _SettingsPageState extends State<SettingsPage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              controller.dispose();
+              Navigator.pop(ctx);
+            },
             child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () async {
               final newName = controller.text.trim();
+              controller.dispose();
               if (newName.isEmpty) return;
               Navigator.pop(ctx);
               final success = await authVM.updateUserName(newName);
@@ -408,7 +412,6 @@ class _SettingsPageState extends State<SettingsPage>
         ],
       ),
     );
-    controller.dispose();
   }
 
   void _showChangePasswordDialog(BuildContext context, AuthViewModel authVM) {
@@ -416,6 +419,12 @@ class _SettingsPageState extends State<SettingsPage>
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+
+    void disposeControllers() {
+      oldPasswordController.dispose();
+      newPasswordController.dispose();
+      confirmPasswordController.dispose();
+    }
 
     showDialog(
       context: context,
@@ -469,16 +478,22 @@ class _SettingsPageState extends State<SettingsPage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              disposeControllers();
+              Navigator.pop(ctx);
+            },
             child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
+              final oldPw = oldPasswordController.text;
+              final newPw = newPasswordController.text;
+              disposeControllers();
               Navigator.pop(ctx);
               final success = await authVM.updatePassword(
-                oldPassword: oldPasswordController.text,
-                newPassword: newPasswordController.text,
+                oldPassword: oldPw,
+                newPassword: newPw,
               );
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -498,9 +513,6 @@ class _SettingsPageState extends State<SettingsPage>
         ],
       ),
     );
-    oldPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
   }
 
   void _showEditPlayerDialog(BuildContext context, PlayerModel player) {
@@ -508,6 +520,11 @@ class _SettingsPageState extends State<SettingsPage>
     final ageController = TextEditingController(text: player.age.toString());
     String selectedLevel = player.level;
     final formKey = GlobalKey<FormState>();
+
+    void disposeControllers() {
+      nameController.dispose();
+      ageController.dispose();
+    }
 
     showDialog(
       context: context,
@@ -591,18 +608,24 @@ class _SettingsPageState extends State<SettingsPage>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () {
+              disposeControllers();
+              Navigator.pop(ctx);
+            },
             child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
+              final updatedName = nameController.text.trim();
+              final updatedAge = int.parse(ageController.text.trim());
+              disposeControllers();
               Navigator.pop(ctx);
 
               final updatedPlayer = PlayerModel(
                 id: player.id,
-                name: nameController.text.trim(),
-                age: int.parse(ageController.text.trim()),
+                name: updatedName,
+                age: updatedAge,
                 level: selectedLevel,
                 phone: player.phone,
                 createdAt: player.createdAt,
@@ -646,8 +669,6 @@ class _SettingsPageState extends State<SettingsPage>
         ],
       ),
     );
-    nameController.dispose();
-    ageController.dispose();
   }
 
   Widget _buildReadOnlyInfo(String label, String value) {

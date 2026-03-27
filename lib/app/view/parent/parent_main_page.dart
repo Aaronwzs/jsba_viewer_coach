@@ -17,7 +17,7 @@ class _ParentMainPageState extends State<ParentMainPage> {
   @override
   Widget build(BuildContext context) {
     return AutoTabsRouter(
-      routes: const [
+      routes: [
         ParentDashboardRoute(),
         MyReportsRoute(),
         CourtBookingsRoute(),

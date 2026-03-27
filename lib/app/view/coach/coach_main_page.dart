@@ -17,7 +17,7 @@ class _CoachMainPageState extends State<CoachMainPage> {
   @override
   Widget build(BuildContext context) {
     return AutoTabsRouter(
-      routes: const [
+      routes: [
         CoachDashboardRoute(),
         SessionsRoute(),
         PlayersRoute(),
