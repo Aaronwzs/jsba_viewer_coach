@@ -20,6 +20,14 @@ class PdfService {
     return pw.ThemeData.withFont(fontFallback: [emojiFont]);
   }
 
+  Future<pw.TextStyle> _emojiStyle({
+    double fontSize = 16,
+    PdfColor? color,
+  }) async {
+    final emojiFont = await PdfGoogleFonts.notoEmojiRegular();
+    return pw.TextStyle(font: emojiFont, fontSize: fontSize, color: color);
+  }
+
   Future<Uint8List> generateInvoicePdf({
     required InvoiceModel invoice,
     required InvoiceProfile profile,
@@ -63,7 +71,7 @@ class PdfService {
         : null;
 
     pdf.addPage(
-      _buildReceiptPage(
+      await _buildReceiptPage(
         receipt: receipt,
         profile: profile,
         logo: logo,
@@ -182,14 +190,15 @@ class PdfService {
   // ============================================================================
   // RECEIPT PAGE
   // ============================================================================
-  pw.Page _buildReceiptPage({
+  Future<pw.Page> _buildReceiptPage({
     required ReceiptModel receipt,
     required InvoiceProfile profile,
     required pw.ImageProvider? logo,
     required pw.ImageProvider? duitNowQr,
     required String currency,
-  }) {
+  }) async {
     final methodLabel = _getMethodLabel(receipt.paymentMethod);
+    final checkmarkStyle = await _emojiStyle(fontSize: 28, color: primaryColor);
 
     return pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -210,7 +219,7 @@ class PdfService {
           padding: const pw.EdgeInsets.all(24),
           decoration: pw.BoxDecoration(
             gradient: pw.LinearGradient(
-              colors: [primaryColor, PdfColor.fromHex('#1B5E20')],
+              colors: [accentColor, PdfColor.fromHex('#C62828')],
             ),
             borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
           ),
@@ -308,14 +317,7 @@ class PdfService {
           ),
           child: pw.Column(
             children: [
-              pw.Text(
-                '\u2713',
-                style: pw.TextStyle(
-                  fontSize: 28,
-                  color: primaryColor,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
+              pw.Text('✔', style: checkmarkStyle),
               pw.SizedBox(height: 8),
               pw.Text(
                 'Thank you for your payment!',
