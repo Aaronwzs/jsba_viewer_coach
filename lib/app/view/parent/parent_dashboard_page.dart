@@ -47,7 +47,12 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -79,15 +84,15 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
                 children: [
                   Text(
                     'Welcome,',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                   Text(
                     authVM.currentUser?.name ?? 'Parent',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -113,9 +118,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
           children: [
             Text(
               'My Kids',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton.icon(
               onPressed: () => context.router.pushNamed('/add-child'),
@@ -149,24 +154,28 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
             ),
           )
         else
-          ...parentVM.myKids.map((kid) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.secondaryColor.withValues(alpha: 0.1),
-                    child: Icon(Icons.child_care, color: AppTheme.secondaryColor),
+          ...parentVM.myKids.map(
+            (kid) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppTheme.secondaryColor.withValues(
+                    alpha: 0.1,
                   ),
-                  title: Text(
-                    kid.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text('Level: ${kid.level}'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    context.router.pushNamed('/child-details/${kid.id}');
-                  },
+                  child: Icon(Icons.child_care, color: AppTheme.secondaryColor),
                 ),
-              )),
+                title: Text(
+                  kid.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('Level: ${kid.level}'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  context.router.pushNamed('/child-details/${kid.id}');
+                },
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -177,9 +186,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
       children: [
         Text(
           'Quick Actions',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -265,9 +274,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
           children: [
             Text(
               'Announcements',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton(
               onPressed: () => context.router.pushNamed('/announcements'),
@@ -292,7 +301,11 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.announcement_outlined, size: 48, color: Colors.grey[400]),
+                      Icon(
+                        Icons.announcement_outlined,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'No announcements yet',
@@ -306,7 +319,10 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
 
             return Column(
               children: announcementVM.dashboardAnnouncements
-                  .map((announcement) => _buildAnnouncementCard(context, announcement))
+                  .map(
+                    (announcement) =>
+                        _buildAnnouncementCard(context, announcement),
+                  )
                   .toList(),
             );
           },
@@ -315,10 +331,13 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
     );
   }
 
-  Widget _buildAnnouncementCard(BuildContext context, AnnouncementModel announcement) {
+  Widget _buildAnnouncementCard(
+    BuildContext context,
+    AnnouncementModel announcement,
+  ) {
     final Color typeColor;
     final IconData typeIcon;
-    
+
     switch (announcement.type) {
       case AnnouncementType.urgent:
         typeColor = Colors.red;
@@ -371,7 +390,10 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
                     child: Icon(Icons.push_pin, size: 16, color: typeColor),
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: typeColor,
                     borderRadius: BorderRadius.circular(12),
@@ -419,7 +441,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
-                              image: NetworkImage(announcement.imageUrls[index]),
+                              image: NetworkImage(
+                                announcement.imageUrls[index],
+                              ),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -456,22 +480,21 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               children: [
                 Text(
                   announcement.content,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     if (announcement.createdByName != null) ...[
-                      Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.grey[500],
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         announcement.createdByName!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                       ),
                       const SizedBox(width: 12),
                     ],
@@ -479,10 +502,7 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
                     const SizedBox(width: 4),
                     Text(
                       _formatDate(announcement.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),

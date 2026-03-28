@@ -43,7 +43,9 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
     final parentVM = context.read<ParentViewModel>();
     final allPlayerIds = _buildAllPlayerIds(parentVM);
     if (allPlayerIds.isNotEmpty) {
-      await context.read<BillingViewModel>().loadInvoicesForPlayerIds(allPlayerIds);
+      await context.read<BillingViewModel>().loadInvoicesForPlayerIds(
+        allPlayerIds,
+      );
     }
   }
 
@@ -59,6 +61,12 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
               onRefresh: _reload,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
                 children: [
                   _buildMonthSelector(billingVM),
                   _buildContent(context, billingVM),
@@ -78,9 +86,7 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () {
-              billingVM.setSelectedMonth(
-                DateTime(month.year, month.month - 1),
-              );
+              billingVM.setSelectedMonth(DateTime(month.year, month.month - 1));
               _reload();
             },
           ),
@@ -91,9 +97,7 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () {
-              billingVM.setSelectedMonth(
-                DateTime(month.year, month.month + 1),
-              );
+              billingVM.setSelectedMonth(DateTime(month.year, month.month + 1));
               _reload();
             },
           ),

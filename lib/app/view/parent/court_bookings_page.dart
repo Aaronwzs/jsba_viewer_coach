@@ -106,18 +106,18 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           ],
         ),
       ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildAvailableTab(
-              allAvailableSessions,
-              authVM,
-              openCourtVM,
-              parentVM,
-            ),
-            _buildMyClassesTab(authVM, openCourtVM, parentVM),
-          ],
-        ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildAvailableTab(
+            allAvailableSessions,
+            authVM,
+            openCourtVM,
+            parentVM,
+          ),
+          _buildMyClassesTab(authVM, openCourtVM, parentVM),
+        ],
+      ),
     );
   }
 
@@ -141,7 +141,12 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
       child: allSessions.isEmpty
           ? _buildEmptyState(openCourtVM)
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                MediaQuery.paddingOf(context).bottom + 100,
+              ),
               itemCount: allSessions.length,
               itemBuilder: (context, index) {
                 final session = allSessions[index];
@@ -244,7 +249,11 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.class_outlined, size: 64, color: Colors.grey.shade400),
+                Icon(
+                  Icons.class_outlined,
+                  size: 64,
+                  color: Colors.grey.shade400,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'No classes found',
@@ -263,7 +272,12 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.paddingOf(context).bottom + 100,
+      ),
       itemCount: trainings.length,
       itemBuilder: (context, index) {
         return _buildTrainingCard(trainings[index]);

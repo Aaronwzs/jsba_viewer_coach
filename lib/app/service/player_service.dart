@@ -109,4 +109,23 @@ class PlayerService {
 
     return playerNames;
   }
+
+  Future<Map<String, String>> getPlayerImages(List<String> playerIds) async {
+    if (playerIds.isEmpty) return {};
+
+    final Map<String, String> playerImages = {};
+    final snapshot = await _db
+        .collection('players')
+        .where(FieldPath.documentId, whereIn: playerIds)
+        .get();
+
+    for (final doc in snapshot.docs) {
+      final imageUrl = doc.data()['imageUrl'] as String?;
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        playerImages[doc.id] = imageUrl;
+      }
+    }
+
+    return playerImages;
+  }
 }

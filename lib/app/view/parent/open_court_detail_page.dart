@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
@@ -330,16 +331,22 @@ class _OpenCourtDetailPageState extends State<OpenCourtDetailPage> {
               final playerName =
                   openCourtVM.playerNames[entry.value] ??
                   'Player ${entry.key + 1}';
+              final playerImage = openCourtVM.playerImages[entry.value];
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
                   backgroundColor: AppTheme.primaryColor.withValues(
                     alpha: 0.15,
                   ),
-                  child: Text(
-                    '${entry.key + 1}',
-                    style: const TextStyle(color: AppTheme.primaryColor),
-                  ),
+                  backgroundImage: playerImage != null && playerImage.isNotEmpty
+                      ? CachedNetworkImageProvider(playerImage)
+                      : null,
+                  child: (playerImage == null || playerImage.isEmpty)
+                      ? Text(
+                          '${entry.key + 1}',
+                          style: const TextStyle(color: AppTheme.primaryColor),
+                        )
+                      : null,
                 ),
                 title: Text(playerName),
               );

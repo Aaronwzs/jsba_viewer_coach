@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
-import 'package:jsba_app/app/widgets/app_bar_title.dart';
+import 'package:jsba_app/app/view/parent/widgets/pdf_ui_handler.dart';
 
 @RoutePage()
 class InvoiceDetailsPage extends StatefulWidget {
@@ -38,7 +38,19 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   Widget build(BuildContext context) {
     if (_invoice == null) {
       return Scaffold(
-        appBar: const AppBarTitle(title: 'Invoice', blackBackButton: true),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Invoice',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -48,9 +60,29 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     final periodLabel = DateFormat(
       'MMMM yyyy',
     ).format(DateTime(invoice.billingYear, invoice.billingMonth));
+    final billingVM = context.read<BillingViewModel>();
+    final pdfHandler = PdfUiHandler(
+      context: context,
+      pdfBuilder: () => billingVM.generateInvoicePdf(invoice),
+      documentNumber: invoice.invoiceNumber,
+      documentType: 'Invoice',
+    );
 
     return Scaffold(
-      appBar: const AppBarTitle(title: 'Invoice', blackBackButton: true),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Invoice',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        actions: pdfHandler.buildAppBarActions(),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

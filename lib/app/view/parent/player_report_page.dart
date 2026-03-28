@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
@@ -119,11 +120,17 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.white,
-            child: Icon(
-              isSelf ? Icons.person : Icons.child_care,
-              size: 40,
-              color: AppTheme.primaryColor,
-            ),
+            backgroundImage:
+                player.imageUrl != null && player.imageUrl!.isNotEmpty
+                ? CachedNetworkImageProvider(player.imageUrl!)
+                : null,
+            child: (player.imageUrl == null || player.imageUrl!.isEmpty)
+                ? Icon(
+                    isSelf ? Icons.person : Icons.child_care,
+                    size: 40,
+                    color: AppTheme.primaryColor,
+                  )
+                : null,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -193,19 +200,29 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
                     'Guardian',
                     player.parentName!,
                   ),
-                if (player.parentPhone != null && player.parentPhone!.isNotEmpty)
+                if (player.parentPhone != null &&
+                    player.parentPhone!.isNotEmpty)
                   _buildDetailRow(
                     Icons.phone_android,
                     'Guardian Phone',
                     player.parentPhone!,
                   ),
-                if (player.parentEmail != null && player.parentEmail!.isNotEmpty)
-                  _buildDetailRow(Icons.email, 'Guardian Email', player.parentEmail!),
+                if (player.parentEmail != null &&
+                    player.parentEmail!.isNotEmpty)
+                  _buildDetailRow(
+                    Icons.email,
+                    'Guardian Email',
+                    player.parentEmail!,
+                  ),
                 _buildDetailRow(
                   Icons.verified,
                   'Status',
-                  player.status == PlayerStatus.approved ? 'Approved' : 'Pending Approval',
-                  valueColor: player.status == PlayerStatus.approved ? Colors.green : Colors.orange,
+                  player.status == PlayerStatus.approved
+                      ? 'Approved'
+                      : 'Pending Approval',
+                  valueColor: player.status == PlayerStatus.approved
+                      ? Colors.green
+                      : Colors.orange,
                 ),
               ],
             ),
@@ -215,7 +232,7 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
     );
   }
 
-Widget _buildPlayerReportSection() {
+  Widget _buildPlayerReportSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

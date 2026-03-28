@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
-import 'package:jsba_app/app/widgets/app_bar_title.dart';
+import 'package:jsba_app/app/view/parent/widgets/pdf_ui_handler.dart';
 
 @RoutePage()
 class ReceiptDetailsPage extends StatefulWidget {
@@ -38,7 +38,19 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
   Widget build(BuildContext context) {
     if (_receipt == null) {
       return Scaffold(
-        appBar: const AppBarTitle(title: 'Receipt', blackBackButton: true),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Receipt',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -50,9 +62,29 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
         int.parse(receipt.billingPeriodKey.substring(5, 7)),
       ),
     );
+    final billingVM = context.read<BillingViewModel>();
+    final pdfHandler = PdfUiHandler(
+      context: context,
+      pdfBuilder: () => billingVM.generateReceiptPdf(receipt),
+      documentNumber: receipt.receiptNumber,
+      documentType: 'Receipt',
+    );
 
     return Scaffold(
-      appBar: const AppBarTitle(title: 'Receipt', blackBackButton: true),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text(
+          'Receipt',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        actions: pdfHandler.buildAppBarActions(),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

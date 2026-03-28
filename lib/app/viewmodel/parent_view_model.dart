@@ -124,4 +124,49 @@ class ParentViewModel extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  Future<bool> updatePlayerImage(String playerId, String imageUrl) async {
+    try {
+      final playerToUpdate = _selfPlayer?.id == playerId
+          ? _selfPlayer
+          : _myKids.where((p) => p.id == playerId).firstOrNull;
+
+      if (playerToUpdate == null) return false;
+
+      final updatedPlayer = PlayerModel(
+        id: playerToUpdate.id,
+        name: playerToUpdate.name,
+        age: playerToUpdate.age,
+        level: playerToUpdate.level,
+        phone: playerToUpdate.phone,
+        createdAt: playerToUpdate.createdAt,
+        isActive: playerToUpdate.isActive,
+        parentId: playerToUpdate.parentId,
+        parentName: playerToUpdate.parentName,
+        parentPhone: playerToUpdate.parentPhone,
+        parentEmail: playerToUpdate.parentEmail,
+        status: playerToUpdate.status,
+        isSelf: playerToUpdate.isSelf,
+        imageUrl: imageUrl,
+      );
+
+      await _playerService.updatePlayer(playerId, updatedPlayer);
+
+      if (_selfPlayer?.id == playerId) {
+        _selfPlayer = updatedPlayer;
+      } else {
+        final index = _myKids.indexWhere((p) => p.id == playerId);
+        if (index != -1) {
+          _myKids[index] = updatedPlayer;
+        }
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
 }

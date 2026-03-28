@@ -166,6 +166,65 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> verifyCurrentPassword(String password) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('No user signed in');
+      await _authService.reauthenticateWithPassword(user.email!, password);
+      return true;
+    } catch (e) {
+      _error = 'Incorrect password';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> changePasswordOnly(String newPassword) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authService.updatePassword(newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateEmail(String newEmail) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final user = _authService.currentUser;
+      if (user == null) throw Exception('No user signed in');
+      await user.verifyBeforeUpdateEmail(newEmail);
+      await _databaseService.updateUserProfile(
+        _currentUser!.uid,
+        email: newEmail,
+      );
+      _currentUser = await _databaseService.getUser(_currentUser!.uid);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

@@ -105,8 +105,8 @@ class _ParentMainPageState extends State<ParentMainPage> {
           _buildNavItem(
             context,
             index: 4,
-            icon: Icons.person,
-            label: 'Profile',
+            icon: Icons.settings,
+            label: 'Settings',
             tabRouter: tabRouter,
           ),
         ],

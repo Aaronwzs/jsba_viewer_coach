@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
@@ -94,7 +95,12 @@ class _MyReportsPageState extends State<MyReportsPage> {
     }
 
     return ListView(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 80),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.paddingOf(context).bottom + 100,
+      ),
       children: [
         if (selfPlayer != null) ...[
           const Text(
@@ -142,7 +148,12 @@ class _MyReportsPageState extends State<MyReportsPage> {
         leading: CircleAvatar(
           radius: 28,
           backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-          child: const Icon(Icons.person, color: AppTheme.primaryColor),
+          backgroundImage: self.imageUrl != null && self.imageUrl!.isNotEmpty
+              ? CachedNetworkImageProvider(self.imageUrl!)
+              : null,
+          child: self.imageUrl == null || self.imageUrl!.isEmpty
+              ? const Icon(Icons.person, color: AppTheme.primaryColor)
+              : null,
         ),
         title: Text(
           '${self.name} (You)',
@@ -307,14 +318,19 @@ class _MyReportsPageState extends State<MyReportsPage> {
         leading: CircleAvatar(
           radius: 28,
           backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-          child: Text(
-            kid.name.isNotEmpty ? kid.name[0].toUpperCase() : '?',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
-            ),
-          ),
+          backgroundImage: kid.imageUrl != null && kid.imageUrl!.isNotEmpty
+              ? CachedNetworkImageProvider(kid.imageUrl!)
+              : null,
+          child: (kid.imageUrl == null || kid.imageUrl!.isEmpty)
+              ? Text(
+                  kid.name.isNotEmpty ? kid.name[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                )
+              : null,
         ),
         title: Text(
           kid.name,
@@ -411,6 +427,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                     onChanged: hasSelfAdded
                         ? null
                         : (value) {
+                            if (!context.mounted) return;
                             setModalState(() {
                               isAddingForSelf = value ?? false;
                               if (isAddingForSelf) {
@@ -439,7 +456,10 @@ class _MyReportsPageState extends State<MyReportsPage> {
                       labelText: 'Age',
                       border: OutlineInputBorder(),
                     ),
-                    onChanged: (_) => setModalState(() {}),
+                    onChanged: (_) {
+                      if (!context.mounted) return;
+                      setModalState(() {});
+                    },
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -452,6 +472,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                         .map((l) => DropdownMenuItem(value: l, child: Text(l)))
                         .toList(),
                     onChanged: (value) {
+                      if (!context.mounted) return;
                       setModalState(() {
                         level = value ?? 'Beginner';
                       });

@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
 import 'package:jsba_app/app/service/training_service.dart';
@@ -27,6 +28,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   TrainingModel? _training;
   List<AttendanceModel> _attendances = [];
   Map<String, String> _playerNames = {};
+  Map<String, String> _playerImages = {};
   bool _isLoading = true;
 
   @override
@@ -44,17 +46,20 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       return;
     }
 
-    final attendances =
-        await _attendanceService.getAttendanceForTraining(widget.trainingId);
+    final attendances = await _attendanceService.getAttendanceForTraining(
+      widget.trainingId,
+    );
 
     final playerIds = attendances.map((a) => a.playerId).toList();
     final playerNames = await _playerService.getPlayerNames(playerIds);
+    final playerImages = await _playerService.getPlayerImages(playerIds);
 
     if (mounted) {
       setState(() {
         _training = training;
         _attendances = attendances;
         _playerNames = playerNames;
+        _playerImages = playerImages;
         _isLoading = false;
       });
     }
@@ -67,8 +72,8 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _training == null
-              ? const Center(child: Text('Class not found'))
-              : _buildContent(),
+          ? const Center(child: Text('Class not found'))
+          : _buildContent(),
     );
   }
 
@@ -124,8 +129,10 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
@@ -174,19 +181,35 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          _buildDetailRow(Icons.calendar_today, 'Date',
-              DateFormat('EEEE, MMM d, yyyy').format(training.date)),
-          _buildDetailRow(Icons.access_time, 'Time',
-              '${training.startTime} - ${training.computedEndTime}'),
+          _buildDetailRow(
+            Icons.calendar_today,
+            'Date',
+            DateFormat('EEEE, MMM d, yyyy').format(training.date),
+          ),
+          _buildDetailRow(
+            Icons.access_time,
+            'Time',
+            '${training.startTime} - ${training.computedEndTime}',
+          ),
           _buildDetailRow(Icons.timer, 'Duration', durationText),
           _buildDetailRow(Icons.location_on, 'Venue', training.venue),
-          _buildDetailRow(Icons.group, 'Class Type',
-              training.classType[0].toUpperCase() + training.classType.substring(1)),
+          _buildDetailRow(
+            Icons.group,
+            'Class Type',
+            training.classType[0].toUpperCase() +
+                training.classType.substring(1),
+          ),
           _buildDetailRow(Icons.trending_up, 'Level', training.level),
-          _buildDetailRow(Icons.attach_money, 'Price',
-              'RM ${training.price.toStringAsFixed(2)}'),
-          _buildDetailRow(Icons.people, 'Max Players',
-              '${training.getEffectiveMaxPlayers()}'),
+          _buildDetailRow(
+            Icons.attach_money,
+            'Price',
+            'RM ${training.price.toStringAsFixed(2)}',
+          ),
+          _buildDetailRow(
+            Icons.people,
+            'Max Players',
+            '${training.getEffectiveMaxPlayers()}',
+          ),
           if (training.coachId != null && training.coachId!.isNotEmpty)
             _buildDetailRow(Icons.person, 'Coach', training.coachId!),
         ],
@@ -267,10 +290,11 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
   }
 
   Widget _buildAttendanceCard(AttendanceModel attendance) {
-    final playerName =
-        _playerNames[attendance.playerId] ?? 'Unknown Player';
+    final playerName = _playerNames[attendance.playerId] ?? 'Unknown Player';
+    final playerImage = _playerImages[attendance.playerId];
     final statusColor = _getStatusColor(attendance.attendanceStatus);
-    final statusText = attendance.attendanceStatus[0].toUpperCase() +
+    final statusText =
+        attendance.attendanceStatus[0].toUpperCase() +
         attendance.attendanceStatus.substring(1);
 
     return Container(
@@ -289,7 +313,12 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: statusColor.withValues(alpha: 0.15),
-                child: Icon(Icons.person, size: 18, color: statusColor),
+                backgroundImage: playerImage != null && playerImage.isNotEmpty
+                    ? CachedNetworkImageProvider(playerImage)
+                    : null,
+                child: (playerImage == null || playerImage.isEmpty)
+                    ? Icon(Icons.person, size: 18, color: statusColor)
+                    : null,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -299,8 +328,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -326,10 +354,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 Expanded(
                   child: Text(
                     attendance.coachComments,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                   ),
                 ),
               ],
@@ -343,10 +368,7 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                 const SizedBox(width: 6),
                 Text(
                   'Charge: ${attendance.reasonCharge}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                 ),
               ],
             ),

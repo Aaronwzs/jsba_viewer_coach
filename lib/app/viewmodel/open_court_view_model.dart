@@ -41,6 +41,8 @@ class OpenCourtViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Map<String, String> _playerNames = {};
   Map<String, String> get playerNames => _playerNames;
+  Map<String, String> _playerImages = {};
+  Map<String, String> get playerImages => _playerImages;
 
   Future<void> loadSessions() async {
     _isLoading = true;
@@ -116,8 +118,12 @@ class OpenCourtViewModel extends ChangeNotifier {
         _playerNames = await _playerService.getPlayerNames(
           _currentSession!.playerIds,
         );
+        _playerImages = await _playerService.getPlayerImages(
+          _currentSession!.playerIds,
+        );
       } else {
         _playerNames = {};
+        _playerImages = {};
       }
     } catch (e) {
       _errorMessage = e.toString();
