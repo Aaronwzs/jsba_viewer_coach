@@ -63,35 +63,32 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: AppTheme.primaryColor,
-              child: const Icon(Icons.person, color: Colors.white, size: 30),
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Welcome back,',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                   Text(
                     authVM.currentUser?.name ?? 'Coach',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.notifications_outlined),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: Colors.black,
+              ),
               onPressed: () {
-                context.router.pushNamed('/announcements');
+                context.router.pushNamed('/notifications');
               },
             ),
           ],
@@ -143,15 +140,15 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -160,7 +157,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     );
   }
 
-  Widget _buildTodaySessionsSection(BuildContext context, CoachViewModel coachVM) {
+  Widget _buildTodaySessionsSection(
+    BuildContext context,
+    CoachViewModel coachVM,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -169,15 +169,15 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           children: [
             Text(
               'Today\'s Sessions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               DateFormat('EEEE, d MMMM').format(DateTime.now()),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -189,7 +189,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.event_available, size: 48, color: Colors.grey[400]),
+                    Icon(
+                      Icons.event_available,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'No sessions today',
@@ -201,7 +205,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           )
         else
-          ...coachVM.todaySessions.map((session) => _buildSessionCard(context, session)),
+          ...coachVM.todaySessions.map(
+            (session) => _buildSessionCard(context, session),
+          ),
       ],
     );
   }
@@ -227,10 +233,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               value: 'attendance',
               child: Text('Take Attendance'),
             ),
-            const PopupMenuItem(
-              value: 'details',
-              child: Text('View Details'),
-            ),
+            const PopupMenuItem(value: 'details', child: Text('View Details')),
           ],
           onSelected: (value) {
             if (value == 'attendance') {
@@ -250,9 +253,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
       children: [
         Text(
           'Quick Actions',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         Row(
@@ -338,9 +341,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
           children: [
             Text(
               'Announcements',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton(
               onPressed: () => context.router.pushNamed('/announcements'),
@@ -365,7 +368,11 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.announcement_outlined, size: 48, color: Colors.grey[400]),
+                      Icon(
+                        Icons.announcement_outlined,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'No announcements yet',
@@ -379,7 +386,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
 
             return Column(
               children: announcementVM.dashboardAnnouncements
-                  .map((announcement) => _buildAnnouncementCard(context, announcement))
+                  .map(
+                    (announcement) =>
+                        _buildAnnouncementCard(context, announcement),
+                  )
                   .toList(),
             );
           },
@@ -388,10 +398,13 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     );
   }
 
-  Widget _buildAnnouncementCard(BuildContext context, AnnouncementModel announcement) {
+  Widget _buildAnnouncementCard(
+    BuildContext context,
+    AnnouncementModel announcement,
+  ) {
     final Color typeColor;
     final IconData typeIcon;
-    
+
     switch (announcement.type) {
       case AnnouncementType.urgent:
         typeColor = Colors.red;
@@ -444,7 +457,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     child: Icon(Icons.push_pin, size: 16, color: typeColor),
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: typeColor,
                     borderRadius: BorderRadius.circular(12),
@@ -492,7 +508,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
-                              image: NetworkImage(announcement.imageUrls[index]),
+                              image: NetworkImage(
+                                announcement.imageUrls[index],
+                              ),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -529,22 +547,21 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               children: [
                 Text(
                   announcement.content,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     if (announcement.createdByName != null) ...[
-                      Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                      Icon(
+                        Icons.person_outline,
+                        size: 14,
+                        color: Colors.grey[500],
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         announcement.createdByName!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                       ),
                       const SizedBox(width: 12),
                     ],
@@ -552,10 +569,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                     const SizedBox(width: 4),
                     Text(
                       _formatDate(announcement.createdAt),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),

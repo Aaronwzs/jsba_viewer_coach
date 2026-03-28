@@ -106,25 +106,6 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,6 +125,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
               ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, color: Colors.black),
+                onPressed: () => _showProfileOptionsSheet(context, authVM),
+              ),
             ],
           ),
         ),
@@ -152,58 +137,59 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _showProfileOptionsSheet(BuildContext context, AuthViewModel authVM) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(height: 16),
-              _profileOptionTile(
-                icon: Icons.edit_outlined,
-                title: 'Edit Name',
-                subtitle: 'Change your display name',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showEditNameSheet(context, authVM);
-                },
-              ),
-              const Divider(height: 1),
-              _profileOptionTile(
-                icon: Icons.email_outlined,
-                title: 'Change Email',
-                subtitle: 'Coming soon',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Coming Soon')));
-                },
-              ),
-              const Divider(height: 1),
-              _profileOptionTile(
-                icon: Icons.lock_outline,
-                title: 'Change Password',
-                subtitle: 'Update your password',
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showVerifyPasswordSheet(context, authVM);
-                },
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+            _profileOptionTile(
+              icon: Icons.edit_outlined,
+              title: 'Edit Name',
+              subtitle: 'Change your display name',
+              onTap: () {
+                Navigator.pop(ctx);
+                _showEditNameSheet(context, authVM);
+              },
+            ),
+            const Divider(height: 1),
+            _profileOptionTile(
+              icon: Icons.email_outlined,
+              title: 'Change Email',
+              subtitle: 'Coming soon',
+              onTap: () {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Coming Soon')));
+              },
+            ),
+            const Divider(height: 1),
+            _profileOptionTile(
+              icon: Icons.lock_outline,
+              title: 'Change Password',
+              subtitle: 'Update your password',
+              onTap: () {
+                Navigator.pop(ctx);
+                _showVerifyPasswordSheet(context, authVM);
+              },
+            ),
+          ],
         ),
       ),
     );

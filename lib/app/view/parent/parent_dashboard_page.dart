@@ -72,12 +72,6 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: AppTheme.primaryColor,
-              child: const Icon(Icons.person, color: Colors.white, size: 30),
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,9 +92,12 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.notifications_outlined),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: Colors.black,
+              ),
               onPressed: () {
-                context.router.pushNamed('/announcements');
+                context.router.pushNamed('/notifications');
               },
             ),
           ],

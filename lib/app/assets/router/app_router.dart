@@ -70,6 +70,7 @@ class AppRouter extends RootStackRouter {
       page: AnnouncementDetailsRoute.page,
       path: '/announcement-details/:id',
     ),
+    AutoRoute(page: NotificationsRoute.page, path: '/notifications'),
     AutoRoute(page: EditProfileRoute.page, path: '/edit-profile'),
     AutoRoute(page: ChangePasswordRoute.page, path: '/change-password'),
     AutoRoute(page: OpenCourtDetailRoute.page, path: '/open-court-detail/:id'),
