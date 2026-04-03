@@ -4,6 +4,7 @@ import 'package:jsba_app/app/model/feedback_model.dart';
 import 'package:jsba_app/app/service/feedback_service.dart';
 import 'package:jsba_app/app/utils/device_info_helper.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:jsba_app/app/view/shared/widgets/form_section_card.dart';
 
 class FeedbackForm extends StatefulWidget {
   final String userId;
@@ -106,60 +107,95 @@ class _FeedbackFormState extends State<FeedbackForm> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             const Text(
               'Send Feedback',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Share your thoughts to help us improve',
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Category',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            FormSectionCard(
+              icon: Icons.category_outlined,
+              iconColor: AppTheme.primaryColor,
+              title: 'Category',
+              helperText: 'What type of feedback is this?',
+              child: Wrap(
+                spacing: 8,
+                children: FeedbackCategory.values.map((category) {
+                  return ChoiceChip(
+                    label: Text(_getCategoryLabel(category)),
+                    selected: _selectedCategory == category,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() => _selectedCategory = category);
+                      }
+                    },
+                    selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                    labelStyle: TextStyle(
+                      color: _selectedCategory == category
+                          ? AppTheme.primaryColor
+                          : Colors.black87,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: FeedbackCategory.values.map((category) {
-                return ChoiceChip(
-                  label: Text(_getCategoryLabel(category)),
-                  selected: _selectedCategory == category,
-                  onSelected: (selected) {
-                    if (selected) {
-                      setState(() => _selectedCategory = category);
-                    }
-                  },
-                  selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
-                  labelStyle: TextStyle(
-                    color: _selectedCategory == category
-                        ? AppTheme.primaryColor
-                        : Colors.black87,
+            const SizedBox(height: 16),
+            FormSectionCard(
+              icon: Icons.title,
+              iconColor: AppTheme.primaryColor,
+              title: 'Feedback Title',
+              helperText: 'A brief summary of your feedback',
+              child: TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Add dark mode support',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                );
-              }).toList(),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter a title'
+                    : null,
+              ),
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Brief summary of your feedback',
-                border: OutlineInputBorder(),
+            FormSectionCard(
+              icon: Icons.description_outlined,
+              iconColor: AppTheme.primaryColor,
+              title: 'Description',
+              helperText: 'Tell us more about your feedback',
+              child: TextFormField(
+                controller: _descriptionController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText:
+                      'Provide details about your suggestion, concern, or compliment...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  alignLabelWithHint: true,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter a description'
+                    : null,
               ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Tell us more about your feedback...',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -169,6 +205,9 @@ class _FeedbackFormState extends State<FeedbackForm> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: _isSubmitting
                     ? const SizedBox(
@@ -182,6 +221,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                     : const Text('Submit Feedback'),
               ),
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
