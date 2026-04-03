@@ -97,17 +97,6 @@ class _FeedbackFormState extends State<FeedbackForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             const Text(
               'Send Feedback',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -154,6 +143,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                 controller: _titleController,
                 decoration: InputDecoration(
                   hintText: 'e.g., Add dark mode support',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -181,6 +171,7 @@ class _FeedbackFormState extends State<FeedbackForm> {
                 decoration: InputDecoration(
                   hintText:
                       'Provide details about your suggestion, concern, or compliment...',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

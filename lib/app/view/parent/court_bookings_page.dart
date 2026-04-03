@@ -494,7 +494,6 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
   }
 
   Widget _buildEmptyState(OpenCourtViewModel openCourtVM) {
-    final hasAnySessions = openCourtVM.sessions.isNotEmpty;
     return Center(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -519,32 +518,6 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
                 style: TextStyle(color: Colors.grey.shade500),
                 textAlign: TextAlign.center,
               ),
-              if (hasAnySessions) ...[
-                const SizedBox(height: 24),
-                const Divider(),
-                const SizedBox(height: 16),
-                Text(
-                  'Debug: Existing sessions in DB:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...openCourtVM.sessions.map(
-                  (s) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      '${s.venue} - ${s.date.toString().substring(0, 10)} - Status: ${s.status}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

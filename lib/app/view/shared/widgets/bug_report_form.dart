@@ -117,17 +117,6 @@ class _BugReportFormState extends State<BugReportForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
             const Text(
               'Report a Bug',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -147,6 +136,7 @@ class _BugReportFormState extends State<BugReportForm> {
                 controller: _titleController,
                 decoration: InputDecoration(
                   hintText: 'e.g., App crashes when opening settings',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -173,6 +163,7 @@ class _BugReportFormState extends State<BugReportForm> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: '1. Open the app\n2. Go to...\n3. Tap on...',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -200,6 +191,7 @@ class _BugReportFormState extends State<BugReportForm> {
                 maxLines: 2,
                 decoration: InputDecoration(
                   hintText: 'e.g., The settings page should open normally',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -227,6 +219,7 @@ class _BugReportFormState extends State<BugReportForm> {
                 maxLines: 2,
                 decoration: InputDecoration(
                   hintText: 'e.g., The app froze and showed a black screen',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -304,7 +297,7 @@ class _BugReportFormState extends State<BugReportForm> {
                             Text(
                               'Tap to add a screenshot',
                               style: TextStyle(
-                                color: Colors.grey[600],
+                                color: Colors.grey[500],
                                 fontSize: 13,
                               ),
                             ),

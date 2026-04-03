@@ -32,7 +32,7 @@ class FeedbackReportPage extends StatelessWidget {
               title: 'Report a Bug',
               subtitle: 'Found something broken? Let us know.',
               color: Colors.red,
-              onTap: () => _showBugReportSheet(context),
+              onTap: () => _navigateToBugForm(context),
             ),
             const SizedBox(height: 16),
             _buildOptionCard(
@@ -41,7 +41,7 @@ class FeedbackReportPage extends StatelessWidget {
               title: 'Send Feedback',
               subtitle: 'Have suggestions or compliments?',
               color: AppTheme.primaryColor,
-              onTap: () => _showFeedbackSheet(context),
+              onTap: () => _navigateToFeedbackForm(context),
             ),
           ],
         ),
@@ -109,7 +109,7 @@ class FeedbackReportPage extends StatelessWidget {
     );
   }
 
-  void _showBugReportSheet(BuildContext context) {
+  void _navigateToBugForm(BuildContext context) {
     String userId = '';
     try {
       userId = context.read<AuthViewModel>().currentUser?.uid ?? 'anonymous';
@@ -117,19 +117,13 @@ class FeedbackReportPage extends StatelessWidget {
       userId = 'anonymous';
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) =>
-          BugReportForm(userId: userId, onSuccess: () => Navigator.pop(ctx)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (ctx) => BugReportPage(userId: userId)),
     );
   }
 
-  void _showFeedbackSheet(BuildContext context) {
+  void _navigateToFeedbackForm(BuildContext context) {
     String userId = '';
     try {
       userId = context.read<AuthViewModel>().currentUser?.uid ?? 'anonymous';
@@ -137,15 +131,67 @@ class FeedbackReportPage extends StatelessWidget {
       userId = 'anonymous';
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (ctx) => FeedbackPage(userId: userId)),
+    );
+  }
+}
+
+class BugReportPage extends StatelessWidget {
+  final String userId;
+
+  const BugReportPage({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Report a Bug',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      builder: (ctx) =>
-          FeedbackForm(userId: userId, onSuccess: () => Navigator.pop(ctx)),
+      body: BugReportForm(
+        userId: userId,
+        onSuccess: () => Navigator.pop(context),
+      ),
+    );
+  }
+}
+
+class FeedbackPage extends StatelessWidget {
+  final String userId;
+
+  const FeedbackPage({super.key, required this.userId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Send Feedback',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: FeedbackForm(
+        userId: userId,
+        onSuccess: () => Navigator.pop(context),
+      ),
     );
   }
 }

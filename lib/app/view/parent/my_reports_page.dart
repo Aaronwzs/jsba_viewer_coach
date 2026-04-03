@@ -113,7 +113,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
         ],
         if (allKids.isNotEmpty) ...[
           const Text(
-            'My Kids',
+            'My Players',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
