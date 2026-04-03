@@ -6,6 +6,7 @@ import 'package:jsba_app/app/model/feedback_model.dart';
 import 'package:jsba_app/app/service/feedback_service.dart';
 import 'package:jsba_app/app/utils/device_info_helper.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:jsba_app/app/view/shared/widgets/form_section_card.dart';
 
 class BugReportForm extends StatefulWidget {
   final String userId;
@@ -126,93 +127,190 @@ class _BugReportFormState extends State<BugReportForm> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             const Text(
               'Report a Bug',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Help us fix issues by providing detailed information',
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 20),
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                hintText: 'Brief description of the issue',
-                border: OutlineInputBorder(),
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _stepsController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Steps to Reproduce',
-                hintText: '1. Open the app\n2. Go to...\n3. Tap on...',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _expectedController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Expected Behavior',
-                hintText: 'What should have happened?',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _actualController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Actual Behavior',
-                hintText: 'What actually happened?',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickScreenshot,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
+            FormSectionCard(
+              icon: Icons.bug_report_outlined,
+              iconColor: Colors.red,
+              title: 'Bug Title',
+              helperText: 'Give a short, descriptive name for the issue',
+              child: TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., App crashes when opening settings',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
                 ),
-                child: _screenshot != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          _screenshot!,
-                          height: 150,
-                          fit: BoxFit.cover,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter a title'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FormSectionCard(
+              icon: Icons.format_list_numbered,
+              iconColor: Colors.red,
+              title: 'Steps to Reproduce',
+              helperText: 'Tell us exactly how to trigger this bug',
+              child: TextFormField(
+                controller: _stepsController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: '1. Open the app\n2. Go to...\n3. Tap on...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  alignLabelWithHint: true,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please describe the steps'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FormSectionCard(
+              icon: Icons.check_circle_outline,
+              iconColor: Colors.red,
+              title: 'Expected Behavior',
+              helperText: 'What should have happened?',
+              child: TextFormField(
+                controller: _expectedController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'e.g., The settings page should open normally',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  alignLabelWithHint: true,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please describe expected behavior'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FormSectionCard(
+              icon: Icons.error_outline,
+              iconColor: Colors.red,
+              title: 'Actual Behavior',
+              helperText: 'What actually happened instead?',
+              child: TextFormField(
+                controller: _actualController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'e.g., The app froze and showed a black screen',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  alignLabelWithHint: true,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please describe what happened'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FormSectionCard(
+              icon: Icons.add_a_photo_outlined,
+              iconColor: Colors.red,
+              title: 'Screenshot',
+              helperText:
+                  'Attach a screenshot to help us understand (optional)',
+              child: GestureDetector(
+                onTap: _pickScreenshot,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFFF9FAFB),
+                  ),
+                  child: _screenshot != null
+                      ? Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                _screenshot!,
+                                height: 150,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () => setState(() => _screenshot = null),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Icon(
+                              Icons.image_outlined,
+                              size: 32,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap to add a screenshot',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                      )
-                    : Column(
-                        children: [
-                          Icon(
-                            Icons.add_a_photo_outlined,
-                            color: Colors.grey[500],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Add Screenshot (Optional)',
-                            style: TextStyle(color: Colors.grey[500]),
-                          ),
-                        ],
-                      ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -223,6 +321,9 @@ class _BugReportFormState extends State<BugReportForm> {
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: _isSubmitting
                     ? const SizedBox(
@@ -236,6 +337,7 @@ class _BugReportFormState extends State<BugReportForm> {
                     : const Text('Submit Bug Report'),
               ),
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
