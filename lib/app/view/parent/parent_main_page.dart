@@ -1,9 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart'
-    show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
+    show Colors, Icons, Scaffold, MaterialPageRoute, Icon;
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
+import 'package:jsba_app/app/view/shared/faq_page.dart';
 
 @RoutePage()
 class ParentMainPage extends StatefulWidget {
@@ -175,13 +176,16 @@ class _ParentMainPageState extends State<ParentMainPage> {
 
   Widget _buildFaqButton() {
     return GestureDetector(
-      onTap: () => _showFaqDialog(context),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const FaqPage())),
       child: Container(
         width: 50,
         height: 50,
         decoration: BoxDecoration(
           color: AppTheme.primaryColor,
           shape: BoxShape.circle,
+
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
@@ -189,61 +193,11 @@ class _ParentMainPageState extends State<ParentMainPage> {
             ),
           ],
         ),
-        child: const Icon(
-          CupertinoIcons.question_circle,
+        child: Icon(
+          Icons.quiz_outlined,
           color: CupertinoColors.white,
           size: 24,
         ),
-      ),
-    );
-  }
-
-  void _showFaqDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Frequently Asked Questions'),
-        content: const SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Q: How do I register my child?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'A: Download the app and create an account to register your child.',
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Q: What age groups do you accept?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text('A: We accept students from 5 years old and above.'),
-              SizedBox(height: 12),
-              Text(
-                'Q: Do you offer trial sessions?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text('A: Yes! We offer a free trial session for new students.'),
-              SizedBox(height: 12),
-              Text(
-                'Q: What should my child bring?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'A: Sports attire, badminton racket (optional), and water bottle.',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

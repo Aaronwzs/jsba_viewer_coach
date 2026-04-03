@@ -75,5 +75,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: ChangePasswordRoute.page, path: '/change-password'),
     AutoRoute(page: OpenCourtDetailRoute.page, path: '/open-court-detail/:id'),
     AutoRoute(page: ClassDetailRoute.page, path: '/class-detail/:trainingId'),
+    AutoRoute(page: FaqRoute.page, path: '/faq'),
+    AutoRoute(page: FeedbackReportRoute.page, path: '/feedback-report'),
   ];
 }

@@ -314,6 +314,38 @@ class EditProfileRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [FaqPage]
+class FaqRoute extends PageRouteInfo<void> {
+  const FaqRoute({List<PageRouteInfo>? children})
+    : super(FaqRoute.name, initialChildren: children);
+
+  static const String name = 'FaqRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const FaqPage();
+    },
+  );
+}
+
+/// generated route for
+/// [FeedbackReportPage]
+class FeedbackReportRoute extends PageRouteInfo<void> {
+  const FeedbackReportRoute({List<PageRouteInfo>? children})
+    : super(FeedbackReportRoute.name, initialChildren: children);
+
+  static const String name = 'FeedbackReportRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const FeedbackReportPage();
+    },
+  );
+}
+
+/// generated route for
 /// [FirstTimeLoginPage]
 class FirstTimeLoginRoute extends PageRouteInfo<void> {
   const FirstTimeLoginRoute({List<PageRouteInfo>? children})

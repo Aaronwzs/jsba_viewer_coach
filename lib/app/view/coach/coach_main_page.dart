@@ -1,9 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart'
-    show Colors, Icons, Scaffold, AlertDialog, TextButton, showDialog;
+    show Colors, Icons, Scaffold, MaterialPageRoute;
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
+import 'package:jsba_app/app/view/shared/faq_page.dart';
 
 @RoutePage()
 class CoachMainPage extends StatefulWidget {
@@ -175,7 +176,9 @@ class _CoachMainPageState extends State<CoachMainPage> {
 
   Widget _buildFaqButton() {
     return GestureDetector(
-      onTap: () => _showFaqDialog(context),
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const FaqPage())),
       child: Container(
         width: 50,
         height: 50,
@@ -189,59 +192,11 @@ class _CoachMainPageState extends State<CoachMainPage> {
             ),
           ],
         ),
-        child: const Icon(
-          CupertinoIcons.question_circle,
+        child: Icon(
+          Icons.quiz_outlined,
           color: CupertinoColors.white,
           size: 24,
         ),
-      ),
-    );
-  }
-
-  void _showFaqDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Coach FAQ'),
-        content: const SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Q: How do I create a new session?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text('A: Go to Sessions tab and tap the + button.'),
-              SizedBox(height: 12),
-              Text(
-                'Q: How do I mark attendance?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text('A: Navigate to the session and tap on attendance.'),
-              SizedBox(height: 12),
-              Text(
-                'Q: How do I add a new player?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text('A: Go to Players tab and tap Add Player.'),
-              SizedBox(height: 12),
-              Text(
-                'Q: How do I record match results?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'A: Go to Sessions, select a session, and use Record Match.',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/material.dart' show Colors, Icons;
 import 'bottom_nav_item.dart';
 import 'notification_badge.dart';
 
@@ -45,7 +45,8 @@ class AppBottomNavBar extends StatelessWidget {
   final double verticalPadding;
   final double gap;
 
-  bool get showBadge => unreadCount != null && unreadCount! > 0 && badgeIndex != null;
+  bool get showBadge =>
+      unreadCount != null && unreadCount! > 0 && badgeIndex != null;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +54,9 @@ class AppBottomNavBar extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: horizontalPadding,
-          vertical: MediaQuery.paddingOf(context).bottom > 0 ? 0 : verticalPadding,
+          vertical: MediaQuery.paddingOf(context).bottom > 0
+              ? 0
+              : verticalPadding,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -80,12 +83,7 @@ class AppBottomNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
           color: backgroundColor,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 32,
-              color: shadowColor,
-            ),
-          ],
+          boxShadow: [BoxShadow(blurRadius: 32, color: shadowColor)],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -98,14 +96,14 @@ class AppBottomNavBar extends StatelessWidget {
 
   List<Widget> _buildTabItems(BuildContext context) {
     final List<Widget> tabWidgets = [];
-    
+
     for (int i = 0; i < items.length; i++) {
       if (i > 0) {
         tabWidgets.add(SizedBox(width: 4));
       }
       tabWidgets.add(_buildTabItem(context, i));
     }
-    
+
     return tabWidgets;
   }
 
@@ -175,22 +173,13 @@ class AppBottomNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
           color: backgroundColor,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 32,
-              color: shadowColor,
-            ),
-          ],
+          boxShadow: [BoxShadow(blurRadius: 32, color: shadowColor)],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              CupertinoIcons.person,
-              size: iconSize,
-              color: unselectedColor,
-            ),
+            Icon(CupertinoIcons.person, size: iconSize, color: unselectedColor),
             const SizedBox(width: 10),
             Text(
               'Sign In',
@@ -210,8 +199,8 @@ class AppBottomNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: onFaqPressed,
       child: Container(
-        width: 50,
-        height: 50,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           color: selectedColor,
           shape: BoxShape.circle,
@@ -223,9 +212,9 @@ class AppBottomNavBar extends StatelessWidget {
           ],
         ),
         child: Icon(
-          CupertinoIcons.question_circle,
+          Icons.quiz_outlined,
+          size: iconSize,
           color: CupertinoColors.white,
-          size: 24,
         ),
       ),
     );
