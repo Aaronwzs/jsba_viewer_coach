@@ -170,6 +170,25 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           session.date.month == openCourtVM.selectedMonth.month;
     }).toList();
 
+    // Group sessions by week
+    final Map<int, List<OpenCourtModel>> sessionsByWeek = _groupSessionsByWeek(
+      filteredSessions,
+    );
+
+    // Create sorted list of week numbers (1-5)
+    final sortedWeeks = sessionsByWeek.keys.toList()..sort();
+
+    // Build flattened list with week headers + session cards
+    final List<Widget> weekItems = [];
+    for (final week in sortedWeeks) {
+      weekItems.add(_buildWeekHeader(week));
+      for (final session in sessionsByWeek[week]!) {
+        weekItems.add(
+          _buildSessionCard(session, authVM, openCourtVM, parentVM),
+        );
+      }
+    }
+
     return RefreshIndicator(
       onRefresh: () async {
         await openCourtVM.loadAvailableSessions();
@@ -183,7 +202,7 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           _buildAvailableMonthSelector(openCourtVM),
           // Sessions list
           Expanded(
-            child: filteredSessions.isEmpty
+            child: weekItems.isEmpty
                 ? _buildEmptyState(openCourtVM)
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(
@@ -192,19 +211,44 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
                       16,
                       MediaQuery.paddingOf(context).bottom + 100,
                     ),
-                    itemCount: filteredSessions.length,
-                    itemBuilder: (context, index) {
-                      final session = filteredSessions[index];
-                      return _buildSessionCard(
-                        session,
-                        authVM,
-                        openCourtVM,
-                        parentVM,
-                      );
-                    },
+                    itemCount: weekItems.length,
+                    itemBuilder: (context, index) => weekItems[index],
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  int _getWeekOfMonth(DateTime date) {
+    return ((date.day - 1) ~/ 7) + 1;
+  }
+
+  Map<int, List<OpenCourtModel>> _groupSessionsByWeek(
+    List<OpenCourtModel> sessions,
+  ) {
+    final Map<int, List<OpenCourtModel>> weeks = {};
+    for (final session in sessions) {
+      final week = _getWeekOfMonth(session.date);
+      weeks.putIfAbsent(week, () => []);
+      weeks[week]!.add(session);
+    }
+    for (final week in weeks.keys) {
+      weeks[week]!.sort((a, b) => a.date.compareTo(b.date));
+    }
+    return weeks;
+  }
+
+  Widget _buildWeekHeader(int weekNumber) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Text(
+        'Week $weekNumber',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.primaryColor,
+        ),
       ),
     );
   }

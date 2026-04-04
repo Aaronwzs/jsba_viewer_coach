@@ -27,6 +27,22 @@ class AcademyDashboardRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [AcademyPage]
+class AcademyRoute extends PageRouteInfo<void> {
+  const AcademyRoute({List<PageRouteInfo>? children})
+    : super(AcademyRoute.name, initialChildren: children);
+
+  static const String name = 'AcademyRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const AcademyPage();
+    },
+  );
+}
+
+/// generated route for
 /// [AddChildPage]
 class AddChildRoute extends PageRouteInfo<void> {
   const AddChildRoute({List<PageRouteInfo>? children})

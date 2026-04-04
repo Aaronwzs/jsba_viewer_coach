@@ -68,7 +68,7 @@ class AppBottomNavBar extends StatelessWidget {
               _buildLoginButton(context)
             else
               const SizedBox.shrink(),
-            if (showLoginButton && items.isNotEmpty) SizedBox(width: gap + 8),
+            if (showLoginButton && showFaqButton) SizedBox(width: gap + 8),
             if (showFaqButton) _buildFaqButton(context),
           ],
         ),
@@ -179,7 +179,7 @@ class AppBottomNavBar extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(CupertinoIcons.person, size: iconSize, color: unselectedColor),
+            Icon(Icons.person, size: iconSize, color: unselectedColor),
             const SizedBox(width: 10),
             Text(
               'Sign In',

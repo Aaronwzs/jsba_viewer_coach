@@ -1046,6 +1046,55 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     super.dispose();
   }
 
+  Widget _buildSection(String title, List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldWithTitle(String title, Widget field) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          field,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final age = int.tryParse(ageController.text) ?? widget.player.age;
@@ -1128,117 +1177,130 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                 ),
               ),
               const SizedBox(height: 20),
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+              _buildSection('Basic Information', [
+                _buildFieldWithTitle(
+                  'Player Name',
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter name',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
+                  ),
                 ),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: ageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  border: OutlineInputBorder(),
+                _buildFieldWithTitle(
+                  'Age',
+                  TextFormField(
+                    controller: ageController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter age',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Required';
+                      final a = int.tryParse(v);
+                      if (a == null || a < 1 || a > 100) return 'Invalid age';
+                      return null;
+                    },
+                  ),
                 ),
-                onChanged: (_) => setState(() {}),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  final a = int.tryParse(v);
-                  if (a == null || a < 1 || a > 100) return 'Invalid age';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: selectedLevel,
-                decoration: const InputDecoration(
-                  labelText: 'Level',
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Beginner', 'Intermediate', 'Advanced']
-                    .map((l) => DropdownMenuItem(value: l, child: Text(l)))
-                    .toList(),
-                onChanged: (v) =>
-                    setState(() => selectedLevel = v ?? widget.player.level),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              if (needsParentInfo) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.2),
+                _buildFieldWithTitle(
+                  'Skill Level',
+                  DropdownButtonFormField<String>(
+                    value: selectedLevel,
+                    decoration: const InputDecoration(
+                      hintText: 'Select level',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    items: ['Beginner', 'Intermediate', 'Advanced']
+                        .map((l) => DropdownMenuItem(value: l, child: Text(l)))
+                        .toList(),
+                    onChanged: (v) => setState(
+                      () => selectedLevel = v ?? widget.player.level,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.supervisor_account_outlined,
-                            color: Colors.blue[700],
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Parent/Guardian Info',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue[700],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                ),
+              ]),
+              _buildSection('Contact Information', [
+                _buildFieldWithTitle(
+                  'Phone Number',
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter phone number',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: parentNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Name',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: parentPhoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Phone',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: parentEmailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Email',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ],
+              ]),
+              if (needsParentInfo)
+                _buildSection('Parent/Guardian Information', [
+                  _buildFieldWithTitle(
+                    'Parent Name',
+                    TextFormField(
+                      controller: parentNameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent name',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _buildFieldWithTitle(
+                    'Parent Phone',
+                    TextFormField(
+                      controller: parentPhoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent phone',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _buildFieldWithTitle(
+                    'Parent Email',
+                    TextFormField(
+                      controller: parentEmailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent email',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ]),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
