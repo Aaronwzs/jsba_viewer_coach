@@ -5,6 +5,7 @@ import 'package:jsba_app/app/viewmodel/coach_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
 import 'package:jsba_app/app/models/announcement_model.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +44,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               },
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(
+                  ResponsiveHelper.getHorizontalPadding(context),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

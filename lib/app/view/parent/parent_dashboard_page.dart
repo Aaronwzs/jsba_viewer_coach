@@ -5,6 +5,7 @@ import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
 import 'package:jsba_app/app/models/announcement_model.dart';
 
@@ -50,9 +51,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
+                  ResponsiveHelper.getHorizontalPadding(context),
                   16,
-                  16,
-                  16,
+                  ResponsiveHelper.getHorizontalPadding(context),
                   MediaQuery.paddingOf(context).bottom + 100,
                 ),
                 child: Column(

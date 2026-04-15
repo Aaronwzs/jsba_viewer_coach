@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 
 class AcademyContent extends StatelessWidget {
   const AcademyContent({super.key});
@@ -70,7 +71,7 @@ class _HeroBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 220,
+      height: ResponsiveHelper.getHeroHeight(context),
       color: AppTheme.primaryColor,
       child: Stack(
         clipBehavior: Clip.hardEdge,
@@ -223,10 +224,14 @@ class _OverlapAboutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final offsetY = ResponsiveHelper.getDeviceType(context) == DeviceType.mobile
+        ? -30.0
+        : -40.0;
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
     return Transform.translate(
-      offset: const Offset(0, -30),
+      offset: Offset(0, offsetY),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
+        margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -320,8 +325,9 @@ class _QuickLinksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -334,70 +340,77 @@ class _QuickLinksSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            children: [
-              _buildQuickLinkItem(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = ResponsiveHelper.getQuickLinkColumns(
                 context,
-                icon: Icons.info_outline,
-                label: 'About Us',
-                onTap: () => _showInfoDialog(
-                  context,
-                  'About Us',
-                  'JSBA is committed to nurturing talent and promoting badminton excellence in Malaysia.',
-                ),
-              ),
-              _buildQuickLinkItem(
-                context,
-                icon: Icons.groups_outlined,
-                label: 'Programs',
-                onTap: () => _showInfoDialog(
-                  context,
-                  'Our Programs',
-                  'We offer programs for all ages and skill levels: beginner, intermediate, and advanced training.',
-                ),
-              ),
-              _buildQuickLinkItem(
-                context,
-                icon: Icons.calendar_month_outlined,
-                label: 'Schedule',
-                onTap: () => _showInfoDialog(
-                  context,
-                  'Training Schedule',
-                  'Training sessions available Monday to Sunday, morning and evening slots.',
-                ),
-              ),
-              _buildQuickLinkItem(
-                context,
-                icon: Icons.location_on_outlined,
-                label: 'Location',
-                onTap: () => _showInfoDialog(
-                  context,
-                  'Our Location',
-                  'Jaya Sentosa Badminton Academy\nKuala Lumpur, Malaysia',
-                ),
-              ),
-              _buildQuickLinkItem(
-                context,
-                icon: Icons.phone_outlined,
-                label: 'Contact',
-                onTap: () => _showContactDialog(context),
-              ),
-              _buildQuickLinkItem(
-                context,
-                icon: Icons.photo_library_outlined,
-                label: 'Gallery',
-                onTap: () => _showInfoDialog(
-                  context,
-                  'Gallery',
-                  'Check out our photo gallery showcasing training sessions, tournaments, and player achievements.',
-                ),
-              ),
-            ],
+              );
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                children: [
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.info_outline,
+                    label: 'About Us',
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'About Us',
+                      'JSBA is committed to nurturing talent and promoting badminton excellence in Malaysia.',
+                    ),
+                  ),
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.groups_outlined,
+                    label: 'Programs',
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Our Programs',
+                      'We offer programs for all ages and skill levels: beginner, intermediate, and advanced training.',
+                    ),
+                  ),
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.calendar_month_outlined,
+                    label: 'Schedule',
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Training Schedule',
+                      'Training sessions available Monday to Sunday, morning and evening slots.',
+                    ),
+                  ),
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.location_on_outlined,
+                    label: 'Location',
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Our Location',
+                      'Jaya Sentosa Badminton Academy\nKuala Lumpur, Malaysia',
+                    ),
+                  ),
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.phone_outlined,
+                    label: 'Contact',
+                    onTap: () => _showContactDialog(context),
+                  ),
+                  _buildQuickLinkItem(
+                    context,
+                    icon: Icons.photo_library_outlined,
+                    label: 'Gallery',
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'Gallery',
+                      'Check out our photo gallery showcasing training sessions, tournaments, and player achievements.',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -500,102 +513,107 @@ class _ContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+    final maxWidth = ResponsiveHelper.getContentMaxWidth(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.06),
-            width: 0.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-            BoxShadow(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
               color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 32,
-              offset: const Offset(0, 12),
+              width: 0.5,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  width: 0.5,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              child: const Icon(
-                Icons.chat_bubble_outline,
-                size: 22,
-                color: Colors.grey,
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 32,
+                offset: const Offset(0, 12),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Get in touch',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Have questions about programs, schedules, or enrolment? Our team is ready to help.',
-              style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.6),
-            ),
-            const SizedBox(height: 24),
-            Divider(height: 0.5, thickness: 0.5, color: Colors.grey.shade200),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _launchWhatsApp(context),
-                icon: const Icon(
-                  Icons.chat_bubble,
-                  size: 18,
-                  color: Colors.white,
-                ),
-                label: const Text('Contact us on WhatsApp'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.1,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    width: 0.5,
                   ),
                 ),
+                child: const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 22,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            const Center(
-              child: Text(
-                'Typically replies within a few hours',
-                style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+              const SizedBox(height: 16),
+              const Text(
+                'Get in touch',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  letterSpacing: -0.3,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              const Text(
+                'Have questions about programs, schedules, or enrolment? Our team is ready to help.',
+                style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.6),
+              ),
+              const SizedBox(height: 24),
+              Divider(height: 0.5, thickness: 0.5, color: Colors.grey.shade200),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _launchWhatsApp(context),
+                  icon: const Icon(
+                    Icons.chat_bubble,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: const Text('Contact us on WhatsApp'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Center(
+                child: Text(
+                  'Typically replies within a few hours',
+                  style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

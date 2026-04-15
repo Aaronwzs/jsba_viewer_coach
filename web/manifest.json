@@ -1,11 +1,11 @@
 {
-    "name": "jsba_app",
-    "short_name": "jsba_app",
+    "name": "JSBA Badminton Academy",
+    "short_name": "JSBA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2E7D32",
+    "theme_color": "#2E7D32",
+    "description": "JSBA Badminton Academy - Premier badminton training management app",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
