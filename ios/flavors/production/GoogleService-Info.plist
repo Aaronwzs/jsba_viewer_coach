@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>713373958841-qb6ocf7eajalt733g7inolsel9cvtvtg.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.713373958841-qb6ocf7eajalt733g7inolsel9cvtvtg</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB5xczWKAkvPBEZEGTSJi4f7dAVRHNgyao</string>
+	<key>GCM_SENDER_ID</key>
+	<string>713373958841</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.jsba.jsbaApp</string>
+	<key>PROJECT_ID</key>
+	<string>juniorshuttlers</string>
+	<key>STORAGE_BUCKET</key>
+	<string>juniorshuttlers.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:713373958841:ios:dd3a9c4f8a1b03e5fc9168</string>
+</dict>
+</plist>

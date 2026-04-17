@@ -557,18 +557,49 @@ class OpenCourtDetailRouteArgs {
 
 /// generated route for
 /// [OtpPage]
-class OtpRoute extends PageRouteInfo<void> {
-  const OtpRoute({List<PageRouteInfo>? children})
-    : super(OtpRoute.name, initialChildren: children);
+class OtpRoute extends PageRouteInfo<OtpRouteArgs> {
+  OtpRoute({
+    Key? key,
+    required String phoneNumber,
+    List<PageRouteInfo>? children,
+  }) : super(
+         OtpRoute.name,
+         args: OtpRouteArgs(key: key, phoneNumber: phoneNumber),
+         initialChildren: children,
+       );
 
   static const String name = 'OtpRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const OtpPage();
+      final args = data.argsAs<OtpRouteArgs>();
+      return OtpPage(key: args.key, phoneNumber: args.phoneNumber);
     },
   );
+}
+
+class OtpRouteArgs {
+  const OtpRouteArgs({this.key, required this.phoneNumber});
+
+  final Key? key;
+
+  final String phoneNumber;
+
+  @override
+  String toString() {
+    return 'OtpRouteArgs{key: $key, phoneNumber: $phoneNumber}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! OtpRouteArgs) return false;
+    return key == other.key && phoneNumber == other.phoneNumber;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ phoneNumber.hashCode;
 }
 
 /// generated route for
@@ -615,6 +646,22 @@ class ParentMainRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const ParentMainPage();
+    },
+  );
+}
+
+/// generated route for
+/// [PhoneSignInPage]
+class PhoneSignInRoute extends PageRouteInfo<void> {
+  const PhoneSignInRoute({List<PageRouteInfo>? children})
+    : super(PhoneSignInRoute.name, initialChildren: children);
+
+  static const String name = 'PhoneSignInRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const PhoneSignInPage();
     },
   );
 }

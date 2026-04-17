@@ -46,7 +46,12 @@ class DatabaseService {
   }
 
   /// Update user profile in Firestore (e.g. name, phone, email)
-  Future<void> updateUserProfile(String uid, {String? name, String? phone, String? email}) async {
+  Future<void> updateUserProfile(
+    String uid, {
+    String? name,
+    String? phone,
+    String? email,
+  }) async {
     final updates = <String, dynamic>{};
     if (name != null) updates['name'] = name;
     if (phone != null) updates['phone'] = phone;
@@ -65,6 +70,21 @@ class DatabaseService {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return null;
     return UserModel.fromMap(doc.data()!, uid);
+  }
+
+  /// Get user by phone number from Firestore (returns null if not found)
+  Future<UserModel?> getUserByPhone(String phone) async {
+    final normalizedPhone = phone.trim();
+    final snapshot = await _db
+        .collection('users')
+        .where('phone', isEqualTo: normalizedPhone)
+        .limit(1)
+        .get();
+    if (snapshot.docs.isEmpty) return null;
+    return UserModel.fromMap(
+      snapshot.docs.first.data(),
+      snapshot.docs.first.id,
+    );
   }
 
   /// Returns true if at least one active Admin or SuperAdmin exists.

@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
+import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 
 @RoutePage()
 class ResetPasswordPage extends StatefulWidget {
@@ -15,15 +18,98 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
 
+  bool _emailSent = false;
+  String _sentEmail = '';
+  int _resendCountdown = 0;
+  Timer? _resendTimer;
+
   @override
   void dispose() {
     _emailController.dispose();
+    _resendTimer?.cancel();
     super.dispose();
+  }
+
+  void _startResendTimer() {
+    _resendCountdown = 60;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _resendCountdown--;
+        if (_resendCountdown <= 0) {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  Future<void> _sendResetEmail() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final ok = await context.read<AuthViewModel>().sendPasswordResetEmail(
+      _emailController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (ok) {
+      setState(() {
+        _emailSent = true;
+        _sentEmail = _emailController.text.trim();
+      });
+      _startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reset link sent. Check your email inbox.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<AuthViewModel>().error ?? 'Failed to send reset link.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _resendResetEmail() async {
+    if (_resendCountdown > 0) return;
+
+    final ok = await context.read<AuthViewModel>().sendPasswordResetEmail(
+      _sentEmail,
+    );
+
+    if (!mounted) return;
+
+    if (ok) {
+      _startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reset link resent. Check your email inbox.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.read<AuthViewModel>().error ??
+                'Failed to resend reset link.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isWide = ResponsiveHelper.isWideScreen(context);
+    final authVM = context.watch<AuthViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -32,27 +118,37 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
-        child: isWide ? _buildWideLayout(context) : _buildMobileLayout(context),
+        child: isWide
+            ? _buildWideLayout(context, authVM)
+            : _buildMobileLayout(context, authVM),
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 20),
-          _buildHeader(context, false),
-          const SizedBox(height: 32),
-          _buildForm(context),
-        ],
+  Widget _buildMobileLayout(BuildContext context, AuthViewModel authVM) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              _buildHeader(context, false),
+              const SizedBox(height: 32),
+              _emailSent
+                  ? _buildSuccessState(context, authVM)
+                  : _buildForm(context, authVM),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildWideLayout(BuildContext context) {
+  Widget _buildWideLayout(BuildContext context, AuthViewModel authVM) {
     return Row(
       children: [
         Expanded(flex: 5, child: _buildLeftPanel(context)),
@@ -68,7 +164,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 children: [
                   _buildHeader(context, true),
                   const SizedBox(height: 32),
-                  _buildForm(context),
+                  _emailSent
+                      ? _buildSuccessState(context, authVM)
+                      : _buildForm(context, authVM),
                 ],
               ),
             ),
@@ -172,7 +270,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Enter your email to receive reset instructions',
+          _emailSent
+              ? 'Follow the instructions sent to your email'
+              : 'Enter your email to receive reset instructions',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -182,7 +282,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 
-  Widget _buildForm(BuildContext context) {
+  Widget _buildForm(BuildContext context, AuthViewModel authVM) {
     return Form(
       key: _formKey,
       child: Column(
@@ -198,9 +298,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
             ),
             validator: (value) {
-              if (value == null || value.isEmpty)
+              if (value == null || value.isEmpty) {
                 return 'Please enter your email';
-              if (!value.contains('@')) return 'Please enter a valid email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email';
+              }
               return null;
             },
           ),
@@ -208,15 +311,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Password reset link sent to your email'),
-                    ),
-                  );
-                }
-              },
+              onPressed: authVM.isLoading ? null : _sendResetEmail,
+              child: authVM.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Send Reset Link'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
@@ -226,7 +331,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 ),
                 elevation: 0,
               ),
-              child: const Text('Send Reset Link'),
             ),
           ),
           const SizedBox(height: 16),
@@ -236,6 +340,85 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSuccessState(BuildContext context, AuthViewModel authVM) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.green.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.check_circle, size: 60, color: Colors.green),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Email Sent!',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'We have sent a password reset link to:',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _sentEmail,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.primaryColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Click the link in the email to reset your password.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        if (_resendCountdown > 0) ...[
+          Text(
+            'Resend email in ${_resendCountdown} seconds',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+          ),
+          const SizedBox(height: 8),
+        ],
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _resendCountdown > 0 ? null : _resendResetEmail,
+            icon: const Icon(Icons.refresh),
+            label: Text(
+              _resendCountdown > 0 ? 'Please wait...' : 'Resend Email',
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => context.router.maybePop(),
+          child: const Text('Back to Login'),
+        ),
+      ],
     );
   }
 }

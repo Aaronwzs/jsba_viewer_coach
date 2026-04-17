@@ -25,20 +25,25 @@ class LoginLandingPage extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          const Spacer(),
-          _buildLogo(context),
-          const SizedBox(height: 32),
-          _buildWelcomeText(context),
-          const SizedBox(height: 48),
-          _buildLoginButton(context),
-          const SizedBox(height: 24),
-          _buildFeatures(context),
-          const Spacer(),
-        ],
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              _buildLogo(context),
+              const SizedBox(height: 32),
+              _buildWelcomeText(context),
+              const SizedBox(height: 48),
+              _buildLoginButton(context),
+              const SizedBox(height: 24),
+              _buildFeatures(context),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -291,9 +296,9 @@ class LoginLandingPage extends StatelessWidget {
 
   Widget _buildFeatures(BuildContext context) {
     final features = [
-      {'icon': Icons.calendar_today_outlined, 'text': 'Easy Booking'},
+      {'icon': Icons.calendar_today_outlined, 'text': 'Track Booking'},
       {'icon': Icons.trending_up, 'text': 'Progress Tracking'},
-      {'icon': Icons.notifications_outlined, 'text': 'Real-time Updates'},
+      {'icon': Icons.payment, 'text': 'Payment Updates'},
     ];
 
     final isWide = ResponsiveHelper.isWideScreen(context);

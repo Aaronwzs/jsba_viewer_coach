@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "814632821050",
+    "project_id": "juniorshuttlers-stag",
+    "storage_bucket": "juniorshuttlers-stag.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814632821050:android:27b7e546a4938ce9b47003",
+        "android_client_info": {
+          "package_name": "com.jsba.jsba_app.stag"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQccru5stdS807GOAtB_OlLgVDGbe0uyM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,8 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
+import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 
 @RoutePage()
 class VerificationPage extends StatelessWidget {
@@ -11,6 +13,7 @@ class VerificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWide = ResponsiveHelper.isWideScreen(context);
+    final authVM = context.watch<AuthViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -19,22 +22,33 @@ class VerificationPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: SafeArea(
-        child: isWide ? _buildWideLayout(context) : _buildMobileLayout(context),
+        child: isWide
+            ? _buildWideLayout(context, authVM)
+            : _buildMobileLayout(context, authVM),
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [const SizedBox(height: 40), _buildContent(context, false)],
+  Widget _buildMobileLayout(BuildContext context, AuthViewModel authVM) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              _buildContent(context, false, authVM),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildWideLayout(BuildContext context) {
+  Widget _buildWideLayout(BuildContext context, AuthViewModel authVM) {
     return Row(
       children: [
         Expanded(flex: 5, child: _buildLeftPanel(context)),
@@ -44,7 +58,10 @@ class VerificationPage extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
               padding: const EdgeInsets.all(48),
-              child: _buildContent(context, true),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [_buildContent(context, true, authVM)],
+              ),
             ),
           ),
         ),
@@ -133,7 +150,11 @@ class VerificationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, bool isWide) {
+  Widget _buildContent(
+    BuildContext context,
+    bool isWide,
+    AuthViewModel authVM,
+  ) {
     return Column(
       crossAxisAlignment: isWide
           ? CrossAxisAlignment.center
@@ -176,11 +197,25 @@ class VerificationPage extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Verification email resent')),
-              );
-            },
+            onPressed: authVM.isLoading
+                ? null
+                : () async {
+                    final ok = await context
+                        .read<AuthViewModel>()
+                        .sendEmailVerification();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ok
+                              ? 'Verification email resent.'
+                              : (context.read<AuthViewModel>().error ??
+                                    'Failed to resend email verification.'),
+                        ),
+                        backgroundColor: ok ? null : Colors.red,
+                      ),
+                    );
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
@@ -190,7 +225,16 @@ class VerificationPage extends StatelessWidget {
               ),
               elevation: 0,
             ),
-            child: const Text('Resend Email'),
+            child: authVM.isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Resend Email'),
           ),
         ),
         const SizedBox(height: 16),

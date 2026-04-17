@@ -731,8 +731,97 @@
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
-			name = Release;
+name = Release;
+	97C14707STAGIN001CF9000 /* Debug-staging */ = {
+		isa = XCBuildConfiguration;
+		baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+			DEVELOPMENT_TEAM = CSTTJGR7WG;
+			ENABLE_BITCODE = NO;
+			INFOPLIST_FILE = "flavors/staging/Info.plist";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "com.jsba.jsbaApp.stag";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+			SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			SWIFT_VERSION = 5.0;
+			VERSIONING_SYSTEM = "apple-generic";
 		};
+		name = "Debug-staging";
+	};
+	97C14707STAGRE001CF9000 /* Release-staging */ = {
+		isa = XCBuildConfiguration;
+		baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+			DEVELOPMENT_TEAM = CSTTJGR7WG;
+			ENABLE_BITCODE = NO;
+			INFOPLIST_FILE = "flavors/staging/Info.plist";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "com.jsba.jsbaApp.stag";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+			SWIFT_VERSION = 5.0;
+			VERSIONING_SYSTEM = "apple-generic";
+		};
+		name = "Release-staging";
+	};
+	97C14707PRODUC001CF9000 /* Debug-production */ = {
+		isa = XCBuildConfiguration;
+		baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+			DEVELOPMENT_TEAM = CSTTJGR7WG;
+			ENABLE_BITCODE = NO;
+			INFOPLIST_FILE = "flavors/production/Info.plist";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "com.jsba.jsbaApp";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+			SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			SWIFT_VERSION = 5.0;
+			VERSIONING_SYSTEM = "apple-generic";
+		};
+		name = "Debug-production";
+	};
+	97C14707PRODUR001CF9000 /* Release-production */ = {
+		isa = XCBuildConfiguration;
+		baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+		buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ENABLE_MODULES = YES;
+			CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+			DEVELOPMENT_TEAM = CSTTJGR7WG;
+			ENABLE_BITCODE = NO;
+			INFOPLIST_FILE = "flavors/production/Info.plist";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			PRODUCT_BUNDLE_IDENTIFIER = "com.jsba.jsbaApp";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+			SWIFT_VERSION = 5.0;
+			VERSIONING_SYSTEM = "apple-generic";
+		};
+		name = "Release-production";
+	};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -756,16 +845,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				97C147061CF9000F007C117D /* Debug */,
-				97C147071CF9000F007C117D /* Release */,
-				249021D4217E4FDB00AE95B9 /* Profile */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
+97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */ = {
+	isa = XCConfigurationList;
+	buildConfigurations = (
+		97C147061CF9000F007C117D /* Debug */,
+		97C147071CF9000F007C117D /* Release */,
+		249021D4217E4FDB00AE95B9 /* Profile */,
+		97C14707STAGIN001CF9000 /* Debug-staging */,
+		97C14707STAGRE001CF9000 /* Release-staging */,
+		97C14707PRODUC001CF9000 /* Debug-production */,
+		97C14707PRODUR001CF9000 /* Release-production */,
+	);
+	defaultConfigurationIsVisible = 0;
+	defaultConfigurationName = Release;
+};
 /* End XCConfigurationList section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
