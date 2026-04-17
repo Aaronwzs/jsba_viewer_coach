@@ -37,16 +37,6 @@ enum AvailabilityFilter {
   sunday,
 }
 
-class _WeekListEntry {
-  final bool isHeader;
-  final int? weekNumber;
-  final OpenCourtModel? session;
-
-  _WeekListEntry.header(this.weekNumber) : isHeader = true, session = null;
-
-  _WeekListEntry.session(this.session) : isHeader = false, weekNumber = null;
-}
-
 class _CourtBookingsPageState extends State<CourtBookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -180,15 +170,24 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           session.date.month == openCourtVM.selectedMonth.month;
     }).toList();
 
-    // Sort by date ascending, then by start time
-    filteredSessions.sort((a, b) {
-      final dateCompare = a.date.compareTo(b.date);
-      if (dateCompare != 0) return dateCompare;
-      return a.startTime.compareTo(b.startTime);
-    });
+    // Group sessions by week
+    final Map<int, List<OpenCourtModel>> sessionsByWeek = _groupSessionsByWeek(
+      filteredSessions,
+    );
 
-    // Group sessions by week (Mon-Sun)
-    final weeklyGroups = _groupSessionsByWeek(filteredSessions);
+    // Create sorted list of week numbers (1-5)
+    final sortedWeeks = sessionsByWeek.keys.toList()..sort();
+
+    // Build flattened list with week headers + session cards
+    final List<Widget> weekItems = [];
+    for (final week in sortedWeeks) {
+      weekItems.add(_buildWeekHeader(week));
+      for (final session in sessionsByWeek[week]!) {
+        weekItems.add(
+          _buildSessionCard(session, authVM, openCourtVM, parentVM),
+        );
+      }
+    }
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -203,7 +202,7 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           _buildAvailableMonthSelector(openCourtVM),
           // Sessions list
           Expanded(
-            child: filteredSessions.isEmpty
+            child: weekItems.isEmpty
                 ? _buildEmptyState(openCourtVM)
                 : ListView.builder(
                     padding: EdgeInsets.fromLTRB(
@@ -212,20 +211,8 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
                       16,
                       MediaQuery.paddingOf(context).bottom + 100,
                     ),
-                    itemCount: weeklyGroups.length,
-                    itemBuilder: (context, index) {
-                      final entry = weeklyGroups[index];
-                      if (entry.isHeader) {
-                        return _buildWeekHeader(entry.weekNumber!);
-                      } else {
-                        return _buildSessionCard(
-                          entry.session!,
-                          authVM,
-                          openCourtVM,
-                          parentVM,
-                        );
-                      }
-                    },
+                    itemCount: weekItems.length,
+                    itemBuilder: (context, index) => weekItems[index],
                   ),
           ),
         ],
@@ -233,64 +220,35 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
     );
   }
 
-  /// Groups sessions by ISO week (Mon-Sun) and returns a flat list
-  /// of alternating WeekHeader and Session entries.
-  List<_WeekListEntry> _groupSessionsByWeek(List<OpenCourtModel> sessions) {
-    if (sessions.isEmpty) return [];
-
-    final result = <_WeekListEntry>[];
-    int weekCounter = 1;
-
-    // Group by ISO week number
-    final weekMap = <int, List<OpenCourtModel>>{};
-    for (final session in sessions) {
-      final weekNum = _getISOWeekNumber(session.date);
-      weekMap.putIfAbsent(weekNum, () => []).add(session);
-    }
-
-    // Sort weeks by their week number
-    final sortedWeeks = weekMap.keys.toList()..sort();
-
-    for (final weekNum in sortedWeeks) {
-      result.add(_WeekListEntry.header(weekCounter));
-      for (final session in weekMap[weekNum]!) {
-        result.add(_WeekListEntry.session(session));
-      }
-      weekCounter++;
-    }
-
-    return result;
+  int _getWeekOfMonth(DateTime date) {
+    return ((date.day - 1) ~/ 7) + 1;
   }
 
-  /// Calculate ISO week number for a given date
-  int _getISOWeekNumber(DateTime date) {
-    final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays;
-    return ((dayOfYear + DateTime(date.year, 1, 1).weekday - 1) ~/ 7) + 1;
+  Map<int, List<OpenCourtModel>> _groupSessionsByWeek(
+    List<OpenCourtModel> sessions,
+  ) {
+    final Map<int, List<OpenCourtModel>> weeks = {};
+    for (final session in sessions) {
+      final week = _getWeekOfMonth(session.date);
+      weeks.putIfAbsent(week, () => []);
+      weeks[week]!.add(session);
+    }
+    for (final week in weeks.keys) {
+      weeks[week]!.sort((a, b) => a.date.compareTo(b.date));
+    }
+    return weeks;
   }
 
   Widget _buildWeekHeader(int weekNumber) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'Week $weekNumber',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
-        ],
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Text(
+        'Week $weekNumber',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.primaryColor,
+        ),
       ),
     );
   }
@@ -580,6 +538,7 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
   }
 
   Widget _buildEmptyState(OpenCourtViewModel openCourtVM) {
+    final hasAnySessions = openCourtVM.sessions.isNotEmpty;
     return Center(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -604,6 +563,32 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
                 style: TextStyle(color: Colors.grey.shade500),
                 textAlign: TextAlign.center,
               ),
+              if (hasAnySessions) ...[
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+                Text(
+                  'Debug: Existing sessions in DB:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...openCourtVM.sessions.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      '${s.venue} - ${s.date.toString().substring(0, 10)} - Status: ${s.status}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

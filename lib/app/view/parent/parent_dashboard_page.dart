@@ -5,8 +5,11 @@ import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
 import 'package:jsba_app/app/models/announcement_model.dart';
+
+import '../../assets/router/app_router.dart';
 
 @RoutePage()
 class ParentDashboardPage extends StatefulWidget {
@@ -48,15 +51,17 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
+                  ResponsiveHelper.getHorizontalPadding(context),
                   16,
-                  16,
-                  16,
+                  ResponsiveHelper.getHorizontalPadding(context),
                   MediaQuery.paddingOf(context).bottom + 100,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeCard(context, authVM),
+                    const SizedBox(height: 24),
+                    _buildAboutAcademySection(context),
                     const SizedBox(height: 24),
                     _buildAnnouncementsSection(context),
                   ],
@@ -257,6 +262,95 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutAcademySection(BuildContext context) {
+    return InkWell(
+      onTap: () => context.router.root.pushNamed('/about-academy'),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.star,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Discover JSBA Academy',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: AppTheme.primaryColor,
+                  size: 16,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Join Malaysia's premier badminton coaching program with expert coaches and state-of-the-art facilities.",
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondaryColor,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Explore Now',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 14, color: Colors.white),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

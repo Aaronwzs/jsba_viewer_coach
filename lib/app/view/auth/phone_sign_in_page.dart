@@ -1,59 +1,73 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
+import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 
 @RoutePage()
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class PhoneSignInPage extends StatefulWidget {
+  const PhoneSignInPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<PhoneSignInPage> createState() => _PhoneSignInPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _PhoneSignInPageState extends State<PhoneSignInPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _phoneController = TextEditingController();
+  String _selectedCountryCode = '+60';
+  final List<String> _countryCodes = ['+60', '+65', '+62', '+66', '+91', '+1'];
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  String get _fullPhoneNumber =>
+      '$_selectedCountryCode${_phoneController.text.trim()}';
+
+  Future<void> _getOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authVM = context.read<AuthViewModel>();
-    final success = await authVM.signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
 
-    if (success && mounted) {
-      final user = authVM.currentUser;
-      if (user?.role == 'Coach') {
-        context.router.replaceAll([const CoachMainRoute()]);
-      } else {
-        context.router.replaceAll([const ParentMainRoute()]);
-      }
-    } else if (mounted && authVM.error != null) {
+    final userExists = await authVM.checkUserExistsByPhone(_fullPhoneNumber);
+
+    if (!mounted) return;
+
+    if (!userExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authVM.error!), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('No user found with this phone number.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final sent = await authVM.requestPhoneOtp(_fullPhoneNumber);
+
+    if (!mounted) return;
+
+    if (sent) {
+      context.router.push(OtpRoute(phoneNumber: _fullPhoneNumber));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authVM.error ?? 'Failed to send OTP.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authVM = context.watch<AuthViewModel>();
     final isWide = ResponsiveHelper.isWideScreen(context);
+    final authVM = context.watch<AuthViewModel>();
 
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +96,9 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               _buildHeader(context, false),
               const SizedBox(height: 32),
-              _buildForm(context, authVM),
+              _buildPhoneInput(),
+              const SizedBox(height: 24),
+              _buildActions(context, authVM),
             ],
           ),
         ),
@@ -106,7 +122,9 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   _buildHeader(context, true),
                   const SizedBox(height: 32),
-                  _buildForm(context, authVM),
+                  _buildPhoneInput(),
+                  const SizedBox(height: 24),
+                  _buildActions(context, authVM),
                 ],
               ),
             ),
@@ -152,21 +170,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          Positioned(
-            right: -30,
-            bottom: 50,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  width: 25,
-                ),
-              ),
-            ),
-          ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -182,14 +185,14 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   child: const Icon(
-                    Icons.sports_tennis,
+                    Icons.phone_android,
                     size: 80,
                     color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  'Welcome Back',
+                  'Phone Sign In',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -198,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Sign in to continue your journey',
+                  'Enter your phone number to sign in',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white.withValues(alpha: 0.7),
@@ -223,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
-              Icons.sports_tennis,
+              Icons.phone_android,
               size: 48,
               color: AppTheme.primaryColor,
             ),
@@ -231,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 16),
         ],
         Text(
-          'Welcome Back',
+          'Phone Sign In',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -240,7 +243,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Sign in to your account to continue',
+          'Enter your phone number to receive OTP',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -250,114 +253,99 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildForm(BuildContext context, AuthViewModel authVM) {
+  Widget _buildPhoneInput() {
     return Form(
       key: _formKey,
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedCountryCode,
+                items: _countryCodes.map((code) {
+                  return DropdownMenuItem(
+                    value: code,
+                    child: Text(code, style: const TextStyle(fontSize: 16)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedCountryCode = value);
+                  }
+                },
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty)
-                return 'Please enter your email';
-              if (!value.contains('@')) return 'Please enter a valid email';
-              return null;
-            },
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              prefixIcon: const Icon(Icons.lock_outlined),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty)
-                return 'Please enter your password';
-              return null;
-            },
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => context.router.push(const ResetPasswordRoute()),
-              child: const Text('Forgot Password?'),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: authVM.isLoading ? null : _login,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                hintText: '123456789',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 0,
               ),
-              child: authVM.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Sign In'),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                if (value.trim().length < 7) {
+                  return 'Enter a valid phone number';
+                }
+                return null;
+              },
             ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: authVM.isLoading
-                  ? null
-                  : () => context.router.push(const PhoneSignInRoute()),
-              icon: const Icon(Icons.sms_outlined),
-              label: const Text('Sign In with Phone OTP'),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Don't have an account? ",
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              TextButton(
-                onPressed: () =>
-                    context.router.push(const FirstTimeLoginRoute()),
-                child: const Text('Register Now'),
-              ),
-            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context, AuthViewModel authVM) {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: authVM.isLoading ? null : _getOtp,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: authVM.isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Get OTP'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () => context.router.maybePop(),
+          child: const Text('Back to Login'),
+        ),
+      ],
     );
   }
 }

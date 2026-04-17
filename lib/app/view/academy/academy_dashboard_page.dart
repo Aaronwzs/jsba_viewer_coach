@@ -2,22 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/bottom_nav_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-class _C {
-  static const primary = Color(0xFF1B6B45);
-  static const primaryLight = Color(0xFFEBF5EF);
-  static const surface = Color(0xFFFFFFFF);
-  static const background = Color(0xFFF4F8F5);
-  static const textDark = Color(0xFF1A2E23);
-  static const textMid = Color(0xFF2E4A39);
-  static const textMuted = Color(0xFF5A6B62);
-  static const border = Color(0x1A1B6B45);
-  static const neutral200 = Color(0xFFE8E8E8);
-  static const neutral400 = Color(0xFF888888);
-  static const whatsapp = Color(0xFF25D366);
-}
 
 @RoutePage()
 class AcademyDashboardPage extends StatelessWidget {
@@ -26,7 +13,7 @@ class AcademyDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _C.background,
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -70,8 +57,8 @@ class _HeroBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 220,
-      color: _C.primary,
+      height: ResponsiveHelper.getHeroHeight(context),
+      color: AppTheme.primaryColor,
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
@@ -222,19 +209,24 @@ class _OverlapAboutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final offsetY = ResponsiveHelper.getDeviceType(context) == DeviceType.mobile
+        ? -22.0
+        : -30.0;
     return Transform.translate(
-      offset: const Offset(0, -22),
+      offset: Offset(0, offsetY),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveHelper.getHorizontalPadding(context),
+        ),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: _C.surface,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _C.border, width: 0.5),
+            border: Border.all(color: Colors.grey.shade200, width: 0.5),
             boxShadow: [
               BoxShadow(
-                color: _C.primary.withValues(alpha: 0.08),
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -248,7 +240,7 @@ class _OverlapAboutCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: _C.primary,
+                  color: AppTheme.primaryColor,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -259,7 +251,7 @@ class _OverlapAboutCard extends StatelessWidget {
                 'training for players of all skill levels, from beginners to competitive athletes.',
                 style: TextStyle(
                   fontSize: 12,
-                  color: _C.textMuted,
+                  color: AppTheme.textSecondaryColor,
                   height: 1.65,
                 ),
               ),
@@ -340,23 +332,30 @@ Widget _QuickLinksSection(BuildContext context) {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: _C.textDark,
+            color: Colors.black,
           ),
         ),
         const SizedBox(height: 12),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 9,
-            crossAxisSpacing: 9,
-            childAspectRatio: 1,
-          ),
-          itemCount: links.length,
-          itemBuilder: (context, index) {
-            final link = links[index];
-            return _QuickLinkCard(data: link);
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = ResponsiveHelper.getQuickLinkColumns(
+              context,
+            );
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 9,
+                crossAxisSpacing: 9,
+                childAspectRatio: 1,
+              ),
+              itemCount: links.length,
+              itemBuilder: (context, index) {
+                final link = links[index];
+                return _QuickLinkCard(data: link);
+              },
+            );
           },
         ),
       ],
@@ -384,7 +383,7 @@ class _QuickLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: _C.surface,
+      color: Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: data.onTap,
@@ -392,7 +391,7 @@ class _QuickLinkCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _C.border, width: 0.5),
+            border: Border.all(color: Colors.grey.shade200, width: 0.5),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -401,10 +400,10 @@ class _QuickLinkCard extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: _C.primaryLight,
+                  color: AppTheme.primaryColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(data.icon, color: _C.primary, size: 18),
+                child: Icon(data.icon, color: AppTheme.primaryColor, size: 18),
               ),
               const SizedBox(height: 8),
               Text(
@@ -412,7 +411,7 @@ class _QuickLinkCard extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: _C.textMid,
+                  color: AppTheme.textSecondaryColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -425,102 +424,107 @@ class _QuickLinkCard extends StatelessWidget {
 }
 
 Widget _ContactCard(BuildContext context) {
+  final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+  final maxWidth = ResponsiveHelper.getContentMaxWidth(context);
   return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Container(
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.black.withValues(alpha: 0.06),
-          width: 0.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-          BoxShadow(
+    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+    child: Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
             color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 32,
-            offset: const Offset(0, 12),
+            width: 0.5,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.black.withValues(alpha: 0.06),
-                width: 0.5,
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: const Icon(
-              Icons.chat_bubble_outline,
-              size: 22,
-              color: _C.neutral400,
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 32,
+              offset: const Offset(0, 12),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Get in touch',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: _C.textDark,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Have questions about programs, schedules, or enrolment? Our team is ready to help.',
-            style: TextStyle(fontSize: 13, color: _C.neutral400, height: 1.6),
-          ),
-          const SizedBox(height: 24),
-          const Divider(height: 0.5, thickness: 0.5, color: _C.neutral200),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _launchWhatsApp(),
-              icon: const Icon(
-                Icons.chat_bubble,
-                size: 18,
-                color: Colors.white,
-              ),
-              label: const Text('Contact us on WhatsApp'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _C.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.1,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  width: 0.5,
                 ),
               ),
+              child: const Icon(
+                Icons.chat_bubble_outline,
+                size: 22,
+                color: Colors.grey,
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          const Center(
-            child: Text(
-              'Typically replies within a few hours',
-              style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+            const SizedBox(height: 16),
+            const Text(
+              'Get in touch',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+                letterSpacing: -0.3,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            const Text(
+              'Have questions about programs, schedules, or enrolment? Our team is ready to help.',
+              style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.6),
+            ),
+            const SizedBox(height: 24),
+            Divider(height: 0.5, thickness: 0.5, color: Colors.grey.shade200),
+            SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _launchWhatsApp(),
+                icon: const Icon(
+                  Icons.chat_bubble,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                label: const Text('Contact us on WhatsApp'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Center(
+              child: Text(
+                'Typically replies within a few hours',
+                style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -533,16 +537,19 @@ void _showInfoDialog(BuildContext context, String title, String content) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w700, color: _C.textDark),
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Colors.black,
+        ),
       ),
       content: Text(
         content,
-        style: const TextStyle(color: _C.textMuted, height: 1.6),
+        style: const TextStyle(color: AppTheme.textSecondaryColor, height: 1.6),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: _C.primary),
+          style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
           child: const Text('Close'),
         ),
       ],
@@ -557,7 +564,7 @@ void _showContactDialog(BuildContext context) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text(
         'Contact Us',
-        style: TextStyle(fontWeight: FontWeight.w700, color: _C.textDark),
+        style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),
       ),
       content: const Column(
         mainAxisSize: MainAxisSize.min,
@@ -573,7 +580,7 @@ void _showContactDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: _C.primary),
+          style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
           child: const Text('Close'),
         ),
       ],

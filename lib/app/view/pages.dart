@@ -4,6 +4,7 @@ export 'package:jsba_app/app/view/auth/login_landing_page.dart';
 export 'package:jsba_app/app/view/auth/first_time_login_page.dart';
 export 'package:jsba_app/app/view/auth/verification_page.dart';
 export 'package:jsba_app/app/view/auth/otp_page.dart';
+export 'package:jsba_app/app/view/auth/phone_sign_in_page.dart';
 export 'package:jsba_app/app/view/auth/reset_password_page.dart';
 
 // Splash
@@ -11,6 +12,7 @@ export 'package:jsba_app/app/view/splash/splash_screen_page.dart';
 
 // Academy
 export 'package:jsba_app/app/view/academy/academy_dashboard_page.dart';
+export 'package:jsba_app/app/view/shared/academy_page.dart';
 
 // Dashboard
 export 'package:jsba_app/app/view/dashboard/root_navigator_page.dart';

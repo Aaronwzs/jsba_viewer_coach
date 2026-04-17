@@ -37,6 +37,28 @@ android {
         }
     }
 
+    flavorDimensions += "default"
+    productFlavors {
+        create("production") {
+            dimension = "default"
+            manifestPlaceholders["appName"] = "JSBA"
+        }
+        create("staging") {
+            dimension = "default"
+            applicationIdSuffix = ".stag"
+            manifestPlaceholders["appName"] = "[S] JSBA"
+        }
+    }
+
+    sourceSets {
+        getByName("staging") {
+            java.srcDirs("src/staging")
+        }
+        getByName("production") {
+            java.srcDirs("src/production")
+        }
+    }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true

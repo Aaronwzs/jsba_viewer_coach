@@ -10,13 +10,25 @@ class AuthService {
   User? get currentUser => _auth.currentUser;
 
   // Sign in
-  Future<UserCredential> signInWithEmailAndPassword(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+  Future<UserCredential> signInWithEmailAndPassword(
+      String email,
+      String password,
+      ) async {
+    return await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
   }
 
   // Register (create new Auth user)
-  Future<UserCredential> createUserWithEmailAndPassword(String email, String password) async {
-    return await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<UserCredential> createUserWithEmailAndPassword(
+      String email,
+      String password,
+      ) async {
+    return await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
   }
 
   // Sign out
@@ -30,8 +42,14 @@ class AuthService {
   }
 
   // Reauthenticate (required before sensitive operations)
-  Future<UserCredential> reauthenticateWithPassword(String email, String password) async {
-    final credential = EmailAuthProvider.credential(email: email, password: password);
+  Future<UserCredential> reauthenticateWithPassword(
+      String email,
+      String password,
+      ) async {
+    final credential = EmailAuthProvider.credential(
+      email: email,
+      password: password,
+    );
     return await _auth.currentUser!.reauthenticateWithCredential(credential);
   }
 
@@ -46,8 +64,14 @@ class AuthService {
   }
 
   /// Link email + password to current user (e.g. phone-only user adding email/password).
-  Future<UserCredential> linkWithEmailAndPassword(String email, String password) async {
-    final credential = EmailAuthProvider.credential(email: email.trim(), password: password);
+  Future<UserCredential> linkWithEmailAndPassword(
+      String email,
+      String password,
+      ) async {
+    final credential = EmailAuthProvider.credential(
+      email: email.trim(),
+      password: password,
+    );
     return await _auth.currentUser!.linkWithCredential(credential);
   }
 
@@ -98,7 +122,40 @@ class AuthService {
     );
     return await _auth.signInWithCredential(credential);
   }
+
   Future<void> sendEmailVerification() async {
     await _auth.currentUser?.sendEmailVerification();
+  }
+
+  bool get isEmailVerified {
+    _auth.currentUser?.reload();
+    return _auth.currentUser?.emailVerified ?? false;
+  }
+
+  String? get currentEmail => _auth.currentUser?.email;
+
+  Future<void> updateEmail(String newEmail) async {
+    await _auth.currentUser?.verifyBeforeUpdateEmail(newEmail.trim());
+  }
+
+  Future<void> unlinkEmail() async {
+    await _auth.currentUser?.unlink('password');
+  }
+
+  Future<String> getIdToken() async {
+    return await _auth.currentUser?.getIdToken() ?? '';
+  }
+
+  Future<bool> isEmailLinked() async {
+    final providers = _auth.currentUser?.providerData ?? [];
+    return providers.any((p) => p.providerId == 'password');
+  }
+
+  Future<void> linkPhoneNumber(PhoneAuthCredential credential) async {
+    await _auth.currentUser?.linkWithCredential(credential);
+  }
+
+  Future<void> unlinkPhone() async {
+    await _auth.currentUser?.unlink('phone');
   }
 }

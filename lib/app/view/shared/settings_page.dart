@@ -74,6 +74,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final user = authVM.currentUser;
     final displayName = user?.name ?? 'User';
     final displayEmail = user?.email ?? '';
+    final isEmailVerified = authVM.isEmailVerified;
+    final phone = user?.phone;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +92,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-        // Top profile card
+        // Main profile card - Name and Email
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -117,7 +119,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       displayEmail,
                       style: TextStyle(color: Colors.grey[500], fontSize: 13),
@@ -132,7 +134,104 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        // Email verification status card
+        _buildVerificationCard(
+          icon: isEmailVerified ? Icons.verified : Icons.error_outline,
+          title: isEmailVerified ? 'Email Verified' : 'Email Not Verified',
+          subtitle: isEmailVerified
+              ? 'Your email is verified'
+              : 'Tap to send verification email',
+          isVerified: isEmailVerified,
+          onTap: isEmailVerified
+              ? null
+              : () async {
+                  final sent = await authVM.sendEmailVerification();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          sent
+                              ? 'Verification email sent'
+                              : (authVM.error ?? 'Failed to send'),
+                        ),
+                        backgroundColor: sent ? Colors.green : Colors.red,
+                      ),
+                    );
+                  }
+                },
+        ),
+        // Phone verification status card (if phone exists)
+        if (phone != null && phone.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _buildVerificationCard(
+            icon: Icons.phone,
+            title: 'Phone Verified',
+            subtitle: phone,
+            isVerified: true,
+            onTap: null,
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildVerificationCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isVerified,
+    VoidCallback? onTap,
+  }) {
+    final bgColor = isVerified
+        ? Colors.green.withValues(alpha: 0.08)
+        : Colors.orange.withValues(alpha: 0.08);
+    final borderColor = isVerified
+        ? Colors.green.withValues(alpha: 0.3)
+        : Colors.orange.withValues(alpha: 0.3);
+    final textColor = isVerified ? Colors.green[700] : Colors.orange[700];
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: textColor),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: textColor?.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              Icon(Icons.chevron_right, size: 20, color: textColor),
+          ],
+        ),
+      ),
     );
   }
 
@@ -171,12 +270,24 @@ class _SettingsPageState extends State<SettingsPage> {
             _profileOptionTile(
               icon: Icons.email_outlined,
               title: 'Change Email',
-              subtitle: 'Coming soon',
+              subtitle: 'Update your email',
               onTap: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Coming Soon')));
+                _showVerifyPasswordForEmailSheet(context, authVM);
+              },
+            ),
+            const Divider(height: 1),
+            _profileOptionTile(
+              icon: Icons.phone_outlined,
+              title: authVM.currentUser?.phone?.isNotEmpty == true
+                  ? 'Change Phone'
+                  : 'Add Phone',
+              subtitle: authVM.currentUser?.phone?.isNotEmpty == true
+                  ? 'Update your phone number'
+                  : 'Link phone number',
+              onTap: () {
+                Navigator.pop(ctx);
+                _showVerifyPasswordForPhoneSheet(context, authVM);
               },
             ),
             const Divider(height: 1),
@@ -222,6 +333,528 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       trailing: const Icon(Icons.chevron_right, size: 20),
       onTap: onTap,
+    );
+  }
+
+  void _showVerifyPasswordForEmailSheet(
+    BuildContext context,
+    AuthViewModel authVM,
+  ) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Verify Password',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter your password to change email',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controller,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (_) =>
+                    _verifyPasswordForEmail(ctx, authVM, controller),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () =>
+                      _verifyPasswordForEmail(ctx, authVM, controller),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _verifyPasswordForEmail(
+    BuildContext sheetCtx,
+    AuthViewModel authVM,
+    TextEditingController controller,
+  ) async {
+    final password = controller.text.trim();
+    if (password.isEmpty) return;
+
+    EasyLoading.show(status: 'Verifying...');
+    final verified = await authVM.verifyCurrentPassword(password);
+    EasyLoading.dismiss();
+
+    if (!sheetCtx.mounted) return;
+    Navigator.pop(sheetCtx);
+
+    if (verified && mounted) {
+      _showChangeEmailSheet(context, authVM, password);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authVM.error ?? 'Incorrect password'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showChangeEmailSheet(
+    BuildContext context,
+    AuthViewModel authVM,
+    String password,
+  ) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'New Email',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter your new email address',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'New Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () async {
+                    final newEmail = controller.text.trim();
+                    if (newEmail.isEmpty) return;
+                    if (!newEmail.contains('@')) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Enter a valid email'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.pop(ctx);
+                    final success = await authVM.changeEmail(
+                      password: password,
+                      newEmail: newEmail,
+                    );
+                    if (success && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Verification email sent to your new email address. Please check your inbox and click the link to complete the change.',
+                          ),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            authVM.error ?? 'Failed to send verification',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Send Verification'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showVerifyPasswordForPhoneSheet(
+    BuildContext context,
+    AuthViewModel authVM,
+  ) {
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Verify Password',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter your password to change phone',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controller,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (_) =>
+                    _verifyPasswordForPhone(ctx, authVM, controller),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () =>
+                      _verifyPasswordForPhone(ctx, authVM, controller),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Continue'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _verifyPasswordForPhone(
+    BuildContext sheetCtx,
+    AuthViewModel authVM,
+    TextEditingController controller,
+  ) async {
+    final password = controller.text.trim();
+    if (password.isEmpty) return;
+
+    EasyLoading.show(status: 'Verifying...');
+    final verified = await authVM.verifyCurrentPassword(password);
+    EasyLoading.dismiss();
+
+    if (!sheetCtx.mounted) return;
+    Navigator.pop(sheetCtx);
+
+    if (verified && mounted) {
+      _showAddPhoneSheet(context, authVM, password);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authVM.error ?? 'Incorrect password'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showAddPhoneSheet(
+    BuildContext context,
+    AuthViewModel authVM,
+    String password,
+  ) {
+    final phoneController = TextEditingController();
+    final otpControllers = List.generate(6, (_) => TextEditingController());
+    String _selectedCountryCode = '+60';
+    bool _showOtpInput = false;
+    final countryCodes = ['+60', '+65', '+62', '+66', '+91', '+1'];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            20,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                _showOtpInput ? 'Verify Phone' : 'Add Phone',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _showOtpInput
+                    ? 'Enter the OTP sent to your phone'
+                    : 'Enter your phone number',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              if (!_showOtpInput) ...[
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedCountryCode,
+                          items: countryCodes.map((code) {
+                            return DropdownMenuItem(
+                              value: code,
+                              child: Text(code),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => _selectedCountryCode = value);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: Colors.black),
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () async {
+                      final phone =
+                          '$_selectedCountryCode${phoneController.text.trim()}';
+                      if (phone.length < 10) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Enter a valid phone number'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                      EasyLoading.show(status: 'Sending OTP...');
+                      final sent = await authVM.requestPhoneOtp(phone);
+                      EasyLoading.dismiss();
+                      if (sent) {
+                        setState(() => _showOtpInput = true);
+                      } else if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(authVM.error ?? 'Failed to send OTP'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Send OTP'),
+                  ),
+                ),
+              ] else ...[
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    textTheme: Theme.of(context).textTheme.copyWith(
+                      bodyLarge: const TextStyle(color: Colors.black),
+                      bodyMedium: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (index) {
+                      return Container(
+                        width: 40,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        child: TextField(
+                          controller: otpControllers[index],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          maxLength: 1,
+                          style: const TextStyle(color: Colors.black),
+                          decoration: InputDecoration(
+                            counterText: '',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            hintStyle: const TextStyle(color: Colors.grey),
+                          ),
+                          onChanged: (value) {
+                            if (value.length == 1 && index < 5) {
+                              FocusScope.of(context).nextFocus();
+                            }
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () async {
+                      final otp = otpControllers.map((c) => c.text).join();
+                      if (otp.length != 6) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Enter full 6-digit OTP'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                      final phone =
+                          '$_selectedCountryCode${phoneController.text.trim()}';
+                      final success = await authVM.verifyAndAddPhone(
+                        phoneNumber: phone,
+                        smsCode: otp,
+                      );
+                      if (success && context.mounted) {
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Phone added successfully'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } else if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(authVM.error ?? 'Failed to verify'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Verify & Add Phone'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () async {
+                    final resent = await authVM.resendPhoneOtp();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            resent
+                                ? 'OTP resent'
+                                : (authVM.error ?? 'Failed to resend'),
+                          ),
+                          backgroundColor: resent ? Colors.green : Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Resend OTP'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -953,7 +1586,7 @@ class _SettingsPageState extends State<SettingsPage> {
         final authVM = context.read<AuthViewModel>();
         await authVM.signOut();
         if (context.mounted) {
-          context.router.replaceNamed('/academy-dashboard');
+          context.router.replacePath('/academy-dashboard');
         }
       },
       icon: const Icon(Icons.logout, color: Colors.red),
@@ -1046,6 +1679,53 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     super.dispose();
   }
 
+  Widget _buildSection(String title, List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+          ),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFieldWithTitle(String title, Widget field) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final age = int.tryParse(ageController.text) ?? widget.player.age;
@@ -1128,117 +1808,130 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                 ),
               ),
               const SizedBox(height: 20),
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+              _buildSection('Basic Information', [
+                _buildFieldWithTitle(
+                  'Player Name',
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter name',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Required' : null,
+                  ),
                 ),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: ageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Age',
-                  border: OutlineInputBorder(),
+                _buildFieldWithTitle(
+                  'Age',
+                  TextFormField(
+                    controller: ageController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter age',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Required';
+                      final a = int.tryParse(v);
+                      if (a == null || a < 1 || a > 100) return 'Invalid age';
+                      return null;
+                    },
+                  ),
                 ),
-                onChanged: (_) => setState(() {}),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  final a = int.tryParse(v);
-                  if (a == null || a < 1 || a > 100) return 'Invalid age';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: selectedLevel,
-                decoration: const InputDecoration(
-                  labelText: 'Level',
-                  border: OutlineInputBorder(),
-                ),
-                items: ['Beginner', 'Intermediate', 'Advanced']
-                    .map((l) => DropdownMenuItem(value: l, child: Text(l)))
-                    .toList(),
-                onChanged: (v) =>
-                    setState(() => selectedLevel = v ?? widget.player.level),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              if (needsParentInfo) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.2),
+                _buildFieldWithTitle(
+                  'Skill Level',
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedLevel,
+                    decoration: const InputDecoration(
+                      hintText: 'Select level',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    items: ['Beginner', 'Intermediate', 'Advanced']
+                        .map((l) => DropdownMenuItem(value: l, child: Text(l)))
+                        .toList(),
+                    onChanged: (v) => setState(
+                      () => selectedLevel = v ?? widget.player.level,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.supervisor_account_outlined,
-                            color: Colors.blue[700],
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Parent/Guardian Info',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue[700],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
+                ),
+              ]),
+              _buildSection('Contact Information', [
+                _buildFieldWithTitle(
+                  'Phone Number',
+                  TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter phone number',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
                       ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: parentNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Name',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: parentPhoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Phone',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: parentEmailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Parent Email',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ],
+              ]),
+              if (needsParentInfo)
+                _buildSection('Parent/Guardian Information', [
+                  _buildFieldWithTitle(
+                    'Parent Name',
+                    TextFormField(
+                      controller: parentNameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent name',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _buildFieldWithTitle(
+                    'Parent Phone',
+                    TextFormField(
+                      controller: parentPhoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent phone',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _buildFieldWithTitle(
+                    'Parent Email',
+                    TextFormField(
+                      controller: parentEmailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter parent email',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ]),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -1294,7 +1987,6 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
               title: const Text('Take a Photo'),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
-            const SizedBox(height: 12),
           ],
         ),
       ),

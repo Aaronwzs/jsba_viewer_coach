@@ -11,6 +11,7 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(page: SplashScreenRoute.page, initial: true, path: '/'),
     AutoRoute(page: AcademyDashboardRoute.page, path: '/academy-dashboard'),
+    AutoRoute(page: AcademyRoute.page, path: '/about-academy'),
     AutoRoute(page: LoginLandingRoute.page, path: '/login-landing'),
     AutoRoute(page: LoginRoute.page, path: '/login'),
     AutoRoute(page: FirstTimeLoginRoute.page, path: '/first-time-login'),
@@ -47,6 +48,7 @@ class AppRouter extends RootStackRouter {
     ),
     AutoRoute(page: VerificationRoute.page, path: '/verification'),
     AutoRoute(page: OtpRoute.page, path: '/otp'),
+    AutoRoute(page: PhoneSignInRoute.page, path: '/phone-sign-in'),
     AutoRoute(page: SessionDetailsRoute.page, path: '/session-details/:id'),
     AutoRoute(page: CreateSessionRoute.page, path: '/create-session'),
     AutoRoute(page: AttendanceRoute.page, path: '/attendance/:id'),
