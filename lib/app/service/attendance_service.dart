@@ -7,8 +7,9 @@ class AttendanceService {
   Future<void> createAttendanceBatch(
     String trainingId,
     List<String> playerIds,
-    double price,
-  ) async {
+    double price, {
+    String? coachId,
+  }) async {
     final batch = _db.batch();
     final now = DateTime.now();
 
@@ -18,6 +19,7 @@ class AttendanceService {
       batch.set(docRef, {
         'trainingId': trainingId,
         'playerId': playerId,
+        'coachId': coachId,
         'attendanceStatus': 'pending',
         'amountCharge': price,
         'reasonCharge': '',
@@ -56,6 +58,10 @@ class AttendanceService {
     }
 
     await batch.commit();
+  }
+
+  Future<void> updateAttendance(AttendanceModel attendance) async {
+    await _db.collection('attendances').doc(attendance.id).update(attendance.toJson());
   }
 
   Future<List<AttendanceModel>> getAttendanceForMonth(

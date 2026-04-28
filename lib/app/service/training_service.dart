@@ -147,4 +147,45 @@ class TrainingService {
     trainings.sort((a, b) => a.date.compareTo(b.date));
     return trainings;
   }
+
+Future<List<TrainingModel>> getTrainingsForCoachInMonth(
+    String coachId,
+    int year,
+    int month,
+  ) async {
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
+
+    final snapshot = await _db
+        .collection('trainings')
+        .where('coachId', isEqualTo: coachId)
+        .get();
+
+    final allTrainings = snapshot.docs
+        .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
+        .toList();
+
+    final filtered = allTrainings.where((t) => 
+      t.date.isAfter(startDate.subtract(const Duration(days: 1))) && 
+      t.date.isBefore(endDate.add(const Duration(days: 1))))
+    .toList();
+
+    filtered.sort((a, b) => a.date.compareTo(b.date));
+    return filtered;
+  }
+
+  Future<List<TrainingModel>> getTrainingsForCoach(String coachId) async {
+    final snapshot = await _db
+        .collection('trainings')
+        .where('coachId', isEqualTo: coachId)
+        .get();
+
+    final results = snapshot.docs
+        .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
+        .toList();
+
+    // Sort in memory — avoids needing a composite Firestore index
+    results.sort((a, b) => b.date.compareTo(a.date));
+    return results;
+  }
 }

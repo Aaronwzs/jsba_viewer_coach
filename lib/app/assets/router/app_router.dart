@@ -49,9 +49,9 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: VerificationRoute.page, path: '/verification'),
     AutoRoute(page: OtpRoute.page, path: '/otp'),
     AutoRoute(page: PhoneSignInRoute.page, path: '/phone-sign-in'),
-    AutoRoute(page: SessionDetailsRoute.page, path: '/session-details/:id'),
+    AutoRoute(page: SessionDetailsRoute.page, path: '/session-details/:sessionId'),
     AutoRoute(page: CreateSessionRoute.page, path: '/create-session'),
-    AutoRoute(page: AttendanceRoute.page, path: '/attendance/:id'),
+    AutoRoute(page: AttendanceRoute.page, path: '/attendance/:trainingId'),
     AutoRoute(page: PlayerDetailsRoute.page, path: '/player-details/:id'),
     AutoRoute(page: CoachingProgramRoute.page, path: '/coaching-program'),
     AutoRoute(

@@ -7,11 +7,13 @@ class AppBarTitle extends StatelessWidget implements PreferredSizeWidget {
     this.title = 'JuniorShuttlers',
     this.icon = Icons.sports_tennis,
     this.blackBackButton = false,
+    this.actions,
   });
 
   final String title;
   final IconData icon;
   final bool blackBackButton;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +21,10 @@ class AppBarTitle extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
-      leading: blackBackButton
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => Navigator.of(context).pop(),
-            )
-          : null,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -39,6 +39,7 @@ class AppBarTitle extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
+      actions: actions,
     );
   }
 

@@ -9,17 +9,19 @@ class CoachViewModel extends ChangeNotifier {
   final PlayerService _playerService = PlayerService();
 
   List<TrainingModel> _todaySessions = [];
+  List<TrainingModel> _monthSessions = [];
   List<PlayerModel> _players = [];
   bool _isLoading = false;
   String? _error;
 
   List<TrainingModel> get todaySessions => _todaySessions;
+  List<TrainingModel> get monthSessions => _monthSessions;
   List<PlayerModel> get players => _players;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
   int get totalSessionsThisMonth {
-    return _todaySessions.length;
+    return _monthSessions.length;
   }
 
   int get totalPlayers => _players.length;
@@ -32,6 +34,41 @@ class CoachViewModel extends ChangeNotifier {
     try {
       _todaySessions = await _trainingService.getTrainingsForToday();
       _players = await _playerService.getPlayers();
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadCoachSessionsForMonth(String coachId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final now = DateTime.now();
+      _monthSessions = await _trainingService.getTrainingsForCoachInMonth(
+        coachId,
+        now.year,
+        now.month,
+      );
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadAllCoachSessions(String coachId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _monthSessions = await _trainingService.getTrainingsForCoach(coachId);
     } catch (e) {
       _error = e.toString();
     }

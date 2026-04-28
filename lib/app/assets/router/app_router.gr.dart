@@ -92,18 +92,49 @@ class AnnouncementsRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [AttendancePage]
-class AttendanceRoute extends PageRouteInfo<void> {
-  const AttendanceRoute({List<PageRouteInfo>? children})
-    : super(AttendanceRoute.name, initialChildren: children);
+class AttendanceRoute extends PageRouteInfo<AttendanceRouteArgs> {
+  AttendanceRoute({
+    Key? key,
+    required String trainingId,
+    List<PageRouteInfo>? children,
+  }) : super(
+         AttendanceRoute.name,
+         args: AttendanceRouteArgs(key: key, trainingId: trainingId),
+         initialChildren: children,
+       );
 
   static const String name = 'AttendanceRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const AttendancePage();
+      final args = data.argsAs<AttendanceRouteArgs>();
+      return AttendancePage(key: args.key, trainingId: args.trainingId);
     },
   );
+}
+
+class AttendanceRouteArgs {
+  const AttendanceRouteArgs({this.key, required this.trainingId});
+
+  final Key? key;
+
+  final String trainingId;
+
+  @override
+  String toString() {
+    return 'AttendanceRouteArgs{key: $key, trainingId: $trainingId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! AttendanceRouteArgs) return false;
+    return key == other.key && trainingId == other.trainingId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ trainingId.hashCode;
 }
 
 /// generated route for
@@ -862,18 +893,55 @@ class RootNavigatorRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [SessionDetailsPage]
-class SessionDetailsRoute extends PageRouteInfo<void> {
-  const SessionDetailsRoute({List<PageRouteInfo>? children})
-    : super(SessionDetailsRoute.name, initialChildren: children);
+class SessionDetailsRoute extends PageRouteInfo<SessionDetailsRouteArgs> {
+  SessionDetailsRoute({
+    Key? key,
+    String? sessionId,
+    List<PageRouteInfo>? children,
+  }) : super(
+         SessionDetailsRoute.name,
+         args: SessionDetailsRouteArgs(key: key, sessionId: sessionId),
+         rawPathParams: {'sessionId': sessionId},
+         initialChildren: children,
+       );
 
   static const String name = 'SessionDetailsRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const SessionDetailsPage();
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<SessionDetailsRouteArgs>(
+        orElse: () => SessionDetailsRouteArgs(
+          sessionId: pathParams.optString('sessionId'),
+        ),
+      );
+      return SessionDetailsPage(key: args.key, sessionId: args.sessionId);
     },
   );
+}
+
+class SessionDetailsRouteArgs {
+  const SessionDetailsRouteArgs({this.key, this.sessionId});
+
+  final Key? key;
+
+  final String? sessionId;
+
+  @override
+  String toString() {
+    return 'SessionDetailsRouteArgs{key: $key, sessionId: $sessionId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! SessionDetailsRouteArgs) return false;
+    return key == other.key && sessionId == other.sessionId;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ sessionId.hashCode;
 }
 
 /// generated route for
