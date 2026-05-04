@@ -72,7 +72,7 @@ class _SessionsPageState extends State<SessionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarTitle(title: 'My Sessions'),
+      appBar: const AppBarTitle(title: 'My Sessions', showBackButton: false),
       body: Consumer<CoachViewModel>(
         builder: (context, coachVM, child) {
           if (coachVM.isLoading) {

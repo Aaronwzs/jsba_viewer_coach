@@ -35,7 +35,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
     final parentVM = context.watch<ParentViewModel>();
 
     return Scaffold(
-      appBar: const AppBarTitle(title: 'My Reports'),
+      appBar: const AppBarTitle(title: 'My Reports', showBackButton: false),
       body: parentVM.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

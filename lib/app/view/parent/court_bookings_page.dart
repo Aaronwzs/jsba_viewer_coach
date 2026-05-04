@@ -117,6 +117,7 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Court Bookings',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),

@@ -65,11 +65,19 @@ class _AttendancePageState extends State<AttendancePage> {
     _training = await _trainingService.getTrainingById(widget.effectiveTrainingId);
 
     if (_training != null) {
-      // Fetch existing attendance records from the attendances collection
-      _attendances = await _attendanceService
+      // Fetch attendance records for this training, players only
+      // (filter out any coach record where playerId matches coachId)
+      final allAttendances = await _attendanceService
           .getAttendanceForTraining(widget.effectiveTrainingId);
 
-      // If no records exist yet, auto-create them from the training's playerIds
+      final enrolledPlayerIds = _training!.playerIds.toSet();
+
+      // Keep only records whose playerId is in the training's playerIds list
+      _attendances = allAttendances
+          .where((a) => enrolledPlayerIds.contains(a.playerId))
+          .toList();
+
+      // If no player records exist yet, auto-create them from the training's playerIds
       if (_attendances.isEmpty && _training!.playerIds.isNotEmpty) {
         await _attendanceService.createAttendanceBatch(
           _training!.id,
@@ -77,8 +85,11 @@ class _AttendancePageState extends State<AttendancePage> {
           _training!.price,
           coachId: _coachId,
         );
-        _attendances = await _attendanceService
+        final refetched = await _attendanceService
             .getAttendanceForTraining(widget.effectiveTrainingId);
+        _attendances = refetched
+            .where((a) => enrolledPlayerIds.contains(a.playerId))
+            .toList();
       }
 
       // Fetch only the players enrolled in this training

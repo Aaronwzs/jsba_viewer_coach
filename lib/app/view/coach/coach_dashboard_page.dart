@@ -34,7 +34,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
     final coachVM = context.watch<CoachViewModel>();
 
     return Scaffold(
-      appBar: const AppBarTitle(),
+      appBar: const AppBarTitle(showBackButton: false),
       body: coachVM.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

@@ -38,7 +38,7 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
     final parentVM = context.watch<ParentViewModel>();
 
     return Scaffold(
-      appBar: const AppBarTitle(),
+      appBar: const AppBarTitle(showBackButton: false),
       body: parentVM.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

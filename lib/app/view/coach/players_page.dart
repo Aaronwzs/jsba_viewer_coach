@@ -9,7 +9,7 @@ class PlayersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarTitle(),
+      appBar: const AppBarTitle(showBackButton: false),
       body: const Center(child: Text('Players')),
     );
   }

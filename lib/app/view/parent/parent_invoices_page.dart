@@ -54,7 +54,7 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
     final billingVM = context.watch<BillingViewModel>();
 
     return Scaffold(
-      appBar: const AppBarTitle(),
+      appBar: const AppBarTitle(showBackButton: false),
       body: billingVM.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

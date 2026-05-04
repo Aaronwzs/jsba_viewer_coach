@@ -68,17 +68,6 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
       appBar: AppBarTitle(
         title: _training?.className ?? 'Session Details',
         icon: Icons.sports_tennis,
-        actions: [
-          if (_training != null)
-            TextButton.icon(
-              onPressed: _goToAttendance,
-              icon: const Icon(Icons.how_to_reg, color: AppTheme.primaryColor),
-              label: const Text(
-                'Attendance',
-                style: TextStyle(color: AppTheme.primaryColor),
-              ),
-            ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
