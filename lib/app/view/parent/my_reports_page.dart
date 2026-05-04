@@ -47,7 +47,9 @@ class _MyReportsPageState extends State<MyReportsPage> {
               child: _buildContent(context, authVM, parentVM),
             ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30),
+        padding: EdgeInsets.only(
+          bottom: 75 + MediaQuery.paddingOf(context).bottom,
+        ),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddPlayerDialog(context, authVM, parentVM),
           backgroundColor: AppTheme.primaryColor,
