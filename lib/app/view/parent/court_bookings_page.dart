@@ -5,9 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/availability_model.dart';
-import 'package:jsba_app/app/model/user_model.dart';
 import 'package:jsba_app/app/model/player_model.dart';
-import 'package:jsba_app/app/service/database_service.dart';
 import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
@@ -90,6 +88,8 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
         allPlayerIds.add(kid.id);
       }
     }
+
+    debugPrint('DEBUG _loadMyClassesData: playerIds=$allPlayerIds, selectedMonth=${openCourtVM.selectedMonth}');
 
     if (allPlayerIds.isNotEmpty) {
       openCourtVM.loadMyClasses(allPlayerIds);
@@ -264,9 +264,10 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () {
-              openCourtVM.setSelectedMonth(
-                DateTime(month.year, month.month - 1),
-              );
+              final newMonth = month.month == 1 
+                  ? DateTime(month.year - 1, 12)
+                  : DateTime(month.year, month.month - 1);
+              openCourtVM.setSelectedMonth(newMonth);
             },
           ),
           Text(
@@ -276,9 +277,10 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () {
-              openCourtVM.setSelectedMonth(
-                DateTime(month.year, month.month + 1),
-              );
+              final newMonth = month.month == 12 
+                  ? DateTime(month.year + 1, 1)
+                  : DateTime(month.year, month.month + 1);
+              openCourtVM.setSelectedMonth(newMonth);
             },
           ),
         ],
@@ -338,9 +340,10 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () {
-              openCourtVM.setSelectedMonth(
-                DateTime(month.year, month.month - 1),
-              );
+              final newMonth = month.month == 1 
+                  ? DateTime(month.year - 1, 12)
+                  : DateTime(month.year, month.month - 1);
+              openCourtVM.setSelectedMonth(newMonth);
               openCourtVM.loadMyClasses(playerIds);
             },
           ),
@@ -351,9 +354,10 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () {
-              openCourtVM.setSelectedMonth(
-                DateTime(month.year, month.month + 1),
-              );
+              final newMonth = month.month == 12 
+                  ? DateTime(month.year + 1, 1)
+                  : DateTime(month.year, month.month + 1);
+              openCourtVM.setSelectedMonth(newMonth);
               openCourtVM.loadMyClasses(playerIds);
             },
           ),
@@ -407,76 +411,6 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
       itemBuilder: (context, index) {
         return _buildTrainingCard(trainings[index]);
       },
-    );
-  }
-
-  Widget _buildEnrolledSessionCard(OpenCourtModel session) {
-    Color statusColor;
-    switch (session.status) {
-      case 'booked':
-        statusColor = Colors.orange;
-      case 'reserved_for_booking':
-        statusColor = Colors.purple;
-      case 'closed':
-        statusColor = Colors.red;
-      default:
-        statusColor = Colors.green;
-    }
-
-    String statusText = session.statusDisplayName;
-    if (session.status == 'reserved_for_booking' &&
-        session.reservedByParentName != null) {
-      statusText = 'Reserved by ${session.reservedByParentName}';
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-          child: const Icon(Icons.sports_tennis, color: AppTheme.primaryColor),
-        ),
-        title: Text(
-          session.venue,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(DateFormat('EEE, MMM d, yyyy').format(session.date)),
-            Text('${session.startTime} - ${session.computedEndTime}'),
-          ],
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            statusText,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: statusColor,
-            ),
-          ),
-        ),
-        onTap: () =>
-            context.router.push(OpenCourtDetailRoute(sessionId: session.id)),
-      ),
     );
   }
 
@@ -1940,15 +1874,5 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
           ),
       ],
     );
-  }
-
-  Future<Map<String, UserModel>> _fetchUsers(List<String> userIds) async {
-    final db = DatabaseService();
-    final users = <String, UserModel>{};
-    for (final id in userIds) {
-      final user = await db.getUser(id);
-      if (user != null) users[id] = user;
-    }
-    return users;
   }
 }

@@ -140,12 +140,7 @@ class _SessionDetailsPageState extends State<SessionDetailsPage> {
                 _buildDivider(),
                 _buildRow(Icons.speed_outlined, 'Level', t.level),
                 _buildDivider(),
-                _buildRow(
-                  Icons.attach_money,
-                  'Price per Session',
-                  'RM ${t.price.toStringAsFixed(2)}',
-                  valueColor: AppTheme.primaryColor,
-                ),
+                // Price per session hidden in Class Info per request
                 _buildDivider(),
                 _buildRow(
                   Icons.group_outlined,

@@ -31,6 +31,7 @@ export 'package:jsba_app/app/view/coach/create_coaching_program_page.dart';
 export 'package:jsba_app/app/view/coach/match_results_page.dart';
 export 'package:jsba_app/app/view/coach/record_match_page.dart';
 export 'package:jsba_app/app/view/coach/coach_billing_page.dart';
+export 'package:jsba_app/app/view/coach/payout_details_page.dart';
 
 // Parent pages
 export 'package:jsba_app/app/view/parent/parent_dashboard_page.dart';

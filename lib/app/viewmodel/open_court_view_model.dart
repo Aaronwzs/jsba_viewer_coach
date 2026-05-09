@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 import 'package:jsba_app/app/model/training_model.dart';
@@ -88,13 +89,17 @@ class OpenCourtViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    debugPrint('DEBUG loadMyClasses: playerIds=$playerIds, year=${_selectedMonth.year}, month=${_selectedMonth.month}');
+
     try {
       _myTrainings = await _trainingService.getTrainingsForPlayersInMonth(
         playerIds,
         _selectedMonth.year,
         _selectedMonth.month,
       );
+      debugPrint('DEBUG loadMyClasses: loaded ${_myTrainings.length} trainings');
     } catch (e) {
+      debugPrint('DEBUG loadMyClasses error: $e');
       _errorMessage = e.toString();
     }
 
