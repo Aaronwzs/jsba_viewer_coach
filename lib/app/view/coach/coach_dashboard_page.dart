@@ -8,7 +8,6 @@ import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
 import 'package:jsba_app/app/models/announcement_model.dart';
-import 'package:intl/intl.dart';
 
 @RoutePage()
 class CoachDashboardPage extends StatefulWidget {
@@ -91,245 +90,10 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
                 color: Colors.black,
               ),
               onPressed: () {
-                context.router.pushNamed('/notifications');
+                context.router.pushPath('/notifications');
               },
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsRow(BuildContext context, CoachViewModel coachVM) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
-            context,
-            icon: Icons.calendar_today,
-            label: 'Today\'s Sessions',
-            value: coachVM.todaySessions.length.toString(),
-            color: AppTheme.primaryColor,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
-            context,
-            icon: Icons.people,
-            label: 'Total Players',
-            value: coachVM.players.length.toString(),
-            color: AppTheme.secondaryColor,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTodaySessionsSection(
-    BuildContext context,
-    CoachViewModel coachVM,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Today\'s Sessions',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              DateFormat('EEEE, d MMMM').format(DateTime.now()),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (coachVM.todaySessions.isEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.event_available,
-                      size: 48,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No sessions today',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        else
-          ...coachVM.todaySessions.map(
-            (session) => _buildSessionCard(context, session),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSessionCard(BuildContext context, dynamic session) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-          child: Icon(Icons.sports_tennis, color: AppTheme.primaryColor),
-        ),
-        title: Text(
-          session.title ?? 'Training Session',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          '${session.startTime ?? ""} - ${session.endTime ?? ""} | Court: ${session.court ?? ""}',
-        ),
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'attendance',
-              child: Text('Take Attendance'),
-            ),
-            const PopupMenuItem(value: 'details', child: Text('View Details')),
-          ],
-          onSelected: (value) {
-            if (value == 'attendance') {
-              context.router.pushNamed('/attendance/${session.id}');
-            } else if (value == 'details') {
-              context.router.pushNamed('/session-details/${session.id}');
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.add_circle,
-                label: 'New Session',
-                onTap: () => context.router.pushNamed('/create-session'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.people,
-                label: 'View Players',
-                onTap: () => context.router.pushNamed('/players'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.rate_review,
-                label: 'Match Results',
-                onTap: () => context.router.pushNamed('/match-results'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                context,
-                icon: Icons.announcement,
-                label: 'Announcements',
-                onTap: () => context.router.pushNamed('/announcements'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          child: Column(
-            children: [
-              Icon(icon, color: AppTheme.primaryColor, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -349,7 +113,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton(
-              onPressed: () => context.router.pushNamed('/announcements'),
+              onPressed: () => context.router.pushPath('/announcements'),
               child: const Text('See All'),
             ),
           ],
@@ -422,8 +186,7 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
         typeIcon = Icons.update;
         break;
       case AnnouncementType.general:
-      default:
-        typeColor = AppTheme.primaryColor;
+      typeColor = AppTheme.primaryColor;
         typeIcon = Icons.info;
     }
 

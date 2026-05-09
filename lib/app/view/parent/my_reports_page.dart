@@ -465,7 +465,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: level,
+                    initialValue: level,
                     decoration: const InputDecoration(
                       labelText: 'Level',
                       border: OutlineInputBorder(),

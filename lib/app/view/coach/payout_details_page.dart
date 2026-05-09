@@ -23,7 +23,7 @@ class _PayoutDetailsPageState extends State<PayoutDetailsPage> {
 
   CoachPayoutModel? _payout;
   List<TrainingModel> _trainings = [];
-  Map<String, Map<String, dynamic>> _sessionRateCache = {};
+  final Map<String, Map<String, dynamic>> _sessionRateCache = {};
   Map<String, dynamic> _coachRates = {};
 
   bool _isLoading = true;
@@ -342,7 +342,7 @@ class _PayoutDetailsPageState extends State<PayoutDetailsPage> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                 ],
               ),
             ),

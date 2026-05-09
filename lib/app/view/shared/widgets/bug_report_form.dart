@@ -85,10 +85,8 @@ class _BugReportFormState extends State<BugReportForm> {
         );
         widget.onSuccess();
       }
-    } catch (e, stackTrace) {
+    } catch (e, _) {
       EasyLoading.dismiss();
-      print('Bug report submission error: $e');
-      print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

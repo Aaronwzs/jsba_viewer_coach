@@ -22,9 +22,9 @@ class AcademyDashboardPage extends StatelessWidget {
               const _HeroBanner(),
               const _OverlapAboutCard(),
               const SizedBox(height: 20),
-              _QuickLinksSection(context),
+              _quickLinksSection(context),
               const SizedBox(height: 20),
-              _ContactCard(context),
+              _contactCard(context),
               const SizedBox(height: 100),
             ],
           ),
@@ -36,7 +36,7 @@ class AcademyDashboardPage extends StatelessWidget {
         showLoginButton: true,
         showFaqButton: true,
         onLoginPressed: () {
-          context.router.pushNamed('/login-landing');
+          context.router.pushPath('/login-landing');
         },
         onFaqPressed: () {
           context.router.push(const FaqRoute());
@@ -263,7 +263,7 @@ class _OverlapAboutCard extends StatelessWidget {
   }
 }
 
-Widget _QuickLinksSection(BuildContext context) {
+Widget _quickLinksSection(BuildContext context) {
   final links = [
     _QuickLinkData(
       icon: Icons.person_outline,
@@ -423,7 +423,7 @@ class _QuickLinkCard extends StatelessWidget {
   }
 }
 
-Widget _ContactCard(BuildContext context) {
+Widget _contactCard(BuildContext context) {
   final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
   final maxWidth = ResponsiveHelper.getContentMaxWidth(context);
   return Padding(

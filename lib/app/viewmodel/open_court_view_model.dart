@@ -13,7 +13,7 @@ class OpenCourtViewModel extends ChangeNotifier {
 
   List<OpenCourtModel> _sessions = [];
   List<OpenCourtModel> _availableSessions = [];
-  List<OpenCourtModel> _myEnrolledSessions = [];
+  final List<OpenCourtModel> _myEnrolledSessions = [];
   List<TrainingModel> _myTrainings = [];
   DateTime _selectedMonth = DateTime.now();
   OpenCourtModel? _currentSession;

@@ -312,6 +312,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: authVM.isLoading ? null : _sendResetEmail,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
               child: authVM.isLoading
                   ? const SizedBox(
                       height: 20,
@@ -322,15 +331,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       ),
                     )
                   : const Text('Send Reset Link'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -390,7 +390,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         const SizedBox(height: 32),
         if (_resendCountdown > 0) ...[
           Text(
-            'Resend email in ${_resendCountdown} seconds',
+            'Resend email in $_resendCountdown seconds',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),

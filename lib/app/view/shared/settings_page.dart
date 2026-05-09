@@ -626,8 +626,8 @@ class _SettingsPageState extends State<SettingsPage> {
   ) {
     final phoneController = TextEditingController();
     final otpControllers = List.generate(6, (_) => TextEditingController());
-    String _selectedCountryCode = '+60';
-    bool _showOtpInput = false;
+    String selectedCountryCode = '+60';
+    bool showOtpInput = false;
     final countryCodes = ['+60', '+65', '+62', '+66', '+91', '+1'];
 
     showModalBottomSheet(
@@ -658,7 +658,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                _showOtpInput ? 'Verify Phone' : 'Add Phone',
+                showOtpInput ? 'Verify Phone' : 'Add Phone',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -666,13 +666,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                _showOtpInput
+                showOtpInput
                     ? 'Enter the OTP sent to your phone'
                     : 'Enter your phone number',
                 style: TextStyle(color: Colors.grey[500], fontSize: 14),
               ),
               const SizedBox(height: 20),
-              if (!_showOtpInput) ...[
+              if (!showOtpInput) ...[
                 Row(
                   children: [
                     Container(
@@ -683,7 +683,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
-                          value: _selectedCountryCode,
+                          value: selectedCountryCode,
                           items: countryCodes.map((code) {
                             return DropdownMenuItem(
                               value: code,
@@ -692,7 +692,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           }).toList(),
                           onChanged: (value) {
                             if (value != null) {
-                              setState(() => _selectedCountryCode = value);
+                              setState(() => selectedCountryCode = value);
                             }
                           },
                         ),
@@ -718,7 +718,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: FilledButton(
                     onPressed: () async {
                       final phone =
-                          '$_selectedCountryCode${phoneController.text.trim()}';
+                          '$selectedCountryCode${phoneController.text.trim()}';
                       if (phone.length < 10) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -732,7 +732,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       final sent = await authVM.requestPhoneOtp(phone);
                       EasyLoading.dismiss();
                       if (sent) {
-                        setState(() => _showOtpInput = true);
+                        setState(() => showOtpInput = true);
                       } else if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -802,7 +802,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         return;
                       }
                       final phone =
-                          '$_selectedCountryCode${phoneController.text.trim()}';
+                          '$selectedCountryCode${phoneController.text.trim()}';
                       final success = await authVM.verifyAndAddPhone(
                         phoneNumber: phone,
                         smsCode: otp,
@@ -1074,8 +1074,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Required';
-                    if (v != newPwController.text)
+                    if (v != newPwController.text) {
                       return 'Passwords do not match';
+                    }
                     return null;
                   },
                 ),

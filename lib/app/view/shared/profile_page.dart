@@ -46,7 +46,7 @@ class ProfilePage extends StatelessWidget {
                     final authVM = context.read<AuthViewModel>();
                     await authVM.signOut();
                     if (context.mounted) {
-                      context.router.replaceNamed('/academy-dashboard');
+                      context.router.replacePath('/academy-dashboard');
                     }
                   },
                   icon: const Icon(Icons.logout),

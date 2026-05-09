@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/service/player_service.dart';
-import 'package:jsba_app/app/service/training_service.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 
 class ParentViewModel extends ChangeNotifier {
   final PlayerService _playerService = PlayerService();
-  final TrainingService _trainingService = TrainingService();
 
   List<PlayerModel> _myKids = [];
   List<PlayerModel> _pendingKids = [];
   PlayerModel? _selfPlayer;
-  List<TrainingModel> _upcomingSessions = [];
+  final List<TrainingModel> _upcomingSessions = [];
   bool _isLoading = false;
   String? _error;
 

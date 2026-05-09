@@ -489,7 +489,7 @@ class _QuickLinksSection extends StatelessWidget {
                     color: const Color(0xFF25D366).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.chat, color: const Color(0xFF25D366)),
+                  child: const Icon(Icons.chat, color: Color(0xFF25D366)),
                 ),
                 const SizedBox(width: 12),
                 const Text('+60 12-345 6789'),

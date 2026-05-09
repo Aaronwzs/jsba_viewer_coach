@@ -209,7 +209,7 @@ class _InvoiceTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         onTap: () {
-          context.router.pushNamed('/invoice-details/${invoice.id}');
+          context.router.pushPath('/invoice-details/${invoice.id}');
         },
         leading: Container(
           width: 48,
@@ -282,7 +282,7 @@ class _ReceiptTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         onTap: () {
-          context.router.pushNamed('/receipt-details/${receipt.id}');
+          context.router.pushPath('/receipt-details/${receipt.id}');
         },
         leading: Container(
           width: 48,

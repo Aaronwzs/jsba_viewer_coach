@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 
-final _authLeftPanelKey = GlobalKey();
 
 class _LeftPanel extends StatelessWidget {
   const _LeftPanel({required this.routeName});
@@ -238,7 +237,6 @@ class AuthTemplate extends StatelessWidget {
     double horizontalPadding,
     double maxWidth,
   ) {
-    final routeName = title;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,

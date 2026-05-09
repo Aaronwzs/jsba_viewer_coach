@@ -65,10 +65,8 @@ class _FeedbackFormState extends State<FeedbackForm> {
         );
         widget.onSuccess();
       }
-    } catch (e, stackTrace) {
+    } catch (e, _) {
       EasyLoading.dismiss();
-      print('Feedback submission error: $e');
-      print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -29,16 +29,19 @@ class CoachPayoutModel {
     DateTime? generated;
 
     final createdField = map['createdAt'];
-    if (createdField is Timestamp)
+    if (createdField is Timestamp) {
       created = createdField.toDate();
-    else if (createdField is DateTime)
+    } else if (createdField is DateTime){
       created = createdField;
+    }
 
     final genField = map['generatedAt'];
-    if (genField is Timestamp)
+    if (genField is Timestamp) {
       generated = genField.toDate();
-    else if (genField is DateTime)
+    } else if (genField is DateTime){
       generated = genField;
+    }
+
 
     final trainingIdsList = (map['trainingIds'] as List<dynamic>? ?? [])
         .map((e) => e as String)
