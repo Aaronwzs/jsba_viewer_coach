@@ -50,3 +50,11 @@ app.*.map.json
 # Git worktrees
 .worktrees/
 .env
+
+# Graphify knowledge graph
+graphify-out/
+opencode.json
+
+# AI Assistant config
+AGENTS.md
+.opencode/
