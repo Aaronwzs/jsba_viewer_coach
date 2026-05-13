@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
-import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 
 @RoutePage()
@@ -50,40 +49,49 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.sports_tennis,
-              size: 100,
-              color: Colors.white,
+       backgroundColor: Colors.white,
+       body: Stack(
+         children: [
+          Positioned.fill(
+            child: FractionallySizedBox(
+widthFactor: 0.7,
+               heightFactor: 0.7,
+              child: Image.asset(
+                'assets/images/jsba_logo.png',
+                fit: BoxFit.contain,
+              ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'JSBA',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 24),
+                Text(
+                  'JSBA',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Badminton Academy',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.black54,
+                      ),
+                ),
+                const SizedBox(height: 48),
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Badminton Academy',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white70,
-                  ),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
