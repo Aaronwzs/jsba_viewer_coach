@@ -1,5 +1,5 @@
-import 'package:jsba_app/app/models/announcement_model.dart';
-import 'package:jsba_app/app/services/announcement_service.dart';
+import 'package:jsba_app/app/model/announcement_model.dart';
+import 'package:jsba_app/app/service/announcement_service.dart';
 
 class AnnouncementRepository {
   final AnnouncementService _service = AnnouncementService();

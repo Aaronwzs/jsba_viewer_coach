@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:jsba_app/app/models/announcement_model.dart';
+import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/repositories/announcement_repository.dart';
 
 class AnnouncementViewModel extends ChangeNotifier {

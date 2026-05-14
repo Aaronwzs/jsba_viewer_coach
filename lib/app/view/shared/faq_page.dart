@@ -52,17 +52,17 @@ class FaqPage extends StatelessWidget {
               context,
               question: 'What should my child bring?',
               answer:
-                  'Sports attire, badminton racket (optional), and water bottle.',
+                  'Sports attire, badminton racket (required), and water bottle.',
             ),
             _buildFaqItem(
               context,
-              question: 'How do I create a new session?',
-              answer: 'Go to Sessions tab and tap the + button.',
+              question: 'How do I join a new session?',
+              answer: 'Go to Sessions tab, ensure court is booked and join class when admin approves.',
             ),
             _buildFaqItem(
               context,
-              question: 'How do I mark attendance?',
-              answer: 'Navigate to the session and tap on attendance.',
+              question: 'How to view attendance?',
+              answer: 'Navigate to the classes to see classes joined or check the billing.',
             ),
             _buildFaqItem(
               context,
@@ -71,8 +71,8 @@ class FaqPage extends StatelessWidget {
             ),
             _buildFaqItem(
               context,
-              question: 'How do I record match results?',
-              answer: 'Go to Sessions, select a session, and use Record Match.',
+              question: 'How do i pay?',
+              answer: 'Go to billings, check amount, pay through available payment methods and upload the reference.',
             ),
             const SizedBox(height: 32),
             GestureDetector(

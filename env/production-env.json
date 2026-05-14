@@ -1,5 +1,6 @@
 {
   "appName": "JSBA",
   "showDebugOverlay": false,
-  "firebaseProjectId": "juniorshuttlers"
+  "firebaseProjectId": "juniorshuttlers",
+  "appFlavor": "production"
 }

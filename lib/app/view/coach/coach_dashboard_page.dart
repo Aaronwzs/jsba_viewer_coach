@@ -7,7 +7,7 @@ import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
-import 'package:jsba_app/app/models/announcement_model.dart';
+import 'package:jsba_app/app/model/announcement_model.dart';
 
 @RoutePage()
 class CoachDashboardPage extends StatefulWidget {

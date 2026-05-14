@@ -1,5 +1,6 @@
 {
   "appName": "[S] JSBA",
   "showDebugOverlay": true,
-  "firebaseProjectId": "juniorshuttlers-stag"
+  "firebaseProjectId": "juniorshuttlers-stag",
+  "appFlavor": "staging"
 }

@@ -271,7 +271,7 @@ Widget _quickLinksSection(BuildContext context) {
       onTap: () => _showInfoDialog(
         context,
         'About Us',
-        'JSBA is a premier badminton academy established in 2015. We are committed to '
+        'JSBA is a premier badminton academy established in 2023. We are committed to '
             'developing young talent through professional coaching and state-of-the-art facilities.',
       ),
     ),
@@ -296,8 +296,8 @@ Widget _quickLinksSection(BuildContext context) {
         context,
         'Schedule',
         'Our training sessions are available:\n\n'
-            '• Monday - Friday: 4PM - 9PM\n'
-            '• Saturday - Sunday: 9AM - 6PM\n\n'
+            '• Monday - Friday: 7PM - 9PM\n'
+            '• Saturday - Sunday: 9AM - 9PM\n\n'
             'Book your slot through the app!',
       ),
     ),
@@ -572,9 +572,9 @@ void _showContactDialog(BuildContext context) {
         children: [
           Text('📞 Phone: +60 18-970 9776'),
           SizedBox(height: 8),
-          Text('📧 Email: info@jsba.com.my'),
+          Text('📧 Email: zyisyen.wong@gmail.com'),
           SizedBox(height: 8),
-          Text('📍 Location: KL Badminton Centre'),
+          Text('📍 Location: Midfields 2 Sungai Besi'),
         ],
       ),
       actions: [
@@ -590,7 +590,7 @@ void _showContactDialog(BuildContext context) {
 
 Future<void> _launchMaps() async {
   final Uri url = Uri.parse(
-    'https://maps.google.com/?q=JSBA+Badminton+Academy+Kuala+Lumpur',
+    'https://maps.google.com/?q=Midfields+2+Condominium+Sungai+Besi',
   );
   if (await canLaunchUrl(url)) {
     await launchUrl(url, mode: LaunchMode.externalApplication);

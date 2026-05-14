@@ -202,9 +202,8 @@ class _HeroBanner extends StatelessWidget {
                       Text(
                         'Kuala Lumpur, Malaysia',
                         style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                          color: Colors.white.withValues(alpha: 0.75),
                         ),
                       ),
                     ],
@@ -225,97 +224,55 @@ class _OverlapAboutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final offsetY = ResponsiveHelper.getDeviceType(context) == DeviceType.mobile
-        ? -30.0
-        : -40.0;
-    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+        ? -22.0
+        : -30.0;
     return Transform.translate(
       offset: Offset(0, offsetY),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveHelper.getHorizontalPadding(context),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.info_outline,
-                    color: AppTheme.primaryColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'About JSBA',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'JSBA (Jaya Sentosa Badminton Academy) is a premier badminton training institution dedicated to developing elite players through professional coaching and state-of-the-art facilities.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondaryColor,
-                height: 1.5,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey.shade200, width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildStatItem('500+', 'Players Trained'),
-                const SizedBox(width: 24),
-                _buildStatItem('20+', 'Expert Coaches'),
-                const SizedBox(width: 24),
-                _buildStatItem('10+', 'Years Experience'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String value, String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.primaryColor,
+            ],
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ABOUT THE ACADEMY',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.primaryColor,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              SizedBox(height: 7),
+              Text(
+                'JSBA is a premier badminton academy dedicated to nurturing young talent '
+                'and developing skilled players. Our expert coaches provide professional '
+                'training for players of all skill levels, from beginners to competitive athletes.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondaryColor,
+                  height: 1.65,
+                ),
+              ),
+            ],
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: AppTheme.textSecondaryColor),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -325,90 +282,97 @@ class _QuickLinksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+    final links = [
+      _QuickLinkData(
+        icon: Icons.person_outline,
+        label: 'About Us',
+        onTap: () => _showInfoDialog(
+          context,
+          'About Us',
+          'JSBA is a premier badminton academy established in 2023. We are committed to '
+              'developing young talent through professional coaching and state-of-the-art facilities.',
+        ),
+      ),
+      _QuickLinkData(
+        icon: Icons.format_list_bulleted,
+        label: 'Programs',
+        onTap: () => _showInfoDialog(
+          context,
+          'Programs',
+          'We offer various programs including:\n\n'
+              '• Beginners Course\n'
+              '• Intermediate Training\n'
+              '• Advanced Coaching\n'
+              '• Private Lessons\n'
+              '• Holiday Camps',
+        ),
+      ),
+      _QuickLinkData(
+        icon: Icons.calendar_today_outlined,
+        label: 'Schedule',
+        onTap: () => _showInfoDialog(
+          context,
+          'Schedule',
+          'Our training sessions are available:\n\n'
+              '• Monday - Friday: 7PM - 9PM\n'
+              '• Saturday - Sunday: 9AM - 9PM\n\n'
+              'Book your slot through the app!',
+        ),
+      ),
+      _QuickLinkData(
+        icon: Icons.location_on_outlined,
+        label: 'Location',
+        onTap: () => _launchMaps(),
+      ),
+      _QuickLinkData(
+        icon: Icons.phone_outlined,
+        label: 'Contact',
+        onTap: () => _showContactDialog(context),
+      ),
+      _QuickLinkData(
+        icon: Icons.grid_view_outlined,
+        label: 'Gallery',
+        onTap: () => _showInfoDialog(
+          context,
+          'Gallery',
+          'Check out our photo gallery on social media!',
+        ),
+      ),
+    ];
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Quick Links',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
               final crossAxisCount = ResponsiveHelper.getQuickLinkColumns(
                 context,
               );
-              return GridView.count(
+              return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                children: [
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.info_outline,
-                    label: 'About Us',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      'About Us',
-                      'JSBA is committed to nurturing talent and promoting badminton excellence in Malaysia.',
-                    ),
-                  ),
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.groups_outlined,
-                    label: 'Programs',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      'Our Programs',
-                      'We offer programs for all ages and skill levels: beginner, intermediate, and advanced training.',
-                    ),
-                  ),
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.calendar_month_outlined,
-                    label: 'Schedule',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      'Training Schedule',
-                      'Training sessions available Monday to Sunday, morning and evening slots.',
-                    ),
-                  ),
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.location_on_outlined,
-                    label: 'Location',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      'Our Location',
-                      'Jaya Sentosa Badminton Academy\nKuala Lumpur, Malaysia',
-                    ),
-                  ),
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.phone_outlined,
-                    label: 'Contact',
-                    onTap: () => _showContactDialog(context),
-                  ),
-                  _buildQuickLinkItem(
-                    context,
-                    icon: Icons.photo_library_outlined,
-                    label: 'Gallery',
-                    onTap: () => _showInfoDialog(
-                      context,
-                      'Gallery',
-                      'Check out our photo gallery showcasing training sessions, tournaments, and player achievements.',
-                    ),
-                  ),
-                ],
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 9,
+                  crossAxisSpacing: 9,
+                  childAspectRatio: 1,
+                ),
+                itemCount: links.length,
+                itemBuilder: (context, index) {
+                  final link = links[index];
+                  return _QuickLinkCard(data: link);
+                },
               );
             },
           ),
@@ -416,93 +380,63 @@ class _QuickLinksSection extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildQuickLinkItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppTheme.primaryColor, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _QuickLinkData {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  void _showInfoDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+  const _QuickLinkData({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+}
+
+class _QuickLinkCard extends StatelessWidget {
+  final _QuickLinkData data;
+
+  const _QuickLinkCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: data.onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey.shade200, width: 0.5),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showContactDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Contact Us'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Get in touch with us:'),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF25D366).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.chat, color: Color(0xFF25D366)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                const Text('+60 12-345 6789'),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+                child: Icon(data.icon, color: AppTheme.primaryColor, size: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -635,5 +569,72 @@ Future<void> _launchWhatsApp(BuildContext context) async {
       'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}',
     );
     await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+  }
+}
+
+void _showInfoDialog(BuildContext context, String title, String content) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Colors.black,
+        ),
+      ),
+      content: Text(
+        content,
+        style: const TextStyle(color: AppTheme.textSecondaryColor, height: 1.6),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showContactDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        'Contact Us',
+        style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black),
+      ),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('📞 Phone: +60 18-970 9776'),
+          SizedBox(height: 8),
+          Text('📧 Email: zyisyen.wong@gmail.com'),
+          SizedBox(height: 8),
+          Text('📍 Location: Midfields 2 Sungai Besi'),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _launchMaps() async {
+  final Uri url = Uri.parse(
+    'https://maps.google.com/?q=Midfields+2+Condominium+Sungai+Besi',
+  );
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 }

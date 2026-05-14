@@ -15,7 +15,7 @@ enum EnvironmentType {
 }
 
 final appEnvironmentType = EnvironmentType.fromAppFlavor(
-  const String.fromEnvironment('appFlavor', defaultValue: 'production'),
+  const String.fromEnvironment('appFlavor', defaultValue: ''),
 );
 
 class EnvValues {

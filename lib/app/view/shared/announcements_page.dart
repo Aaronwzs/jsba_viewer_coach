@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jsba_app/app/models/announcement_model.dart';
+import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 
