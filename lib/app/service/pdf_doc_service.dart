@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
+// Network fetches are unnecessary for receipt PDFs; we avoid embedding
+// remote images to keep generated PDFs lightweight and offline-friendly.
 import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/model/invoice_profile_model.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
@@ -201,30 +202,10 @@ class PdfService {
     final methodLabel = _getMethodLabel(receipt.paymentMethod);
     final checkmarkStyle = await _emojiStyle(fontSize: 28, color: primaryColor);
 
-    final refUrls = receipt.paymentReference != null && receipt.paymentReference!.isNotEmpty
-        ? receipt.paymentReference!.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList()
-        : <String>[];
-
-    // Only attempt to fetch and embed image references. Do not include raw
-    // reference URLs or filenames in the generated PDF (omit textual URLs).
-    final refImageWidgets = <pw.Widget>[];
-    for (final url in refUrls) {
-      if (_isImageUrl(url)) {
-        try {
-          final response = await http.get(Uri.parse(url));
-          if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-            refImageWidgets.add(
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(top: 4),
-                child: pw.Image(pw.MemoryImage(response.bodyBytes), fit: pw.BoxFit.contain, height: 120),
-              ),
-            );
-          }
-        } catch (_) {
-          // ignore fetch errors and skip showing the URL/text in PDF
-        }
-      }
-    }
+    // Payment reference images are intentionally NOT embedded in the PDF.
+    // The receipt may contain uploaded proof images/URLs in the app UI, but
+    // we avoid fetching or embedding them in generated PDFs per product
+    // decision to keep PDFs lightweight and offline-friendly.
 
     return pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -320,10 +301,10 @@ class PdfService {
                   ),
                   pw.SizedBox(height: 4),
                   _buildKeyValue('Method', methodLabel),
-                  if (refImageWidgets.isNotEmpty) ...[
-                    pw.SizedBox(height: 4),
-                    ...refImageWidgets,
-                  ],
+                  // Payment proof images/URLs are intentionally omitted from
+                  // the generated PDF. The app UI displays uploaded proof
+                  // images, but PDFs do not embed or list them to keep the
+                  // document lightweight and offline-friendly.
                 ],
               ),
             ),
@@ -1013,20 +994,7 @@ class PdfService {
     }
   }
 
-  bool _isImageUrl(String url) {
-    final lower = url.toLowerCase();
-    return lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.png') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.webp');
-  }
-
-  String _fileNameFromUrl(String url) {
-    try {
-      return url.split('/').last;
-    } catch (_) {
-      return url;
-    }
-  }
+  // Note: receipt proof images/URLs are displayed in the app UI but are not
+  // embedded or listed in generated PDFs. Helper functions for inspecting
+  // reference URLs were removed for clarity.
 }
