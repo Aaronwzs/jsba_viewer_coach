@@ -193,7 +193,7 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
             child: Column(
               children: [
                 _buildDetailRow(Icons.person, 'Name', player.name),
-                _buildDetailRow(Icons.cake, 'Age', '${player.age} years old'),
+                _buildDetailRow(Icons.cake, 'Age', '${player.computedAge} years old'),
                 _buildDetailRow(Icons.trending_up, 'Level', player.level),
                 _buildDetailRow(
                   Icons.phone,

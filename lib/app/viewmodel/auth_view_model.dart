@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jsba_app/app/service/auth_service.dart';
 import 'package:jsba_app/app/service/database_service.dart';
 import 'package:jsba_app/app/model/user_model.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -65,6 +66,8 @@ class AuthViewModel extends ChangeNotifier {
       _currentUser = await _databaseService.ensureUserDocumentExists(
         credential.user!.uid,
       );
+      // Save FCM device token for push notifications
+      await notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -100,6 +103,8 @@ class AuthViewModel extends ChangeNotifier {
         status: 'active',
       );
       _currentUser = await _databaseService.getUser(credential.user!.uid);
+      // Save FCM device token for push notifications
+      await notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -116,6 +121,10 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Remove device token before signing out
+      if (_currentUser != null) {
+        await notificationService.removeDeviceToken(_currentUser!.uid);
+      }
       await _authService.signOut();
       _currentUser = null;
     } catch (e) {
@@ -328,6 +337,8 @@ class AuthViewModel extends ChangeNotifier {
       _currentUser = await _databaseService.ensureUserDocumentExists(
         credential.user!.uid,
       );
+      // Save FCM device token for push notifications
+      await notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;

@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:jsba_app/app/assets/constants/environment_config.dart';
 import 'package:jsba_app/app/assets/firebase_options/staging_firebase_options.dart';
 import 'package:jsba_app/app/assets/firebase_options/production_firebase_options.dart';
+import 'package:jsba_app/app/service/notification_service.dart';
 
 FirebaseOptions getFirebaseOptions() {
   switch (appEnvironmentType) {
@@ -31,6 +32,22 @@ Future<void> init() async {
   await initApiServices();
 }
 
+/// Singleton accessor for NotificationService used across the app
+NotificationService get notificationService {
+  _ensureNotificationService();
+  return _notificationService!;
+}
+
+NotificationService? _notificationService;
+
+void _ensureNotificationService() {
+  if (_notificationService == null) {
+    _notificationService = NotificationService();
+  }
+}
+
 Future<void> initApiServices() async {
-  // Initialize services
+  // Initialize notification service (FCM + local notifications)
+  _ensureNotificationService();
+  await _notificationService!.initialize();
 }

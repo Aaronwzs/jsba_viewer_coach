@@ -169,7 +169,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
               children: [
                 Icon(Icons.cake, size: 14, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
-                Text('Age: ${self.age}'),
+                Text('Age: ${self.computedAge}'),
               ],
             ),
             const SizedBox(height: 2),
@@ -219,7 +219,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                 children: [
                   Icon(Icons.cake, size: 14, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
-                  Text('Age: ${kid.age}'),
+                  Text('Age: ${kid.computedAge}'),
                 ],
               ),
               const SizedBox(height: 2),
@@ -346,7 +346,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
               children: [
                 Icon(Icons.cake, size: 14, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
-                Text('Age: ${kid.age}'),
+                Text('Age: ${kid.computedAge}'),
               ],
             ),
             const SizedBox(height: 2),
@@ -382,6 +382,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
 
     final nameController = TextEditingController();
     final ageController = TextEditingController();
+    final ageYearController = TextEditingController();
     final phoneController = TextEditingController();
     final parentNameController = TextEditingController();
 
@@ -392,6 +393,16 @@ class _MyReportsPageState extends State<MyReportsPage> {
 
     String level = 'Beginner';
     bool isAddingForSelf = false;
+
+    // Auto-populate ageYear when age changes
+    void onAgeChanged() {
+      final age = int.tryParse(ageController.text);
+      if (age != null && age > 0) {
+        ageYearController.text = (DateTime.now().year - age).toString();
+      } else {
+        ageYearController.clear();
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -459,9 +470,21 @@ class _MyReportsPageState extends State<MyReportsPage> {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (_) {
+                      onAgeChanged();
                       if (!context.mounted) return;
                       setModalState(() {});
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: ageYearController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    decoration: const InputDecoration(
+                      labelText: 'Birth Year (e.g. 2015)',
+                      hintText: 'Auto-filled from age',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -543,6 +566,12 @@ class _MyReportsPageState extends State<MyReportsPage> {
                           return;
                         }
 
+                        // Parse ageYear from input, or compute from age
+                        int? ageYear = int.tryParse(ageYearController.text);
+                        if (ageYear == null || ageYear <= 0) {
+                          ageYear = DateTime.now().year - age;
+                        }
+
                         Navigator.of(ctx).pop();
 
                         bool success;
@@ -555,6 +584,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                             age,
                             level,
                             phoneController.text,
+                            ageYear: ageYear,
                           );
                           message = 'Your profile has been added!';
                         } else {
@@ -567,6 +597,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                             id: '',
                             name: nameController.text,
                             age: age,
+                            ageYear: ageYear,
                             level: level,
                             phone: phoneController.text,
                             createdAt: DateTime.now(),

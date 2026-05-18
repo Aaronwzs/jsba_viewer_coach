@@ -3,7 +3,14 @@ import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
 
 class BillingService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  BillingService({FirebaseFirestore? firestore})
+      : _db = firestore ?? FirebaseFirestore.instance {
+    if (firestore == null) {
+      _db.settings = const Settings(persistenceEnabled: false);
+    }
+  }
 
   String _monthKey(int year, int month) {
     final y = year.toString().padLeft(4, '0');

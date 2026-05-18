@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
+import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 
 @RoutePage()
@@ -32,6 +33,9 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
         if (!mounted) return;
         
         if (authVM.isLoggedIn) {
+          // Start listening to notifications for this user
+          context.read<NotificationViewModel>().startListening(user!.uid);
+
           if (authVM.isCoach) {
             context.router.replaceAll([const CoachMainRoute()]);
           } else {

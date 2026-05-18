@@ -1355,7 +1355,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Age ${player.age}',
+                          'Age ${player.computedAge}',
                           style: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 12,
@@ -1461,7 +1461,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: Column(
                   children: [
-                    _infoRow(Icons.cake_outlined, 'Age', '${player.age}'),
+                    _infoRow(Icons.cake_outlined, 'Age', '${player.computedAge}'),
                     _infoRow(Icons.trending_up, 'Level', player.level),
                     _infoRow(
                       Icons.phone_outlined,
@@ -1617,6 +1617,7 @@ class _EditPlayerSheetContent extends StatefulWidget {
 class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
   late TextEditingController nameController;
   late TextEditingController ageController;
+  late TextEditingController ageYearController;
   late TextEditingController phoneController;
   late TextEditingController parentNameController;
   late TextEditingController parentPhoneController;
@@ -1629,6 +1630,13 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
   @override
   void initState() {
     super.initState();
+    // Initialize ageYear from player or compute from age
+    final initialAgeYear = widget.player.ageYear ??
+        (widget.player.age > 0 ? DateTime.now().year - widget.player.age : null);
+    ageYearController = TextEditingController(
+      text: initialAgeYear?.toString() ?? '',
+    );
+
     nameController = TextEditingController(text: widget.player.name);
     ageController = TextEditingController(text: widget.player.age.toString());
     phoneController = TextEditingController(text: widget.player.phone);
@@ -1644,7 +1652,7 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     selectedLevel = widget.player.level;
 
     // Auto-fill parent info for non-self players under 20
-    if (!widget.player.isSelf && widget.player.age < 20) {
+    if (!widget.player.isSelf && widget.player.computedAge < 20) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         try {
@@ -1673,6 +1681,7 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
   void dispose() {
     nameController.dispose();
     ageController.dispose();
+    ageYearController.dispose();
     phoneController.dispose();
     parentNameController.dispose();
     parentPhoneController.dispose();
@@ -1729,7 +1738,7 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    final age = int.tryParse(ageController.text) ?? widget.player.age;
+    final age = int.tryParse(ageController.text) ?? widget.player.computedAge;
     final needsParentInfo = !widget.player.isSelf && age < 20;
 
     return Padding(
@@ -1846,6 +1855,21 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                       if (a == null || a < 1 || a > 100) return 'Invalid age';
                       return null;
                     },
+                  ),
+                ),
+                _buildFieldWithTitle(
+                  'Birth Year',
+                  TextFormField(
+                    controller: ageYearController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. 2015',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
                   ),
                 ),
                 _buildFieldWithTitle(
@@ -2051,10 +2075,14 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
       }
     }
 
+    // Preserve ageYear on edit; compute from age if not explicitly provided
+    final ageYear = int.tryParse(ageYearController.text.trim());
+
     final updatedPlayer = PlayerModel(
       id: widget.player.id,
       name: nameController.text.trim(),
       age: age,
+      ageYear: ageYear,
       level: selectedLevel,
       phone: phoneController.text.trim(),
       createdAt: widget.player.createdAt,

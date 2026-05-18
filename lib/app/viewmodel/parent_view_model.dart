@@ -55,17 +55,22 @@ class ParentViewModel extends ChangeNotifier {
     String name,
     int age,
     String level,
-    String phone,
-  ) async {
+    String phone, {
+    int? ageYear,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      // If ageYear not provided, compute it from age
+      final computedAgeYear = ageYear ?? DateTime.now().year - age;
+
       final player = PlayerModel(
         id: '',
         name: name,
         age: age,
+        ageYear: computedAgeYear,
         level: level,
         phone: phone,
         createdAt: DateTime.now(),
@@ -92,10 +97,14 @@ class ParentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Ensure ageYear is set — compute from age if missing
+      final ageYear = player.ageYear ?? DateTime.now().year - player.age;
+
       final newPlayer = PlayerModel(
         id: '',
         name: player.name,
         age: player.age,
+        ageYear: ageYear,
         level: player.level,
         phone: player.phone,
         createdAt: DateTime.now(),
@@ -138,6 +147,7 @@ class ParentViewModel extends ChangeNotifier {
         id: playerToUpdate.id,
         name: playerToUpdate.name,
         age: playerToUpdate.age,
+        ageYear: playerToUpdate.ageYear,
         level: playerToUpdate.level,
         phone: playerToUpdate.phone,
         createdAt: playerToUpdate.createdAt,

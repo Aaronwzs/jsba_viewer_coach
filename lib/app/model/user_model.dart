@@ -32,6 +32,7 @@ class UserModel {
   final String? phone;
   final String? role;
   final String status;
+  final List<String> deviceTokens;
   final DateTime? createdAt;
 
   const UserModel({
@@ -41,6 +42,7 @@ class UserModel {
     this.phone,
     this.role,
     this.status = UserStatus.active,
+    this.deviceTokens = const [],
     this.createdAt,
   });
 
@@ -65,6 +67,11 @@ class UserModel {
       }
     }
 
+    final deviceTokensList = (map['deviceTokens'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [];
+
     return UserModel(
       uid: uid,
       email: map['email'] as String? ?? '',
@@ -72,6 +79,7 @@ class UserModel {
       phone: map['phone'] as String?,
       role: map['role'] as String?,
       status: map['status'] as String? ?? UserStatus.active,
+      deviceTokens: deviceTokensList,
       createdAt: createdAt,
     );
   }
@@ -82,6 +90,7 @@ class UserModel {
         if (phone != null) 'phone': phone,
         'role': role,
         'status': status,
+        if (deviceTokens.isNotEmpty) 'deviceTokens': deviceTokens,
         if (createdAt != null) 'createdAt': createdAt,
       };
 
@@ -92,6 +101,7 @@ class UserModel {
     String? phone,
     String? role,
     String? status,
+    List<String>? deviceTokens,
     DateTime? createdAt,
   }) {
     return UserModel(
@@ -101,6 +111,7 @@ class UserModel {
       phone: phone ?? this.phone,
       role: role ?? this.role,
       status: status ?? this.status,
+      deviceTokens: deviceTokens ?? this.deviceTokens,
       createdAt: createdAt ?? this.createdAt,
     );
   }

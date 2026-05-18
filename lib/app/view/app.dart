@@ -9,6 +9,7 @@ import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/viewmodel/availability_view_model.dart';
+import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
@@ -27,6 +28,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OpenCourtViewModel()),
         ChangeNotifierProvider(create: (_) => BillingViewModel()),
         ChangeNotifierProvider(create: (_) => AvailabilityViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
       ],
       child: const AppWrapper(),
     );

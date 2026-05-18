@@ -10,6 +10,7 @@ class PlayerModel {
   String id;
   String name;
   int age;
+  int? ageYear;
   String level;
   DateTime createdAt;
   String? imageUrl;
@@ -28,6 +29,7 @@ class PlayerModel {
     this.imageUrl,
     required this.name,
     required this.age,
+    this.ageYear,
     required this.level,
     required this.createdAt,
     required this.phone,
@@ -41,9 +43,17 @@ class PlayerModel {
     this.isSelf = false,
   });
 
+  /// Computes the current age from birth year.
+  /// Falls back to the stored [age] if [ageYear] is not set.
+  int get computedAge {
+    if (ageYear != null) return DateTime.now().year - ageYear!;
+    return age;
+  }
+
   Map<String, dynamic> toJson() => {
     'name': name,
     'age': age,
+    if (ageYear != null) 'ageYear': ageYear,
     'level': level,
     'phone': phone,
     'isActive': isActive,
@@ -69,10 +79,19 @@ class PlayerModel {
       createdAt = DateTime.now(); // fallback
     }
 
+    int? ageYear;
+    final ageYearField = map['ageYear'];
+    if (ageYearField is int) {
+      ageYear = ageYearField;
+    } else if (ageYearField is String) {
+      ageYear = int.tryParse(ageYearField);
+    }
+
     return PlayerModel(
       id: id,
       name: map['name'] as String? ?? '',
       age: map['age'] as int? ?? 0,
+      ageYear: ageYear,
       level: map['level'] as String? ?? 'Beginner',
       phone: map['phone'] as String? ?? '',
       isActive: map['isActive'] as bool? ?? true,
