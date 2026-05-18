@@ -117,20 +117,26 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: Colors.white,
-            backgroundImage:
-                player.imageUrl != null && player.imageUrl!.isNotEmpty
-                ? CachedNetworkImageProvider(player.imageUrl!)
-                : null,
-            child: (player.imageUrl == null || player.imageUrl!.isEmpty)
-                ? Icon(
-                    isSelf ? Icons.person : Icons.child_care,
-                    size: 40,
-                    color: AppTheme.primaryColor,
-                  )
-                : null,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+            ),
+            child: CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.white,
+              backgroundImage:
+                  player.imageUrl != null && player.imageUrl!.isNotEmpty
+                  ? CachedNetworkImageProvider(player.imageUrl!)
+                  : null,
+              child: (player.imageUrl == null || player.imageUrl!.isEmpty)
+                  ? Icon(
+                      isSelf ? Icons.person : Icons.child_care,
+                      size: 40,
+                      color: AppTheme.primaryColor,
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(

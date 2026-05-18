@@ -1239,7 +1239,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
+                  shape: BoxShape.circle,
                   color: isPending
                       ? Colors.grey[200]
                       : AppTheme.primaryColor.withValues(alpha: 0.08),
@@ -1417,7 +1417,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  shape: BoxShape.circle,
                   color: Colors.grey[100],
                   image: player.imageUrl != null && player.imageUrl!.isNotEmpty
                       ? DecorationImage(

@@ -185,12 +185,81 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
     );
   }
 
+  bool _isImageUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp');
+  }
+
+  String _fileNameFromUrl(String url) {
+    try {
+      return url.split('/').last;
+    } catch (_) {
+      return url;
+    }
+  }
+
+  List<Widget> _buildReferenceProofs(String ref) {
+    final urls = ref.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
+    return urls.map((url) {
+      if (_isImageUrl(url)) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              url,
+              height: 160,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return const SizedBox(
+                  height: 160,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Row(
+                  children: [
+                    const Icon(Icons.broken_image, size: 20, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(url, style: TextStyle(fontSize: 12, color: Colors.grey[600]), overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.insert_drive_file_outlined, size: 20, color: Colors.blue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _fileNameFromUrl(url),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
   Widget _buildPaymentDetailsCard(ReceiptModel receipt) {
     final methodLabel = {
-      'cash': 'Cash',
-      'transfer': 'Bank Transfer',
-      'tng': 'Touch n Go',
-      'card': 'Card',
+      'e-wallet': 'E-Wallet',
+      'bank': 'Bank',
     }[receipt.paymentMethod] ?? receipt.paymentMethod.toUpperCase();
 
     return Card(
@@ -216,16 +285,12 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
             ),
             if (receipt.paymentReference != null && receipt.paymentReference!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.confirmation_number, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Reference: ${receipt.paymentReference}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
+              const Text(
+                'Reference Proof',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
+              const SizedBox(height: 6),
+              ..._buildReferenceProofs(receipt.paymentReference!),
             ],
           ],
         ),

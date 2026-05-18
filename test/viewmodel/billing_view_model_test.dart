@@ -165,7 +165,7 @@ void main() {
         await viewModel.loadInvoicesForPlayerIds(['p1']);
         final result = await viewModel.markAsPaid(
           invoiceId: 'inv1',
-          paymentMethod: 'bank_transfer',
+          paymentMethod: 'bank',
           paymentReference: 'REF123',
         );
 
@@ -173,7 +173,7 @@ void main() {
         expect(viewModel.isLoading, false);
         verify(() => billingService.markInvoiceAsCustomerPaid(
           invoiceId: 'inv1',
-          paymentMethod: 'bank_transfer',
+          paymentMethod: 'bank',
           paymentReference: 'REF123',
         )).called(1);
       });
@@ -187,7 +187,7 @@ void main() {
 
         final result = await viewModel.markAsPaid(
           invoiceId: 'inv1',
-          paymentMethod: 'cash',
+          paymentMethod: 'e-wallet',
         );
 
         expect(result, false);

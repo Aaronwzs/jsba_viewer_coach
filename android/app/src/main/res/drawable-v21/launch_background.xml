@@ -8,8 +8,14 @@
          will make the same artwork available to the native splash. Copy your
          assets/images/jsba_logo.png to that path (see project assets). -->
     <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/launch_image" />
+        <inset
+            android:insetLeft="64dp"
+            android:insetRight="64dp"
+            android:insetTop="64dp"
+            android:insetBottom="64dp">
+            <bitmap
+                android:gravity="center"
+                android:src="@drawable/launch_image" />
+        </inset>
     </item>
 </layer-list>

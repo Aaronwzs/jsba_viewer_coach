@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/model/invoice_profile_model.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
@@ -200,6 +201,31 @@ class PdfService {
     final methodLabel = _getMethodLabel(receipt.paymentMethod);
     final checkmarkStyle = await _emojiStyle(fontSize: 28, color: primaryColor);
 
+    final refUrls = receipt.paymentReference != null && receipt.paymentReference!.isNotEmpty
+        ? receipt.paymentReference!.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList()
+        : <String>[];
+
+    // Only attempt to fetch and embed image references. Do not include raw
+    // reference URLs or filenames in the generated PDF (omit textual URLs).
+    final refImageWidgets = <pw.Widget>[];
+    for (final url in refUrls) {
+      if (_isImageUrl(url)) {
+        try {
+          final response = await http.get(Uri.parse(url));
+          if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+            refImageWidgets.add(
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 4),
+                child: pw.Image(pw.MemoryImage(response.bodyBytes), fit: pw.BoxFit.contain, height: 120),
+              ),
+            );
+          }
+        } catch (_) {
+          // ignore fetch errors and skip showing the URL/text in PDF
+        }
+      }
+    }
+
     return pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(40),
@@ -294,10 +320,9 @@ class PdfService {
                   ),
                   pw.SizedBox(height: 4),
                   _buildKeyValue('Method', methodLabel),
-                  if (receipt.paymentReference != null &&
-                      receipt.paymentReference!.isNotEmpty) ...[
+                  if (refImageWidgets.isNotEmpty) ...[
                     pw.SizedBox(height: 4),
-                    _buildKeyValue('Ref', receipt.paymentReference!),
+                    ...refImageWidgets,
                   ],
                 ],
               ),
@@ -979,16 +1004,29 @@ class PdfService {
 
   String _getMethodLabel(String method) {
     switch (method) {
-      case 'cash':
-        return 'Cash';
-      case 'transfer':
-        return 'Bank Transfer';
-      case 'tng':
-        return 'Touch n Go';
-      case 'card':
-        return 'Card';
+      case 'e-wallet':
+        return 'E-Wallet';
+      case 'bank':
+        return 'Bank';
       default:
         return method.toUpperCase();
+    }
+  }
+
+  bool _isImageUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp');
+  }
+
+  String _fileNameFromUrl(String url) {
+    try {
+      return url.split('/').last;
+    } catch (_) {
+      return url;
     }
   }
 }

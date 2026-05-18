@@ -4,8 +4,14 @@
     <item android:drawable="@android:color/white" />
 
     <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/launch_image" />
+        <inset
+            android:insetLeft="64dp"
+            android:insetRight="64dp"
+            android:insetTop="64dp"
+            android:insetBottom="64dp">
+            <bitmap
+                android:gravity="center"
+                android:src="@drawable/launch_image" />
+        </inset>
     </item>
 </layer-list>

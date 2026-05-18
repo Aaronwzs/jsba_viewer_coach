@@ -135,14 +135,14 @@ void main() {
 
         await service.markInvoiceAsCustomerPaid(
           invoiceId: id,
-          paymentMethod: 'bank_transfer',
+          paymentMethod: 'bank',
           paymentReference: 'REF-001',
         );
 
         final fetched = await service.getInvoiceById(id);
         expect(fetched, isNotNull);
         expect(fetched!.status, 'sent');
-        expect(fetched.paymentMethod, 'bank_transfer');
+        expect(fetched.paymentMethod, 'bank');
         expect(fetched.paymentReference, 'REF-001');
         expect(fetched.sentAt, isNotNull);
       });
@@ -183,7 +183,7 @@ void main() {
         expect(fetched, isNotNull);
         expect(fetched!.receiptNumber, 'REC-001');
         expect(fetched.amountPaid, 100.0);
-        expect(fetched.paymentMethod, 'bank_transfer');
+        expect(fetched.paymentMethod, 'bank');
       });
 
       test('getReceiptById returns null for missing document', () async {

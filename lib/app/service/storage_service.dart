@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:jsba_app/app/assets/constants/environment_config.dart';
 
 class StorageService {
-  static const String _imgbbApiKey = '9d1bc7b8e1546cf6900f9ec114d78434';
   static const String _imgbbUrl = 'https://api.imgbb.com/1/upload';
   final http.Client? _client;
+  final String _imgbbApiKey;
 
-  StorageService({http.Client? client}) : _client = client;
+  StorageService({http.Client? client})
+      : _client = client,
+        _imgbbApiKey = EnvValues.imgbbApiKey;
 
   Future<String?> uploadImage(File imageFile) async {
     try {

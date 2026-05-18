@@ -218,7 +218,7 @@ class TestModelFactory {
     String invoiceId = 'inv1',
     String playerId = 'player1',
     double amountPaid = 100.0,
-    String paymentMethod = 'bank_transfer',
+    String paymentMethod = 'bank',
     int billingYear = 2024,
     int billingMonth = 6,
   }) {

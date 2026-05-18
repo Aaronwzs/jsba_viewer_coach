@@ -52,46 +52,24 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
 @override
   Widget build(BuildContext context) {
     return Scaffold(
-       backgroundColor: Colors.white,
-       body: Stack(
-         children: [
-          Positioned.fill(
-            child: FractionallySizedBox(
-widthFactor: 0.7,
-               heightFactor: 0.7,
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FractionallySizedBox(
+              widthFactor: 0.45,
               child: Image.asset(
                 'assets/images/jsba_logo.png',
                 fit: BoxFit.contain,
               ),
             ),
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 24),
-                Text(
-                  'JSBA',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Badminton Academy',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.black54,
-                      ),
-                ),
-                const SizedBox(height: 48),
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
-                ),
-              ],
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
