@@ -4,6 +4,8 @@ import 'package:jsba_app/app/utils/shared_preference_handler.dart';
 enum UserRole { coach, parent }
 
 class AppViewModel extends ChangeNotifier {
+  final SharedPreferenceHandler _prefs;
+
   String _userRole = '';
   String _userName = '';
   String _userEmail = '';
@@ -17,13 +19,14 @@ class AppViewModel extends ChangeNotifier {
   bool get isCoach => _userRole == 'coach';
   bool get isParent => _userRole == 'parent';
 
-  AppViewModel() {
+  AppViewModel({SharedPreferenceHandler? prefs})
+      : _prefs = prefs ?? SharedPreferenceHandler() {
     _loadUserData();
   }
 
   void _loadUserData() {
-    _userRole = SharedPreferenceHandler.getUserRole();
-    _userId = SharedPreferenceHandler.getUserId();
+    _userRole = _prefs.getUserRole();
+    _userId = _prefs.getUserId();
     notifyListeners();
   }
 
@@ -32,8 +35,8 @@ class AppViewModel extends ChangeNotifier {
     _userName = name;
     _userEmail = email;
     _userId = uid;
-    await SharedPreferenceHandler.setUserRole(role);
-    await SharedPreferenceHandler.setUserId(uid);
+    await _prefs.setUserRole(role);
+    await _prefs.setUserId(uid);
     notifyListeners();
   }
 
@@ -42,7 +45,7 @@ class AppViewModel extends ChangeNotifier {
     _userName = '';
     _userEmail = '';
     _userId = '';
-    await SharedPreferenceHandler.clearAll();
+    await _prefs.clearAll();
     notifyListeners();
   }
 

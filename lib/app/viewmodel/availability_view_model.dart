@@ -3,7 +3,10 @@ import 'package:jsba_app/app/model/availability_model.dart';
 import 'package:jsba_app/app/service/availability_service.dart';
 
 class AvailabilityViewModel extends ChangeNotifier {
-  final AvailabilityService _service = AvailabilityService();
+  final AvailabilityService _service;
+
+  AvailabilityViewModel({AvailabilityService? service})
+      : _service = service ?? AvailabilityService();
 
   List<AvailabilityModel> _slots = [];
   bool _isLoading = false;

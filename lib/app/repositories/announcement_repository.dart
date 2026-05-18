@@ -2,7 +2,10 @@ import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/service/announcement_service.dart';
 
 class AnnouncementRepository {
-  final AnnouncementService _service = AnnouncementService();
+  final AnnouncementService _service;
+
+  AnnouncementRepository({AnnouncementService? service})
+      : _service = service ?? AnnouncementService();
 
   Future<List<AnnouncementModel>> getAnnouncements() async {
     return await _service.getAnnouncements();

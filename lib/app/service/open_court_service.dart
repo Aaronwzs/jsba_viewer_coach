@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 
 class OpenCourtService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  OpenCourtService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   static const String _collection = 'openCourts';
 

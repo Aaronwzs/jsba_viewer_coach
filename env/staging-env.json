@@ -3,4 +3,5 @@
   "showDebugOverlay": true,
   "firebaseProjectId": "juniorshuttlers-stag",
   "appFlavor": "staging"
+  ,"IMGBB_API_KEY": "b155d61ada0a040a94127192a51ab274"
 }

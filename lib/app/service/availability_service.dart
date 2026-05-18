@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/availability_model.dart';
 
 class AvailabilityService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  AvailabilityService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
   static const String _collection = 'kidAvailability';
 
   Future<List<AvailabilityModel>> getActiveSlots() async {

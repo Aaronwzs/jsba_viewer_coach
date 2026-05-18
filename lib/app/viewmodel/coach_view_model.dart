@@ -5,8 +5,12 @@ import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 
 class CoachViewModel extends ChangeNotifier {
-  final TrainingService _trainingService = TrainingService();
-  final PlayerService _playerService = PlayerService();
+  final TrainingService _trainingService;
+  final PlayerService _playerService;
+
+  CoachViewModel({TrainingService? trainingService, PlayerService? playerService})
+      : _trainingService = trainingService ?? TrainingService(),
+        _playerService = playerService ?? PlayerService();
 
   List<TrainingModel> _todaySessions = [];
   List<TrainingModel> _monthSessions = [];

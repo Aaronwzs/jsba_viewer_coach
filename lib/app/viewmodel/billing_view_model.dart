@@ -9,11 +9,21 @@ import 'package:jsba_app/app/service/billing_service.dart';
 import 'package:jsba_app/app/service/pdf_doc_service.dart';
 
 class BillingViewModel extends ChangeNotifier {
-  final BillingService _billingService = BillingService();
-  final PdfService _pdfService = PdfService();
-  final AcademySettingsService _academySettingsService =
-      AcademySettingsService();
-  final Dio _dio = Dio();
+  final BillingService _billingService;
+  final PdfService _pdfService;
+  final AcademySettingsService _academySettingsService;
+  final Dio _dio;
+
+  BillingViewModel({
+    BillingService? billingService,
+    PdfService? pdfService,
+    AcademySettingsService? academySettingsService,
+    Dio? dio,
+  })  : _billingService = billingService ?? BillingService(),
+        _pdfService = pdfService ?? PdfService(),
+        _academySettingsService =
+            academySettingsService ?? AcademySettingsService(),
+        _dio = dio ?? Dio();
 
   List<InvoiceModel> _invoices = [];
   List<ReceiptModel> _receipts = [];

@@ -4,7 +4,9 @@ import 'package:jsba_app/app/model/training_model.dart';
 
 
 class TrainingService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  TrainingService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   // Get all trainings
   Stream<List<TrainingModel>> getAllTrainings() {

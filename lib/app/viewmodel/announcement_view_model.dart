@@ -3,7 +3,10 @@ import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/repositories/announcement_repository.dart';
 
 class AnnouncementViewModel extends ChangeNotifier {
-  final AnnouncementRepository _repository = AnnouncementRepository();
+  final AnnouncementRepository _repository;
+
+  AnnouncementViewModel({AnnouncementRepository? repository})
+      : _repository = repository ?? AnnouncementRepository();
 
   List<AnnouncementModel> _announcements = [];
   bool _isLoading = false;

@@ -4,7 +4,10 @@ import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 
 class ParentViewModel extends ChangeNotifier {
-  final PlayerService _playerService = PlayerService();
+  final PlayerService _playerService;
+
+  ParentViewModel({PlayerService? playerService})
+      : _playerService = playerService ?? PlayerService();
 
   List<PlayerModel> _myKids = [];
   List<PlayerModel> _pendingKids = [];

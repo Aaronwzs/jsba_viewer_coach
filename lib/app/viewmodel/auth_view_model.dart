@@ -5,8 +5,12 @@ import 'package:jsba_app/app/service/database_service.dart';
 import 'package:jsba_app/app/model/user_model.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final DatabaseService _databaseService = DatabaseService();
+  final AuthService _authService;
+  final DatabaseService _databaseService;
+
+  AuthViewModel({AuthService? authService, DatabaseService? databaseService})
+      : _authService = authService ?? AuthService(),
+        _databaseService = databaseService ?? DatabaseService();
 
   UserModel? _currentUser;
   bool _isLoading = false;

@@ -3,8 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:jsba_app/app/model/user_model.dart';
 
 class DatabaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db;
+  final FirebaseAuth _auth;
+
+  DatabaseService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _db = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
 
   Future<UserModel> ensureUserDocumentExists(String uid) async {
     try {

@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 
 class PlayerService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
-  PlayerService() {
-    _db.settings = const Settings(persistenceEnabled: false);
+  PlayerService({FirebaseFirestore? firestore})
+      : _db = firestore ?? FirebaseFirestore.instance {
+    if (firestore == null) {
+      _db.settings = const Settings(persistenceEnabled: false);
+    }
   }
 
   Future<List<PlayerModel>> getPlayers() async {

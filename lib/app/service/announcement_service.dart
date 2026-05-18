@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 
 class AnnouncementService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  AnnouncementService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   Future<List<AnnouncementModel>> getAnnouncements() async {
     try {

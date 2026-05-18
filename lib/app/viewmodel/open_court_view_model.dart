@@ -7,9 +7,17 @@ import 'package:jsba_app/app/service/player_service.dart';
 import 'package:jsba_app/app/service/training_service.dart';
 
 class OpenCourtViewModel extends ChangeNotifier {
-  final OpenCourtService _service = OpenCourtService();
-  final TrainingService _trainingService = TrainingService();
-  final PlayerService _playerService = PlayerService();
+  final OpenCourtService _service;
+  final TrainingService _trainingService;
+  final PlayerService _playerService;
+
+  OpenCourtViewModel({
+    OpenCourtService? service,
+    TrainingService? trainingService,
+    PlayerService? playerService,
+  })  : _service = service ?? OpenCourtService(),
+        _trainingService = trainingService ?? TrainingService(),
+        _playerService = playerService ?? PlayerService();
 
   List<OpenCourtModel> _sessions = [];
   List<OpenCourtModel> _availableSessions = [];

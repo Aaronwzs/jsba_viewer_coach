@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
 
 class AttendanceService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  AttendanceService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   Future<void> createAttendanceBatch(
     String trainingId,

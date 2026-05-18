@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/coach_payout_model.dart';
 
 class CoachPayoutService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  CoachPayoutService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
 
   String _monthKey(int year, int month) {
     final y = year.toString().padLeft(4, '0');
