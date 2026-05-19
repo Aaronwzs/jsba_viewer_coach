@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "./scripts/implementation-guard.sh",
+        "timeout": 20
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "./scripts/implementation-guard.sh",
+        "timeout": 20
+      }
+    ]
+  }
+}

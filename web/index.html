@@ -58,6 +58,14 @@
       localStorage.removeItem('pwa_install_dismissed');
     });
 
+    // Called from Flutter to trigger the native install prompt
+    window.triggerPwaInstall = function() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+      }
+    };
+
     function showInstallButton() {
       // Button will be added by Flutter app
       window.dispatchEvent(new CustomEvent('pwa-ready-to-show-install'));

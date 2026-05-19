@@ -59,7 +59,5 @@ opencode.json
 AGENTS.md
 .opencode/
 
-.github/
-
 # Cloud Functions - do NOT commit node_modules or compiled output
 functions/

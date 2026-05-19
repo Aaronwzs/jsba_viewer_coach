@@ -10,6 +10,10 @@ import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/viewmodel/availability_view_model.dart';
 import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
+import 'package:jsba_app/app/viewmodel/pwa_view_model.dart';
+import 'package:jsba_app/app/widgets/pwa_install_banner.dart';
+import 'package:jsba_app/app/widgets/offline_banner.dart';
+import 'package:jsba_app/app/widgets/pwa_update_banner.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
@@ -29,6 +33,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BillingViewModel()),
         ChangeNotifierProvider(create: (_) => AvailabilityViewModel()),
         ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+        ChangeNotifierProvider(create: (_) => PwaViewModel()),
       ],
       child: const AppWrapper(),
     );
@@ -65,7 +70,7 @@ class _AppWrapperState extends State<AppWrapper> {
                   context,
                 ).clamp(minScaleFactor: 1.0, maxScaleFactor: 1.0),
               ),
-              child: child ?? const SizedBox(),
+              child: _PwaBanners(child: child ?? const SizedBox()),
             );
           },
         );
@@ -81,5 +86,69 @@ class _AppWrapperState extends State<AppWrapper> {
   void setupEasyLoading() {
     EasyLoading.instance.userInteractions = false;
     EasyLoading.instance.maskType = EasyLoadingMaskType.black;
+  }
+}
+
+/// Inner widget that orchestrates PWA banners (install, offline, update).
+class _PwaBanners extends StatefulWidget {
+  const _PwaBanners({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PwaBanners> createState() => _PwaBannersState();
+}
+
+class _PwaBannersState extends State<_PwaBanners> {
+  bool _updateBannerShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for update-available events after a short delay to ensure
+    // the widget tree is fully built before showing a snackbar.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _listenForUpdates();
+    });
+  }
+
+  void _listenForUpdates() {
+    final pwaVm = context.read<PwaViewModel>();
+    pwaVm.addListener(_onPwaStateChanged);
+  }
+
+  void _onPwaStateChanged() {
+    final pwaVm = context.read<PwaViewModel>();
+    // Reset the guard when update is no longer available
+    // so future updates can trigger the banner again.
+    if (!pwaVm.updateAvailable) {
+      _updateBannerShown = false;
+      return;
+    }
+    if (!_updateBannerShown && mounted) {
+      _updateBannerShown = true;
+      PwaUpdateBanner.show(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Remove listener safely
+    try {
+      context.read<PwaViewModel>().removeListener(_onPwaStateChanged);
+    } catch (_) {}
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const OfflineBanner(),
+        const PwaInstallBanner(),
+        Expanded(child: widget.child),
+      ],
+    );
   }
 }
