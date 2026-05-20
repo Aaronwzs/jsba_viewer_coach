@@ -87,12 +87,15 @@ class PlayerModel {
       ageYear = int.tryParse(ageYearField);
     }
 
+    final rawLevel = map['level'] as String? ?? 'B3';
+    final parsedLevel = rawLevel == 'Beginner' ? 'B3' : rawLevel;
+
     return PlayerModel(
       id: id,
       name: map['name'] as String? ?? '',
       age: map['age'] as int? ?? 0,
       ageYear: ageYear,
-      level: map['level'] as String? ?? 'Beginner',
+      level: parsedLevel,
       phone: map['phone'] as String? ?? '',
       isActive: map['isActive'] as bool? ?? true,
       createdAt: createdAt,
@@ -111,7 +114,7 @@ class PlayerModel {
     id: '',
     name: 'Unknown',
     age: 0,
-    level: 'Beginner',
+    level: 'B3',
     phone: '',
     isActive: false,
     createdAt: DateTime.now(),
