@@ -142,12 +142,18 @@ class _PwaBannersState extends State<_PwaBanners> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Stack(
       children: [
-        const OfflineBanner(),
-        const PwaInstallBanner(),
-        Expanded(child: widget.child),
+        Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(child: widget.child),
+          ],
+        ),
+        const Align(
+          alignment: Alignment.bottomCenter,
+          child: PwaInstallBanner(),
+        ),
       ],
     );
   }

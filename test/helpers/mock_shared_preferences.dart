@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-SharedPreferences createMockSharedPreferences() {
+Future<SharedPreferences> createMockSharedPreferences() async {
   SharedPreferences.setMockInitialValues({});
-  return SharedPreferences();
+  return await SharedPreferences.getInstance();
 }

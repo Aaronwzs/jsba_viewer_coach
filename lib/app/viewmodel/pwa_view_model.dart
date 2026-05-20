@@ -12,6 +12,7 @@ class PwaViewModel extends ChangeNotifier {
   bool _isOnline = true;
   bool _updateAvailable = false;
   bool _updateBannerDismissed = false;
+  bool _installBannerDismissed = false;
 
   StreamSubscription<bool>? _installSub;
   StreamSubscription<bool>? _connectivitySub;
@@ -22,6 +23,10 @@ class PwaViewModel extends ChangeNotifier {
 
     _installSub = PwaService.onInstallAvailable.listen((available) {
       _canInstall = available;
+      // Reset dismissal state if install availability changes
+      if (available) {
+        _installBannerDismissed = false;
+      }
       notifyListeners();
     });
 
@@ -40,7 +45,7 @@ class PwaViewModel extends ChangeNotifier {
   }
 
   /// Whether the browser supports PWA installation.
-  bool get canInstall => _canInstall;
+  bool get canInstall => _canInstall && !_installBannerDismissed;
 
   /// Whether the app is currently online.
   bool get isOnline => _isOnline;
@@ -51,6 +56,12 @@ class PwaViewModel extends ChangeNotifier {
   /// Prompt the browser's native PWA install dialog.
   Future<void> promptInstall() async {
     await PwaService.promptInstall();
+  }
+
+  /// Dismiss the install prompt banner for the current session.
+  void dismissInstall() {
+    _installBannerDismissed = true;
+    notifyListeners();
   }
 
   /// Dismiss the update available notification.
