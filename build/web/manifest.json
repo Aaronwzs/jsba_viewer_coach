@@ -3,7 +3,7 @@
     "short_name": "JSBA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#2E7D32",
+    "background_color": "#FFFFFF",
     "theme_color": "#2E7D32",
     "description": "JSBA Badminton Academy - Premier badminton training management app",
     "orientation": "portrait-primary",
