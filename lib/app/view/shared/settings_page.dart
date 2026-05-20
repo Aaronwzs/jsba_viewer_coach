@@ -1210,6 +1210,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildPlayerCard(PlayerModel player) {
     final levelColors = {
       'Beginner': Colors.blue,
+      'B3': Colors.blue,
       'Intermediate': Colors.orange,
       'Advanced': Colors.green,
     };
@@ -1689,6 +1690,29 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     super.dispose();
   }
 
+  void _onAgeChanged() {
+    final age = int.tryParse(ageController.text);
+    if (age != null && age > 0) {
+      ageYearController.text = (DateTime.now().year - age).toString();
+    } else {
+      ageYearController.clear();
+    }
+  }
+
+  void _onAgeYearChanged() {
+    final yearStr = ageYearController.text;
+    if (yearStr.length == 4) {
+      final ageYear = int.tryParse(yearStr);
+      if (ageYear != null && ageYear > 1900 && ageYear <= DateTime.now().year) {
+        ageController.text = (DateTime.now().year - ageYear).toString();
+        return;
+      }
+    }
+    if (yearStr.isEmpty) {
+      ageController.clear();
+    }
+  }
+
   Widget _buildSection(String title, List<Widget> children) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1848,7 +1872,10 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                         vertical: 12,
                       ),
                     ),
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) {
+                      _onAgeChanged();
+                      setState(() {});
+                    },
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Required';
                       final a = int.tryParse(v);
@@ -1870,6 +1897,10 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                         vertical: 12,
                       ),
                     ),
+                    onChanged: (_) {
+                      _onAgeYearChanged();
+                      setState(() {});
+                    },
                   ),
                 ),
                 _buildFieldWithTitle(
@@ -1884,11 +1915,11 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                         vertical: 12,
                       ),
                     ),
-                    items: ['Beginner', 'Intermediate', 'Advanced']
+                    items: ['B3', 'Intermediate', 'Advanced']
                         .map((l) => DropdownMenuItem(value: l, child: Text(l)))
                         .toList(),
                     onChanged: (v) => setState(
-                      () => selectedLevel = v ?? widget.player.level,
+                      () => selectedLevel = v ?? 'B3',
                     ),
                   ),
                 ),

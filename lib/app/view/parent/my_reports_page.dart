@@ -391,8 +391,9 @@ class _MyReportsPageState extends State<MyReportsPage> {
       parentNameController.text = selfPlayer.name;
     }
 
-    String level = 'Beginner';
+    String level = 'B3';
     bool isAddingForSelf = false;
+    bool showOptionalParentInfo = false;
 
     // Auto-populate ageYear when age changes
     void onAgeChanged() {
@@ -404,6 +405,21 @@ class _MyReportsPageState extends State<MyReportsPage> {
       }
     }
 
+    // Auto-populate age when birth year changes
+    void onAgeYearChanged() {
+      final yearStr = ageYearController.text;
+      if (yearStr.length == 4) {
+        final ageYear = int.tryParse(yearStr);
+        if (ageYear != null && ageYear > 1900 && ageYear <= DateTime.now().year) {
+          ageController.text = (DateTime.now().year - ageYear).toString();
+          return;
+        }
+      }
+      if (yearStr.isEmpty) {
+        ageController.clear();
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -411,7 +427,8 @@ class _MyReportsPageState extends State<MyReportsPage> {
         builder: (ctx, setModalState) {
           final hasSelfAdded = parentVM.hasSelfAdded;
           final age = int.tryParse(ageController.text) ?? 0;
-          final needsParentInfo = age < 20;
+          final isUnder20 = age > 0 && age < 20;
+          final showParentInfo = isUnder20 || (age >= 20 && showOptionalParentInfo);
 
           return SingleChildScrollView(
             child: Padding(
@@ -426,7 +443,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Add Player',
+                     'Add Player',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -482,25 +499,13 @@ class _MyReportsPageState extends State<MyReportsPage> {
                     maxLength: 4,
                     decoration: const InputDecoration(
                       labelText: 'Birth Year (e.g. 2015)',
-                      hintText: 'Auto-filled from age',
+                      hintText: 'Auto-filled or manual enter',
                       border: OutlineInputBorder(),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: level,
-                    decoration: const InputDecoration(
-                      labelText: 'Level',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: ['Beginner', 'Intermediate', 'Advanced']
-                        .map((l) => DropdownMenuItem(value: l, child: Text(l)))
-                        .toList(),
-                    onChanged: (value) {
+                    onChanged: (_) {
+                      onAgeYearChanged();
                       if (!context.mounted) return;
-                      setModalState(() {
-                        level = value ?? 'Beginner';
-                      });
+                      setModalState(() {});
                     },
                   ),
                   const SizedBox(height: 16),
@@ -512,10 +517,26 @@ class _MyReportsPageState extends State<MyReportsPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  if (needsParentInfo) ...[
+                  if (age >= 20) ...[
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      title: const Text('Add parent/guardian details'),
+                      value: showOptionalParentInfo,
+                      onChanged: (value) {
+                        if (!context.mounted) return;
+                        setModalState(() {
+                          showOptionalParentInfo = value ?? false;
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                  if (showParentInfo) ...[
                     const SizedBox(height: 16),
                     Text(
-                      'Since the player is under 20 years old, please provide parent/guardian name:',
+                      isUnder20
+                          ? 'Since the player is under 20 years old, please provide parent/guardian name:'
+                          : 'Provide parent/guardian name:',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange.shade700,
@@ -555,7 +576,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                           return;
                         }
 
-                        if (age < 20 && parentNameController.text.isEmpty) {
+                        if (isUnder20 && parentNameController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
@@ -589,7 +610,7 @@ class _MyReportsPageState extends State<MyReportsPage> {
                           message = 'Your profile has been added!';
                         } else {
                           final selfPlayer = parentVM.selfPlayer;
-                          final guardianName = age < 20
+                          final guardianName = (age < 20 || showOptionalParentInfo) && parentNameController.text.isNotEmpty
                               ? parentNameController.text
                               : (selfPlayer?.name ?? user.name);
 
