@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/utils/responsive_helper.dart';
 
 @RoutePage()
 class AnnouncementsPage extends StatefulWidget {
@@ -301,19 +302,53 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                   ),
                   if (announcement.hasImages) ...[
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.image, size: 16, color: Colors.grey[400]),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${announcement.imageCount} image${announcement.imageCount > 1 ? 's' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[500],
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: ResponsiveHelper.getDeviceType(context) ==
+                                DeviceType.web
+                            ? MediaQuery.sizeOf(context).width * 0.4
+                            : double.infinity,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 210 / 297, // A4 Aspect Ratio
+                        child: PageView.builder(
+                          itemCount: announcement.imageUrls.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                    announcement.imageUrls[index],
+                                  ),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    if (announcement.imageUrls.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            announcement.imageUrls.length,
+                            (index) => Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.grey[400],
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                   const SizedBox(height: 12),
                   Row(
@@ -482,28 +517,62 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       ),
                       if (announcement.hasImages) ...[
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 220,
-                          child: PageView.builder(
-                            itemCount: announcement.imageUrls.length,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  image: DecorationImage(
-                                    image: NetworkImage(
-                                      announcement.imageUrls[index],
-                                    ),
-                                    fit: BoxFit.cover,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: ResponsiveHelper.getDeviceType(context) ==
+                                    DeviceType.web
+                                ? MediaQuery.sizeOf(context).width * 0.4
+                                : double.infinity,
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 210 / 297, // A4 aspect ratio
+                            child: PageView.builder(
+                              itemCount: announcement.imageUrls.length,
+                              itemBuilder: (context, index) {
+                                return GestureDetector(
+                                  onTap: () => _openFullImageViewer(
+                                    context,
+                                    announcement.imageUrls,
+                                    index,
                                   ),
-                                ),
-                              );
-                            },
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      image: DecorationImage(
+                                        image: NetworkImage(
+                                          announcement.imageUrls[index],
+                                        ),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
+                        if (announcement.imageUrls.length > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                announcement.imageUrls.length,
+                                (index) => Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                       const SizedBox(height: 24),
                       Text(
@@ -566,6 +635,22 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openFullImageViewer(
+    BuildContext context,
+    List<String> imageUrls,
+    int initialIndex,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (context) => FullScreenImageViewer(
+          imageUrls: imageUrls,
+          initialIndex: initialIndex,
         ),
       ),
     );
@@ -659,5 +744,117 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
+class FullScreenImageViewer extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const FullScreenImageViewer({
+    super.key,
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Center(
+                child: InteractiveViewer(
+                  minScale: 0.8,
+                  maxScale: 4.0,
+                  child: Hero(
+                    tag: '${widget.imageUrls[index]}_fullscreen',
+                    child: Image.network(
+                      widget.imageUrls[index],
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 48,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+          if (widget.imageUrls.length > 1)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_currentIndex + 1} / ${widget.imageUrls.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

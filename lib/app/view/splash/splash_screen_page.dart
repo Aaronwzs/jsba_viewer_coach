@@ -29,7 +29,7 @@ class _SplashScreenPageState extends State<SplashScreenPage> {
       final user = authVM.getCurrentUser();
       if (user != null) {
         await authVM.loadUser(user.uid);
-        
+
         if (!mounted) return;
         
         if (authVM.isLoggedIn) {

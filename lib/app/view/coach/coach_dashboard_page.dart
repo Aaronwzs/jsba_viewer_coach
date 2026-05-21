@@ -419,27 +419,36 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
             ),
           ),
           if (announcement.hasImages)
-            SizedBox(
-              height: 180,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Column(
                 children: [
-                  Expanded(
-                    child: PageView.builder(
-                      itemCount: announcement.imageUrls.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            image: DecorationImage(
-                              image: NetworkImage(
-                                announcement.imageUrls[index],
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: ResponsiveHelper.getDeviceType(context) ==
+                              DeviceType.web
+                          ? MediaQuery.sizeOf(context).width * 0.4
+                          : double.infinity,
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: 210 / 297, // A4 Portrait Aspect Ratio
+                      child: PageView.builder(
+                        itemCount: announcement.imageUrls.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              image: DecorationImage(
+                                image: NetworkImage(
+                                  announcement.imageUrls[index],
+                                ),
+                                fit: BoxFit.cover,
                               ),
-                              fit: BoxFit.cover,
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                   if (announcement.imageUrls.length > 1)
