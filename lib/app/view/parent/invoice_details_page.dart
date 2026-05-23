@@ -252,13 +252,31 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   }
 
   Widget _buildSummaryCard(InvoiceModel invoice) {
+    final hasPromotions = invoice.appliedPromotions != null &&
+        invoice.appliedPromotions!.isNotEmpty;
+    final originalTotal = invoice.lineItems.fold<double>(
+      0,
+      (sum, item) => sum + item.totalPrice,
+    );
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _SummaryRow('Subtotal', invoice.subTotal, invoice.currency),
-            if (invoice.discountAmount > 0)
+            _SummaryRow('Original Total', originalTotal, invoice.currency),
+            if (hasPromotions)
+              ...invoice.appliedPromotions!.map(
+                (p) => Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: _SummaryRow(
+                    '${p.promotionPackageName} (${p.sessionsCount} sessions)${p.batchCount > 1 ? ', ${p.batchCount} batches' : ''}',
+                    -p.discountAmount,
+                    invoice.currency,
+                  ),
+                ),
+              )
+            else if (invoice.discountAmount > 0)
               _SummaryRow(
                 'Discount',
                 -invoice.discountAmount,
@@ -802,23 +820,27 @@ class _PaymentOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RadioListTile<String>(
-      value: value,
+    return RadioGroup<String>(
       groupValue: groupValue,
       onChanged: onChanged,
-      title: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: value == groupValue ? AppTheme.primaryColor : Colors.grey,
-          ),
-          const SizedBox(width: 8),
-          Text(title),
-        ],
+      child: RadioListTile<String>(
+        value: value,
+        title: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: value == groupValue
+                  ? AppTheme.primaryColor
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 8),
+            Text(title),
+          ],
+        ),
+        dense: true,
+        contentPadding: EdgeInsets.zero,
       ),
-      dense: true,
-      contentPadding: EdgeInsets.zero,
     );
   }
 }

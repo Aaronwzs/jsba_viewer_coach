@@ -16,6 +16,7 @@ class TrainingModel {
   final double price;
   final int? maxPlayers;
   final String? coachId;
+  final List<String> promotionPackageIds;
 
   // Predefined options
   static const List<String> validClassTypes = [
@@ -118,6 +119,7 @@ class TrainingModel {
     required this.price,
     this.maxPlayers,
     this.coachId,
+    this.promotionPackageIds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -135,6 +137,8 @@ class TrainingModel {
     'price': price,
     'maxPlayers': maxPlayers,
     'coachId': coachId,
+    if (promotionPackageIds.isNotEmpty)
+      'promotionPackageIds': promotionPackageIds,
   };
 
   factory TrainingModel.fromMap(
@@ -169,6 +173,7 @@ class TrainingModel {
       price: (map['price'] as num?)?.toDouble() ?? 0.0,
       maxPlayers: map['maxPlayers'] as int?,
       coachId: map['coachId'] as String?,
+      promotionPackageIds: List<String>.from(map['promotionPackageIds'] ?? []),
     );
   }
 }
