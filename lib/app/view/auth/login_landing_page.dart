@@ -186,23 +186,25 @@ class LoginLandingPage extends StatelessWidget {
         Expanded(
           flex: 4,
           child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(48),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildLogo(context),
-                  const SizedBox(height: 40),
-                  _buildWelcomeText(context),
-                  const SizedBox(height: 40),
-                  _buildLoginButton(context),
-                  const SizedBox(height: 32),
-                  _buildFeatures(context),
-                  const Spacer(),
-                  _buildFooter(context),
-                ],
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildLogo(context),
+                    const SizedBox(height: 40),
+                    _buildWelcomeText(context),
+                    const SizedBox(height: 40),
+                    _buildLoginButton(context),
+                    const SizedBox(height: 32),
+                    _buildFeatures(context),
+                    const SizedBox(height: 32),
+                    _buildFooter(context),
+                  ],
+                ),
               ),
             ),
           ),
@@ -359,44 +361,65 @@ class LoginLandingPage extends StatelessWidget {
     return Column(
       children: [
         const Divider(),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Need help? ',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primaryColor.withValues(alpha: 0.08),
+                AppTheme.primaryColor.withValues(alpha: 0.03),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppTheme.primaryColor.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                Icons.phone_iphone,
+                size: 28,
+                color: AppTheme.primaryColor,
               ),
-              child: Text(
-                'Contact us',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              const SizedBox(height: 10),
+              Text(
+                'Get the App',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                   color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        OutlinedButton.icon(
-          onPressed: () => _showInstallDialog(context),
-          icon: const Icon(Icons.download_outlined, size: 18),
-          label: const Text('Install JSBA App'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.primaryColor,
-            side: BorderSide(
-              color: AppTheme.primaryColor.withValues(alpha: 0.5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              const SizedBox(height: 4),
+              Text(
+                'Available on Android & iOS',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showInstallDialog(context),
+                  icon: const Icon(Icons.download_rounded, size: 18),
+                  label: const Text('Install JSBA App'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -406,48 +429,116 @@ class LoginLandingPage extends StatelessWidget {
   void _showInstallDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.download, color: AppTheme.primaryColor),
-            const SizedBox(width: 12),
-            const Text('Install JSBA'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Add JSBA to your home screen for quick access?'),
-            const SizedBox(height: 16),
-            Text(
-              'This will install the app on your device.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Use your browser menu to add to home screen'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
+                child: Icon(
+                  Icons.download_rounded,
+                  size: 32,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Install JSBA App',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add JSBA to your home screen for quick access to bookings, progress tracking, and more.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildPlatformBadge(context, Icons.phone_android, 'Android'),
+                  const SizedBox(width: 12),
+                  _buildPlatformBadge(context, Icons.phone_iphone, 'iOS'),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Use your browser menu to add to home screen',
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Install Now'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Maybe Later',
+                  style: TextStyle(color: Colors.grey[500]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlatformBadge(
+    BuildContext context,
+    IconData icon,
+    String label,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[700]),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
             ),
-            child: const Text('Install'),
           ),
         ],
       ),

@@ -136,6 +136,7 @@ class BillingViewModel extends ChangeNotifier {
           billToType: invoice.billToType,
           billingPlayerName: invoice.billingPlayerName,
           playerIds: invoice.playerIds,
+          appliedPromotions: invoice.appliedPromotions,
         );
       }
 
