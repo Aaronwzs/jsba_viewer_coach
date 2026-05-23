@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -67,6 +68,16 @@ class PdfUiHandler {
       final bytes = await pdfBuilder();
       if (!context.mounted) return;
 
+      if (kIsWeb) {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile.fromData(bytes, name: '$documentNumber.pdf', mimeType: 'application/pdf')],
+            text: '$documentType $documentNumber',
+          ),
+        );
+        return;
+      }
+
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/$documentNumber.pdf');
       await file.writeAsBytes(bytes);
@@ -77,11 +88,13 @@ class PdfUiHandler {
           ? Rect.zero
           : box.localToGlobal(Offset.zero) & box.size;
 
+      final needsOrigin = Platform.isIOS || Platform.isMacOS;
+
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: '$documentType $documentNumber',
-          sharePositionOrigin: origin,
+          sharePositionOrigin: needsOrigin ? origin : null,
         ),
       );
     } catch (e) {
