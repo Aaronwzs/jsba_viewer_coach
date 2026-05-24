@@ -11,6 +11,7 @@ class InvoiceLineItem {
   final String? trainingId;
   final DateTime? date;
   final String? attendanceStatus;
+  final List<String> packageIds;
 
   InvoiceLineItem({
     required this.id,
@@ -23,6 +24,7 @@ class InvoiceLineItem {
     this.trainingId,
     this.date,
     this.attendanceStatus,
+    this.packageIds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -36,6 +38,7 @@ class InvoiceLineItem {
     'trainingId': trainingId,
     'date': date != null ? Timestamp.fromDate(date!) : null,
     'attendanceStatus': attendanceStatus,
+    'packageIds': packageIds,
   };
 
   factory InvoiceLineItem.fromMap(Map<String, dynamic> map) {
@@ -58,6 +61,41 @@ class InvoiceLineItem {
       trainingId: map['trainingId'] as String?,
       date: date,
       attendanceStatus: map['attendanceStatus'] as String?,
+      packageIds: List<String>.from(map['packageIds'] ?? []),
+    );
+  }
+}
+
+class AppliedPromotionInfo {
+  final String promotionPackageId;
+  final String promotionPackageName;
+  final int sessionsCount;
+  final double discountAmount;
+  final int batchCount;
+
+  AppliedPromotionInfo({
+    required this.promotionPackageId,
+    required this.promotionPackageName,
+    required this.sessionsCount,
+    required this.discountAmount,
+    this.batchCount = 1,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'promotionPackageId': promotionPackageId,
+        'promotionPackageName': promotionPackageName,
+        'sessionsCount': sessionsCount,
+        'discountAmount': discountAmount,
+        'batchCount': batchCount,
+      };
+
+  factory AppliedPromotionInfo.fromMap(Map<String, dynamic> map) {
+    return AppliedPromotionInfo(
+      promotionPackageId: map['promotionPackageId'] as String? ?? '',
+      promotionPackageName: map['promotionPackageName'] as String? ?? '',
+      sessionsCount: (map['sessionsCount'] as num?)?.toInt() ?? 0,
+      discountAmount: (map['discountAmount'] as num?)?.toDouble() ?? 0.0,
+      batchCount: (map['batchCount'] as num?)?.toInt() ?? 1,
     );
   }
 }
@@ -95,6 +133,7 @@ class InvoiceModel {
   billingPlayerName; // Store the player's name separately for reference
   // Family invoice: list of all player IDs
   final List<String> playerIds;
+  final List<AppliedPromotionInfo>? appliedPromotions;
 
   InvoiceModel({
     required this.id,
@@ -126,6 +165,7 @@ class InvoiceModel {
     this.billToType,
     this.billingPlayerName,
     this.playerIds = const [],
+    this.appliedPromotions,
   });
 
   Map<String, dynamic> toJson() => {
@@ -157,6 +197,9 @@ class InvoiceModel {
     'billToType': billToType,
     'billingPlayerName': billingPlayerName,
     'playerIds': playerIds,
+    if (appliedPromotions != null)
+      'appliedPromotions':
+          appliedPromotions!.map((p) => p.toJson()).toList(),
   };
 
   factory InvoiceModel.fromMap(Map<String, dynamic> map, {required String id}) {
@@ -226,6 +269,13 @@ class InvoiceModel {
       billToType: map['billToType'] as String?,
       billingPlayerName: map['billingPlayerName'] as String?,
       playerIds: playerIdsList,
+      appliedPromotions: (map['appliedPromotions'] as List<dynamic>?)
+          ?.map(
+            (e) => AppliedPromotionInfo.fromMap(
+              Map<String, dynamic>.from(e),
+            ),
+          )
+          .toList(),
     );
   }
 }
