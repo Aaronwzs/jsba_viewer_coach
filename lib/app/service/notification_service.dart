@@ -123,6 +123,64 @@ class NotificationService {
     }
   }
 
+  /// Write a notification document to a list of user's Firestore subcollections
+  /// at /users/{userId}/notifications/{notificationId}.
+  /// This is the in-app feed — the NotificationViewModel picks it up in real-time.
+  Future<void> sendNotificationToUserIds({
+    required List<String> userIds,
+    required String type,
+    required String title,
+    required String body,
+    String? referenceId,
+    String? referenceCollection,
+  }) async {
+    if (userIds.isEmpty) return;
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final userId in userIds) {
+      final notifRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .doc();
+
+      batch.set(notifRef, {
+        'type': type,
+        'title': title,
+        'body': body,
+        'referenceId': referenceId,
+        'referenceCollection': referenceCollection,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+    debugPrint('Notification written for ${userIds.length} user(s)');
+  }
+
+  /// Look up parent user IDs from a list of player IDs
+  /// by querying the `players` collection where the doc ID is in the list.
+  static Future<List<String>> getParentIdsForPlayers(
+    List<String> playerIds,
+  ) async {
+    if (playerIds.isEmpty) return [];
+
+    final players = await FirebaseFirestore.instance
+        .collection('players')
+        .where(FieldPath.documentId, whereIn: playerIds.take(30).toList())
+        .get();
+
+    final parentIds = <String>{};
+    for (final doc in players.docs) {
+      final parentId = doc.data()['parentId'] as String?;
+      if (parentId != null) parentIds.add(parentId);
+    }
+
+    return parentIds.toList();
+  }
+
   /// Handle a foreground FCM message — show local notification
   void _handleForegroundMessage(RemoteMessage message) {
     final notification = message.notification;

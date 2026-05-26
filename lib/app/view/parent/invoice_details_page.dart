@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/service/storage_service.dart';
+import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/view/parent/widgets/pdf_ui_handler.dart';
@@ -730,10 +731,12 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                       Navigator.pop(dialogContext);
                       final billingVM = context.read<BillingViewModel>();
                       final ref = _uploadedUrls.join(',');
+                      final authVM = context.read<AuthViewModel>();
                       final success = await billingVM.markAsPaid(
                         invoiceId: invoice.id,
                         paymentMethod: selectedMethod,
                         paymentReference: ref,
+                        userId: authVM.currentUser?.uid,
                       );
 
                       if (!context.mounted) return;

@@ -91,6 +91,7 @@ class BillingViewModel extends ChangeNotifier {
     required String invoiceId,
     required String paymentMethod,
     String? paymentReference,
+    String? userId,
   }) async {
     _isLoading = true;
     _error = null;
@@ -101,6 +102,7 @@ class BillingViewModel extends ChangeNotifier {
         invoiceId: invoiceId,
         paymentMethod: paymentMethod,
         paymentReference: paymentReference,
+        userId: userId ?? '',
       );
 
       final index = _invoices.indexWhere((i) => i.id == invoiceId);

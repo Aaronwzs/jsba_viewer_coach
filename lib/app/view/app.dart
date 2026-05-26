@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
@@ -9,8 +10,10 @@ import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/viewmodel/availability_view_model.dart';
+import 'package:jsba_app/app/model/notification_item_model.dart';
 import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
 import 'package:jsba_app/app/viewmodel/pwa_view_model.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart' as starter_handler;
 import 'package:jsba_app/app/widgets/pwa_install_banner.dart';
 import 'package:jsba_app/app/widgets/offline_banner.dart';
 import 'package:jsba_app/app/widgets/pwa_update_banner.dart';
@@ -109,12 +112,49 @@ class _PwaBannersState extends State<_PwaBanners> {
     // the widget tree is fully built before showing a snackbar.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _listenForUpdates();
+      _wireNotificationTap();
     });
   }
 
   void _listenForUpdates() {
     final pwaVm = context.read<PwaViewModel>();
     pwaVm.addListener(_onPwaStateChanged);
+  }
+
+  /// Wire the onNotificationTap callback so tapping a push notification
+  /// in the system tray (background/cold-start) navigates to the relevant page.
+  void _wireNotificationTap() {
+    starter_handler.notificationService.onNotificationTap = (
+      NotificationItemModel notification,
+    ) {
+      if (!mounted) return;
+
+      String? path;
+      switch (notification.referenceCollection) {
+        case 'announcements':
+          path = '/announcement-details/${notification.referenceId}';
+        case 'invoices':
+          path = '/invoice-details/${notification.referenceId}';
+        case 'receipts':
+          path = '/receipt-details/${notification.referenceId}';
+        case 'training':
+          path = '/class-detail/${notification.referenceId}';
+        case 'court_signups':
+          path = '/open-court-detail/${notification.referenceId}';
+        case 'kid_availability':
+          // Navigate to the open court detail or general dashboard
+          path = '/open-court-detail/${notification.referenceId}';
+        case 'feedbacks':
+          path = '/feedback-report';
+        default:
+          path = null;
+      }
+
+      if (path == null) return;
+      if (!mounted) return;
+
+      context.router.pushPath(path);
+    };
   }
 
   void _onPwaStateChanged() {

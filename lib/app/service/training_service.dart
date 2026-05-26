@@ -1,6 +1,8 @@
 // lib/app/service/training_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/training_model.dart';
+import 'package:jsba_app/app/service/notification_service.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart' as starter_handler;
 
 
 class TrainingService {
@@ -82,7 +84,30 @@ class TrainingService {
 
   // Update training status
   Future<void> updateTrainingStatus(String id, String status) async {
+    // Get training details before updating
+    final trainingDoc = await _db.collection('trainings').doc(id).get();
+    final trainingData = trainingDoc.data();
+    final playerIds =
+        (trainingData?['playerIds'] as List<dynamic>?)?.cast<String>() ?? [];
+    final className = trainingData?['className'] as String? ?? 'Training';
+
     await _db.collection('trainings').doc(id).update({'status': status});
+
+    // Notify parents when training is cancelled
+    if (status == 'cancelled' && playerIds.isNotEmpty) {
+      final parentIds =
+          await NotificationService.getParentIdsForPlayers(playerIds);
+      if (parentIds.isNotEmpty) {
+        starter_handler.notificationService.sendNotificationToUserIds(
+          userIds: parentIds,
+          type: 'training',
+          title: 'Training Cancelled',
+          body: '$className has been cancelled.',
+          referenceId: id,
+          referenceCollection: 'training',
+        );
+      }
+    }
   }
 
   // Get all trainings for a specific player in a given month/year

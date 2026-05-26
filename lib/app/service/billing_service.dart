@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart' as starter_handler;
 
 class BillingService {
   final FirebaseFirestore _db;
@@ -191,12 +192,30 @@ class BillingService {
     required String invoiceId,
     required String paymentMethod,
     String? paymentReference,
+    /// The user ID to send a confirmation notification to
+    required String userId,
   }) async {
+    // Get invoice details for the notification body
+    final invoiceDoc = await _db.collection('invoices').doc(invoiceId).get();
+    final invoiceData = invoiceDoc.data();
+    final invoiceNumber = invoiceData?['invoiceNumber'] as String? ?? '';
+    final totalAmount = (invoiceData?['totalAmount'] as num?)?.toDouble() ?? 0;
+
     await _db.collection('invoices').doc(invoiceId).update({
       'paymentMethod': paymentMethod,
       'paymentReference': paymentReference,
       'status': 'sent',
       'sentAt': Timestamp.fromDate(DateTime.now()),
     });
+
+    // Write a notification to the user's in-app feed
+    starter_handler.notificationService.sendNotificationToUserIds(
+      userIds: [userId],
+      type: 'invoice',
+      title: 'Payment Submitted',
+      body: 'Invoice $invoiceNumber for RM${totalAmount.toStringAsFixed(2)} has been submitted for confirmation.',
+      referenceId: invoiceId,
+      referenceCollection: 'invoices',
+    );
   }
 }
