@@ -23,9 +23,19 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CoachViewModel>().loadCoachData();
-      context.read<AnnouncementViewModel>().loadAnnouncements();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authVM = context.read<AuthViewModel>();
+      final coachVM = context.read<CoachViewModel>();
+      final announcementVM = context.read<AnnouncementViewModel>();
+      // Ensure auth resolution is complete before proceeding.
+      // On web reload SplashScreen is bypassed, so checkAuth may still be
+      // resolving the Firebase IndexedDB session in the background.
+      if (authVM.currentUser == null) {
+        await authVM.checkAuth();
+      }
+      if (!mounted) return;
+      coachVM.loadCoachData();
+      announcementVM.loadAnnouncements();
     });
   }
 

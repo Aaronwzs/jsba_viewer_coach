@@ -27,7 +27,14 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) {
+          final vm = AuthViewModel();
+          // Fire auth resolution eagerly — on web reload the SplashScreen
+          // guard is bypassed by auto_route URL restore, so no widget will
+          // call checkAuth() unless we start it here.
+          vm.checkAuth();
+          return vm;
+        }),
         ChangeNotifierProvider(create: (_) => AppViewModel()),
         ChangeNotifierProvider(create: (_) => CoachViewModel()),
         ChangeNotifierProvider(create: (_) => ParentViewModel()),

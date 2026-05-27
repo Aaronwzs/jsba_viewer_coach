@@ -1,17 +1,40 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jsba_app/app/service/auth_service.dart';
 import 'package:jsba_app/app/service/database_service.dart';
+import 'package:jsba_app/app/service/notification_service.dart';
 import 'package:jsba_app/app/model/user_model.dart';
-import 'package:jsba_app/app/utils/starter_handler.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart' as starter_handler;
+
+// Debug flag — set to true to enable verbose auth resolution logs
+bool _authDebug = false;
+void _log(String msg) {
+  if (_authDebug) debugPrint('[AuthViewModel] $msg');
+}
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService;
   final DatabaseService _databaseService;
+  final NotificationService _notificationService;
 
-  AuthViewModel({AuthService? authService, DatabaseService? databaseService})
-      : _authService = authService ?? AuthService(),
-        _databaseService = databaseService ?? DatabaseService();
+  /// Tracks the async auth check so [checkAuth] is idempotent.
+  Future<void>? _authCheckFuture;
+
+  AuthViewModel({
+    AuthService? authService,
+    DatabaseService? databaseService,
+    NotificationService? notificationService,
+  })  : _authService = authService ?? AuthService(),
+        _databaseService = databaseService ?? DatabaseService(),
+        _notificationService = notificationService ??
+            starter_handler.notificationService;
+  // NOTE: checkAuth() is NOT called from the constructor to avoid issues
+  // in test environments where mock bindings aren't set up yet.
+  // It is called from the Provider create callback in app.dart, so it
+  // fires eagerly when the widget tree first reads AuthViewModel.
 
   UserModel? _currentUser;
   bool _isLoading = false;
@@ -35,20 +58,109 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> checkAuth() async {
+  /// Idempotent auth check — returns the same Future if already running.
+  /// Safe to call from SplashScreen, dashboard pages, or any widget.
+  Future<void> checkAuth() {
+    _authCheckFuture ??= _executeCheckAuth();
+    return _authCheckFuture!;
+  }
+
+  /// Internal auth resolution logic. Extracted so both constructor and
+  /// idempotent [checkAuth] share the same implementation.
+  Future<void> _executeCheckAuth() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
+    _log('=== checkAuth() START ===');
+    _log('kIsWeb=$kIsWeb');
+
     try {
-      final user = _authService.currentUser;
+      // 🏷 Check persisted flag for previous login (survives page reload on web)
+      final storedUid = starter_handler.cachedLoggedInUid;
+      _log('0. cachedLoggedInUid=$storedUid');
+
+      User? user = _authService.currentUser;
+      _log('1. currentUser (sync) -> ${user != null ? "uid=${user.uid}" : "null"}');
+
+      if (user == null && kIsWeb) {
+        // On web, currentUser returns null on page reload because IndexedDB
+        // hasn't resolved yet. Subscribe to authStateChanges which
+        // asynchronously emits the restored user once IndexedDB resolves.
+        //
+        // ALSO poll currentUser every 500ms as a fallback, because on some
+        // browsers the stream listener never fires but currentUser eventually
+        // gets populated.
+        //
+        // If the user had a prior login session (storedUid != null), use a
+        // longer timeout (30s) because IndexedDB can take 15-25 seconds to
+        // resolve on slow connections or after a fresh page reload.
+        final bool isReturningUser = storedUid != null;
+        final int maxPollIterations = isReturningUser ? 60 : 30; // 30s vs 15s
+        final int timeoutSeconds = isReturningUser ? 30 : 15;
+
+        _log('2a. currentUser was null on web — combined stream + poll approach '
+            '(isReturningUser=$isReturningUser, timeout=${timeoutSeconds}s)');
+        final stopwatch = Stopwatch()..start();
+
+        final streamFuture = _authService.authStateChanges
+            .firstWhere((u) => u != null)
+            .timeout(Duration(seconds: timeoutSeconds));
+
+        final pollFuture = (() async {
+          for (int i = 0; i < maxPollIterations; i++) {
+            await Future.delayed(const Duration(milliseconds: 500));
+            final u = _authService.currentUser;
+            if (u != null) return u;
+          }
+          return null;
+        })();
+
+        try {
+          user = await Future.any([streamFuture, pollFuture]);
+          if (user != null) {
+            _log('3a. ✅ resolved after ${stopwatch.elapsedMilliseconds}ms -> uid=${user.uid}');
+          } else {
+            _log('3a. ⏰ both stream and poll returned null after ${stopwatch.elapsedMilliseconds}ms');
+          }
+        } on TimeoutException {
+          user = null;
+          _log('3a. ⏰ both methods timed out after ${stopwatch.elapsedMilliseconds}ms');
+        }
+      } else if (user == null && !kIsWeb) {
+        _log('2. currentUser was null on mobile — no session');
+      } else {
+        _log('2. currentUser was non-null, skipping web fallback');
+      }
+
       if (user != null) {
-        _currentUser = await _databaseService.getUser(user.uid);
+        _log('4. Loading UserModel from Firestore for uid=${user.uid}...');
+        UserModel? userModel = await _databaseService.getUser(user.uid);
+        _log('5. Firestore getUser returned: ${userModel != null ? "uid=${userModel.uid} role=${userModel.role} name=${userModel.name}" : "null (will retry)"}');
+
+        // Retry once if getUser() returned null — Firestore on web may need
+        // a brief warm-up for the WebSocket connection.
+        if (userModel == null && kIsWeb) {
+          _log('5b. ⏳ getUser() was null on web — retrying after 1s delay...');
+          await Future.delayed(const Duration(seconds: 1));
+          userModel = await _databaseService.getUser(user.uid);
+          _log('5c. Retry getUser returned: ${userModel != null ? "uid=${userModel.uid}" : "still null"}');
+        }
+
+        _currentUser = userModel;
+        // ✅ Session restored — persist UID so it survives the next reload
+        await starter_handler.writeCachedLoggedInUid(user.uid);
+      } else {
+        _log('4. No Firebase user — skipping Firestore load');
+        // Clear stale flag if user is null
+        await starter_handler.writeCachedLoggedInUid(null);
       }
     } catch (e) {
+      _log('ERROR in checkAuth: $e');
       _error = e.toString();
     }
 
+    _log('6. checkAuth() done — isLoggedIn=$isLoggedIn, currentUser=${currentUser != null ? "uid=${currentUser!.uid}" : "null"}');
     _isLoading = false;
     notifyListeners();
   }
@@ -66,8 +178,11 @@ class AuthViewModel extends ChangeNotifier {
       _currentUser = await _databaseService.ensureUserDocumentExists(
         credential.user!.uid,
       );
+      // Store UID in localStorage so checkAuth() can use longer timeout on reload
+      await starter_handler.writeCachedLoggedInUid(credential.user!.uid);
+      _log('[signIn] ✅ persisted jsba_logged_in_uid=${credential.user!.uid}');
       // Save FCM device token for push notifications
-      await notificationService.saveDeviceToken(credential.user!.uid);
+      await _notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -103,8 +218,10 @@ class AuthViewModel extends ChangeNotifier {
         status: 'active',
       );
       _currentUser = await _databaseService.getUser(credential.user!.uid);
+      await starter_handler.writeCachedLoggedInUid(credential.user!.uid);
+      _log('[register] ✅ persisted jsba_logged_in_uid=${credential.user!.uid}');
       // Save FCM device token for push notifications
-      await notificationService.saveDeviceToken(credential.user!.uid);
+      await _notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -123,10 +240,13 @@ class AuthViewModel extends ChangeNotifier {
     try {
       // Remove device token before signing out
       if (_currentUser != null) {
-        await notificationService.removeDeviceToken(_currentUser!.uid);
+        await _notificationService.removeDeviceToken(_currentUser!.uid);
       }
       await _authService.signOut();
       _currentUser = null;
+      // Clear persisted UID so checkAuth() uses short timeout next time
+      await starter_handler.writeCachedLoggedInUid(null);
+      _log('[signOut] ✅ cleared persisted jsba_logged_in_uid');
     } catch (e) {
       _error = e.toString();
     }
@@ -337,8 +457,10 @@ class AuthViewModel extends ChangeNotifier {
       _currentUser = await _databaseService.ensureUserDocumentExists(
         credential.user!.uid,
       );
+      await starter_handler.writeCachedLoggedInUid(credential.user!.uid);
+      _log('[verifyPhoneOtp] ✅ persisted jsba_logged_in_uid=${credential.user!.uid}');
       // Save FCM device token for push notifications
-      await notificationService.saveDeviceToken(credential.user!.uid);
+      await _notificationService.saveDeviceToken(credential.user!.uid);
       _isLoading = false;
       notifyListeners();
       return true;

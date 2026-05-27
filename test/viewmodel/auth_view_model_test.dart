@@ -5,16 +5,19 @@ import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:jsba_app/app/model/user_model.dart';
 import 'package:jsba_app/app/service/auth_service.dart';
 import 'package:jsba_app/app/service/database_service.dart';
+import 'package:jsba_app/app/service/notification_service.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import '../helpers/model_factories.dart';
 
 class MockAuthService extends Mock implements AuthService {}
 class MockDatabaseService extends Mock implements DatabaseService {}
+class MockNotificationService extends Mock implements NotificationService {}
 class MockUserCredential extends Mock implements UserCredential {}
 
 void main() {
   late MockAuthService mockAuthService;
   late MockDatabaseService mockDatabaseService;
+  late MockNotificationService mockNotificationService;
   late AuthViewModel viewModel;
   late MockUser mockFirebaseUser;
   late MockUserCredential mockUserCredential;
@@ -23,9 +26,11 @@ void main() {
   setUp(() {
     mockAuthService = MockAuthService();
     mockDatabaseService = MockDatabaseService();
+    mockNotificationService = MockNotificationService();
     viewModel = AuthViewModel(
       authService: mockAuthService,
       databaseService: mockDatabaseService,
+      notificationService: mockNotificationService,
     );
     mockFirebaseUser = MockUser(uid: 'test-uid', email: 'test@test.com');
     mockUserCredential = MockUserCredential();

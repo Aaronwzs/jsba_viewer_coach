@@ -24,12 +24,21 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authVM = context.read<AuthViewModel>();
-      if (authVM.currentUser != null) {
-        context.read<ParentViewModel>().loadMyKids(authVM.currentUser!.uid);
+      final parentVM = context.read<ParentViewModel>();
+      final announcementVM = context.read<AnnouncementViewModel>();
+      // Ensure auth resolution is complete before checking currentUser.
+      // On web reload SplashScreen is bypassed, so checkAuth may still be
+      // resolving the Firebase IndexedDB session in the background.
+      if (authVM.currentUser == null) {
+        await authVM.checkAuth();
       }
-      context.read<AnnouncementViewModel>().loadAnnouncements();
+      if (!mounted) return;
+      if (authVM.currentUser != null) {
+        parentVM.loadMyKids(authVM.currentUser!.uid);
+      }
+      announcementVM.loadAnnouncements();
     });
   }
 
