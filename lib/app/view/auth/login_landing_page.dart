@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
-import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 
 @RoutePage()
@@ -280,7 +279,7 @@ class LoginLandingPage extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          context.router.root.push(const LoginRoute());
+          context.router.pushPath('/login');
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.primaryColor,

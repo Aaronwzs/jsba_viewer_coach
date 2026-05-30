@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
-import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 
@@ -347,7 +346,7 @@ class _FirstTimeLoginPageState extends State<FirstTimeLoginPage> {
                         await authVM.sendEmailVerification();
                         if (!context.mounted) return;
 
-                        context.router.root.push(const VerificationRoute());
+                        context.router.pushPath('/verification');
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
