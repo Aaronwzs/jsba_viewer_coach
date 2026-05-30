@@ -31,7 +31,9 @@ class _CoachDashboardPageState extends State<CoachDashboardPage> {
       // On web reload SplashScreen is bypassed, so checkAuth may still be
       // resolving the Firebase IndexedDB session in the background.
       if (authVM.currentUser == null) {
-        await authVM.checkAuth();
+        try {
+          await authVM.checkAuth().timeout(const Duration(seconds: 5));
+        } catch (_) {}
       }
       if (!mounted) return;
       coachVM.loadCoachData();
