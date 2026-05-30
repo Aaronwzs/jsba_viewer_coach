@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/player_model.dart';
+import 'package:jsba_app/app/model/player_css_snapshot_model.dart';
+import 'package:jsba_app/app/model/player_rating_model.dart';
+import 'package:jsba_app/app/model/metric_definition_model.dart';
+import 'package:jsba_app/app/service/metric_definition_service.dart';
+import 'package:jsba_app/app/viewmodel/assessment_view_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
@@ -19,20 +24,26 @@ class PlayerReportPage extends StatefulWidget {
 }
 
 class _PlayerReportPageState extends State<PlayerReportPage> {
+  final _metricService = MetricDefinitionService();
+  late Future<List<MetricDefinitionModel>> _metricDefinitionsFuture;
+
   @override
   void initState() {
     super.initState();
+    _metricDefinitionsFuture = _metricService.getAll();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authVM = context.read<AuthViewModel>();
       if (authVM.currentUser != null) {
         context.read<ParentViewModel>().loadMyKids(authVM.currentUser!.uid);
       }
+      context.read<AssessmentViewModel>().loadPlayerData(widget.playerId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final parentVM = context.watch<ParentViewModel>();
+    final assessmentVM = context.watch<AssessmentViewModel>();
 
     final allPlayers = [
       if (parentVM.selfPlayer != null) parentVM.selfPlayer!,
@@ -84,20 +95,26 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPlayerHeader(player, isSelf),
-            const SizedBox(height: 24),
-            _buildPlayerInfoSection(player),
-            const SizedBox(height: 24),
-            _buildPlayerReportSection(),
-            const SizedBox(height: 24),
-            _buildPlayerProgressSection(),
-            const SizedBox(height: 24),
-            if (!isSelf && player.status == PlayerStatus.pending)
-              _buildPendingNotice(),
-          ],
+        child: FutureBuilder<List<MetricDefinitionModel>>(
+          future: _metricDefinitionsFuture,
+          builder: (context, snapshot) {
+            final metricDefinitions = snapshot.data ?? [];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPlayerHeader(player, isSelf),
+                const SizedBox(height: 24),
+                _buildPlayerInfoSection(player),
+                const SizedBox(height: 24),
+                _buildPlayerReportSection(assessmentVM),
+                const SizedBox(height: 24),
+                _buildPlayerProgressSection(assessmentVM, metricDefinitions),
+                const SizedBox(height: 24),
+                if (!isSelf && player.status == PlayerStatus.pending)
+                  _buildPendingNotice(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -193,7 +210,11 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
             child: Column(
               children: [
                 _buildDetailRow(Icons.person, 'Name', player.name),
-                _buildDetailRow(Icons.cake, 'Age', '${player.computedAge} years old'),
+                _buildDetailRow(
+                  Icons.cake,
+                  'Age',
+                  '${player.computedAge} years old',
+                ),
                 _buildDetailRow(Icons.trending_up, 'Level', player.level),
                 _buildDetailRow(
                   Icons.phone,
@@ -238,7 +259,9 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
     );
   }
 
-  Widget _buildPlayerReportSection() {
+  Widget _buildPlayerReportSection(AssessmentViewModel vm) {
+    final css = vm.latestCss;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -247,44 +270,89 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Center(
+        if (vm.isLoadingPlayer && css == null)
+          const _ReportCard(child: Center(child: CircularProgressIndicator()))
+        else if (css == null)
+          const _EmptyAssessmentCard(
+            icon: Icons.description_outlined,
+            title: 'No assessment report yet',
+            subtitle:
+                'Reports appear after a physical, skill, or competition event.',
+          )
+        else
+          _ReportCard(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.description_outlined,
-                  size: 48,
-                  color: Colors.grey.shade400,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _scoreOutOfTen(css.cssTotal),
+                            style: TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          Text(
+                            'Composite Skill Score',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _TrendBadge(trend: css.trend),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Player reports will be available here',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Coming soon',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                const SizedBox(height: 20),
+                _ScoreBar(label: 'Physical', score: css.physicalScore),
+                _ScoreBar(label: 'Technical', score: css.technicalScore),
+                _ScoreBar(label: 'Match', score: css.matchScore),
+                if (css.hasStaleComponent) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.orange.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Some scores are more than 60 days old.',
+                            style: TextStyle(color: Colors.orange.shade800),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildPlayerProgressSection() {
+  Widget _buildPlayerProgressSection(
+    AssessmentViewModel vm,
+    List<MetricDefinitionModel> metricDefinitions,
+  ) {
+    final rating = vm.playerRating;
+    final physical = vm.latestPhysical;
+    final skill = vm.latestSkill;
+    final recentMatches = vm.matchResults.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -293,37 +361,120 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Center(
+        if (vm.isLoadingPlayer)
+          const _ReportCard(child: Center(child: CircularProgressIndicator()))
+        else if (physical == null && skill == null && rating == null)
+          const _EmptyAssessmentCard(
+            icon: Icons.trending_up,
+            title: 'No progress data yet',
+            subtitle: 'Progress appears once assessments are recorded.',
+          )
+        else ...[
+          if (rating != null) _RatingCard(rating: rating),
+          if (rating != null) const SizedBox(height: 12),
+          _ReportCard(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.trending_up, size: 48, color: Colors.grey.shade400),
-                const SizedBox(height: 12),
-                Text(
-                  'Player progress will be available here',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                const Text(
+                  'Latest Physical',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Coming soon',
-                  style: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+                const SizedBox(height: 10),
+                if (physical == null)
+                  Text(
+                    'No physical result yet',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  )
+                else
+                  ..._metricRows(
+                    physical.metrics,
+                    metricDefinitions,
+                    MetricCategory.physical,
                   ),
-                ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          _ReportCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Latest Skills',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                if (skill == null)
+                  Text(
+                    'No skill result yet',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  )
+                else
+                  ..._metricRows(
+                    skill.metrics,
+                    metricDefinitions,
+                    MetricCategory.skill,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ReportCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Recent Matches',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                if (recentMatches.isEmpty)
+                  Text(
+                    'No match results yet',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  )
+                else
+                  ...recentMatches.map(
+                    (match) => _MatchRow(
+                      opponent: match.opponentName,
+                      score: '${match.myPoints}-${match.opponentPoints}',
+                      isWin: match.isWin,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  List<Widget> _metricRows(
+    Map<String, dynamic> values,
+    List<MetricDefinitionModel> definitions,
+    String category,
+  ) {
+    final definitionMap = {
+      for (final definition in definitions.where((d) => d.category == category))
+        definition.key: definition,
+    };
+
+    return values.entries.map((entry) {
+      final definition = definitionMap[entry.key];
+      final raw = entry.value is num
+          ? entry.value as num
+          : num.tryParse(entry.value?.toString() ?? '');
+      final score = definition == null ? null : definition.scoreFor(raw) / 10;
+      return _MetricRow(
+        definition?.label ?? entry.key,
+        score,
+      );
+    }).toList();
+  }
+
+  String _scoreOutOfTen(double score) {
+    return '${(score.clamp(0.0, 100.0) / 10).toStringAsFixed(1)}/10';
   }
 
   Widget _buildDetailRow(
@@ -384,6 +535,248 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
             child: Text(
               'This player is pending admin approval. Some features may be limited.',
               style: TextStyle(color: Colors.orange.shade700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportCard extends StatelessWidget {
+  final Widget child;
+
+  const _ReportCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _EmptyAssessmentCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _EmptyAssessmentCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ReportCard(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Icon(icon, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScoreBar extends StatelessWidget {
+  final String label;
+  final double? score;
+
+  const _ScoreBar({required this.label, required this.score});
+
+  @override
+  Widget build(BuildContext context) {
+    final value = (score ?? 0).clamp(0.0, 100.0);
+    final hasScore = score != null;
+    final display = (value / 10).toStringAsFixed(1);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(label)),
+              Text(
+                hasScore ? '$display/10' : '—',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: hasScore ? value / 100 : 0,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendBadge extends StatelessWidget {
+  final String trend;
+
+  const _TrendBadge({required this.trend});
+
+  @override
+  Widget build(BuildContext context) {
+    final isUp = trend == CssTrend.up;
+    final isDown = trend == CssTrend.down;
+    final color = isUp ? Colors.green : (isDown ? Colors.red : Colors.grey);
+    final icon = isUp
+        ? Icons.trending_up
+        : (isDown ? Icons.trending_down : Icons.trending_flat);
+    final label = isUp ? 'Improving' : (isDown ? 'Needs focus' : 'Stable');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingCard extends StatelessWidget {
+  final PlayerRatingModel rating;
+
+  const _RatingCard({required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return _ReportCard(
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.12),
+            child: Icon(Icons.emoji_events, color: AppTheme.primaryColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  rating.tier,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${rating.matchCount} matches • ${rating.winRate.toStringAsFixed(0)}% win rate',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  final String label;
+  final double? score;
+
+  const _MetricRow(this.label, this.score);
+
+  @override
+  Widget build(BuildContext context) {
+    final text = score == null ? '—' : '${score!.toStringAsFixed(1)}/10';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(child: Text(label)),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MatchRow extends StatelessWidget {
+  final String opponent;
+  final String score;
+  final bool isWin;
+
+  const _MatchRow({
+    required this.opponent,
+    required this.score,
+    required this.isWin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isWin ? Colors.green : Colors.red;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Expanded(child: Text(opponent)),
+          Text(score, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              isWin ? 'Win' : 'Loss',
+              style: TextStyle(color: color, fontSize: 12),
             ),
           ),
         ],

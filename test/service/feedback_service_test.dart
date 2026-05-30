@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:jsba_app/app/service/feedback_service.dart';
-import 'package:jsba_app/app/model/feedback_model.dart';
 import '../helpers/model_factories.dart';
 
 void main() {

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/model/academy_settings_model.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
@@ -13,7 +12,7 @@ import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/user_model.dart';
 
 class TestModelFactory {
-  static DateTime _now = DateTime(2024, 6, 15, 10, 0, 0);
+  static final DateTime _now = DateTime(2024, 6, 15, 10, 0, 0);
 
   static UserModel createUser({
     String uid = 'user1',

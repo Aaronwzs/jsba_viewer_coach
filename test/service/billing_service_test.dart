@@ -1,9 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/service/billing_service.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
-import 'package:jsba_app/app/model/receipt_model.dart';
 import '../helpers/model_factories.dart';
 
 void main() {
@@ -137,6 +135,7 @@ void main() {
           invoiceId: id,
           paymentMethod: 'bank',
           paymentReference: 'REF-001',
+          userId: 'user1',
         );
 
         final fetched = await service.getInvoiceById(id);

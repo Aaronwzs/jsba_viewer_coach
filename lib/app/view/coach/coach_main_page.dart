@@ -92,8 +92,8 @@ class _CoachMainPageState extends State<CoachMainPage> {
           _buildNavItem(
             context,
             index: 2,
-            icon: Icons.people,
-            label: 'Players',
+            icon: Icons.assignment,
+            label: 'Assess',
             tabRouter: tabRouter,
           ),
           _buildNavItem(

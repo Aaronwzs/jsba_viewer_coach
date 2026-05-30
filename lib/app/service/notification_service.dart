@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:jsba_app/app/model/notification_item_model.dart';
 
 class NotificationService {
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging get _fcm => FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
@@ -16,13 +17,19 @@ class NotificationService {
   // Whether the service has been initialized
   bool _initialized = false;
 
+  /// Returns true if at least one Firebase app has been initialized.
+  /// Used to guard against calls when Firebase is not available (tests, web).
+  bool get _firebaseAvailable => Firebase.apps.isNotEmpty;
+
   /// Initialize notification channels and listeners.
   /// Call once at app startup.
   Future<void> initialize() async {
     if (_initialized) return;
 
     // Android notification channel configuration
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -72,6 +79,10 @@ class NotificationService {
 
   /// Get the FCM device token
   Future<String?> getDeviceToken() async {
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: getDeviceToken skipped — Firebase not initialized');
+      return null;
+    }
     try {
       return await _fcm.getToken();
     } catch (e) {
@@ -82,21 +93,28 @@ class NotificationService {
 
   /// Listen for token refresh and call the callback when a new token is issued
   void onTokenRefresh(void Function(String newToken) callback) {
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: onTokenRefresh skipped — Firebase not initialized');
+      return;
+    }
     _fcm.onTokenRefresh.listen(callback);
   }
 
   /// Save the device token to the user's document in Firestore.
   /// Call this on login.
   Future<void> saveDeviceToken(String userId) async {
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: saveDeviceToken skipped — Firebase not initialized');
+      return;
+    }
     try {
       final token = await getDeviceToken();
       if (token != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .update({
-          'deviceTokens': FieldValue.arrayUnion([token]),
-        });
+        await FirebaseFirestore.instance.collection('users').doc(userId).update(
+          {
+            'deviceTokens': FieldValue.arrayUnion([token]),
+          },
+        );
         debugPrint('Device token saved for user: $userId');
       }
     } catch (e) {
@@ -107,15 +125,18 @@ class NotificationService {
   /// Remove the device token from the user's document.
   /// Call this on logout.
   Future<void> removeDeviceToken(String userId) async {
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: removeDeviceToken skipped — Firebase not initialized');
+      return;
+    }
     try {
       final token = await getDeviceToken();
       if (token != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .update({
-          'deviceTokens': FieldValue.arrayRemove([token]),
-        });
+        await FirebaseFirestore.instance.collection('users').doc(userId).update(
+          {
+            'deviceTokens': FieldValue.arrayRemove([token]),
+          },
+        );
         debugPrint('Device token removed for user: $userId');
       }
     } catch (e) {
@@ -135,29 +156,37 @@ class NotificationService {
     String? referenceCollection,
   }) async {
     if (userIds.isEmpty) return;
-
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (final userId in userIds) {
-      final notifRef = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('notifications')
-          .doc();
-
-      batch.set(notifRef, {
-        'type': type,
-        'title': title,
-        'body': body,
-        'referenceId': referenceId,
-        'referenceCollection': referenceCollection,
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: sendNotificationToUserIds skipped — Firebase not initialized');
+      return;
     }
 
-    await batch.commit();
-    debugPrint('Notification written for ${userIds.length} user(s)');
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (final userId in userIds) {
+        final notifRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('notifications')
+            .doc();
+
+        batch.set(notifRef, {
+          'type': type,
+          'title': title,
+          'body': body,
+          'referenceId': referenceId,
+          'referenceCollection': referenceCollection,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+      debugPrint('Notification written for ${userIds.length} user(s)');
+    } catch (e) {
+      debugPrint('Error writing notification: $e');
+    }
   }
 
   /// Look up parent user IDs from a list of player IDs
@@ -166,6 +195,10 @@ class NotificationService {
     List<String> playerIds,
   ) async {
     if (playerIds.isEmpty) return [];
+    if (Firebase.apps.isEmpty) {
+      debugPrint('NotificationService: getParentIdsForPlayers skipped — Firebase not initialized');
+      return [];
+    }
 
     final players = await FirebaseFirestore.instance
         .collection('players')

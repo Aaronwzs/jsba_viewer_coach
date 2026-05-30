@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
@@ -38,27 +38,19 @@
     let hasDismissed = localStorage.getItem('pwa_install_dismissed') === 'true';
 
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent default browser prompt
       e.preventDefault();
       deferredPrompt = e;
-      
-      // Show custom install button if not dismissed
       if (!hasDismissed) {
         showInstallButton();
       }
     });
 
-    // Handle successful install
     window.addEventListener('appinstalled', (e) => {
-      // Clear deferred prompt
       deferredPrompt = null;
-      // Hide install button
       hideInstallButton();
-      // Clear dismissed state
       localStorage.removeItem('pwa_install_dismissed');
     });
 
-    // Called from Flutter to trigger the native install prompt
     window.triggerPwaInstall = function() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -67,7 +59,6 @@
     };
 
     function showInstallButton() {
-      // Button will be added by Flutter app
       window.dispatchEvent(new CustomEvent('pwa-ready-to-show-install'));
     }
 
@@ -75,10 +66,9 @@
       window.dispatchEvent(new CustomEvent('pwa-hide-install'));
     }
 
-    // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      // App is running as installed PWA
       document.body.setAttribute('data-pwa-installed', 'true');
+    }
   </script>
   <style>
     /* Styling for the PWA Loading Screen matching Flutter/Native design */
@@ -115,18 +105,14 @@
       width: 36px;
       height: 36px;
       border: 4px solid rgba(0, 0, 0, 0.08);
-      border-left-color: rgba(0, 0, 0, 0.54); /* Colors.black54 */
+      border-left-color: rgba(0, 0, 0, 0.54);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
 
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>

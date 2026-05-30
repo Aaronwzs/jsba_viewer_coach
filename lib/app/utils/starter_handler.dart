@@ -1,43 +1,49 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:jsba_app/app/assets/constants/environment_config.dart';
 import 'package:jsba_app/app/assets/firebase_options/staging_firebase_options.dart';
 import 'package:jsba_app/app/assets/firebase_options/production_firebase_options.dart';
 import 'package:jsba_app/app/service/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 🏷 In-memory + persistent flag for whether the user had a prior login session.
+/// In-memory + persistent flag for whether the user had a prior login session.
 ///
 /// This value is also persisted to SharedPreferences so it survives page
 /// reloads on web. On init(), it is restored from SharedPreferences so
-/// checkAuth() can tell if this is a returning user and wait long enough
-/// for Firebase IndexedDB to resolve.
+/// checkAuth() can tell if this is a returning user.
 String? cachedLoggedInUid;
 
 /// Key used to persist the logged-in UID in SharedPreferences.
 const String _kLoggedInUidKey = 'jsba_logged_in_uid';
 
 /// Persist the UID to both [cachedLoggedInUid] and SharedPreferences.
-///
-/// SharedPreferences writes to localStorage on web (survives reload) and
-/// to native storage on mobile platforms.
 Future<void> writeCachedLoggedInUid(String? uid) async {
   cachedLoggedInUid = uid;
-  final prefs = await SharedPreferences.getInstance();
-  if (uid != null) {
-    await prefs.setString(_kLoggedInUidKey, uid);
-  } else {
-    await prefs.remove(_kLoggedInUidKey);
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    final prefs = await SharedPreferences.getInstance();
+    if (uid != null) {
+      await prefs.setString(_kLoggedInUidKey, uid);
+    } else {
+      await prefs.remove(_kLoggedInUidKey);
+    }
+  } catch (e) {
+    debugPrint('[startup] SharedPreferences write skipped: $e');
   }
 }
 
 /// Restore [cachedLoggedInUid] from SharedPreferences.
-///
-/// Must be called during init() so the value is available when checkAuth()
-/// runs after the first frame.
 Future<void> _restoreCachedLoggedInUid() async {
-  final prefs = await SharedPreferences.getInstance();
-  cachedLoggedInUid = prefs.getString(_kLoggedInUidKey);
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    final prefs = await SharedPreferences.getInstance();
+    cachedLoggedInUid = prefs.getString(_kLoggedInUidKey);
+  } catch (e) {
+    cachedLoggedInUid = null;
+    debugPrint('[startup] SharedPreferences restore skipped: $e');
+  }
 }
 
 FirebaseOptions getFirebaseOptions() {
@@ -49,27 +55,50 @@ FirebaseOptions getFirebaseOptions() {
   }
 }
 
+/// Hard cap: init() must not block runApp() for more than this on web.
+/// The 8s JS loader safety net in flutter_bootstrap.js still covers the
+/// "Flutter didn't start" case, and the 5s splash timeout handles
+/// "Flutter started but auth hangs".
+const Duration _kInitTimeout = Duration(seconds: 6);
+
+/// Initialize app services. On web, races against a 3-second timeout so
+/// the app always renders even if Firebase or SharedPreferences hang.
+/// On mobile, must complete fully before runApp().
 Future<void> init() async {
+  if (kIsWeb) {
+    try {
+      await _initFull().timeout(_kInitTimeout);
+    } on TimeoutException {
+      debugPrint('[startup] init() timed out after ${_kInitTimeout.inSeconds}s — continuing');
+    } catch (e) {
+      debugPrint('[startup] init() error: $e — continuing');
+    }
+  } else {
+    await _initFull();
+  }
+}
+
+Future<void> _initFull() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Restore the cached UID from persistent storage BEFORE runApp().
-  // This ensures checkAuth() can distinguish returning vs first-visit users
-  // even after a full page reload on web.
   await _restoreCachedLoggedInUid();
 
-  try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: getFirebaseOptions());
-    }
-  } catch (e) {
-    if (e.toString().contains('duplicate-app')) {
-      // App already initialized, ignore
-    } else {
-      rethrow;
-    }
-  }
+  await _initFirebase();
 
   await initApiServices();
+}
+
+Future<void> _initFirebase() async {
+  if (Firebase.apps.isNotEmpty) return;
+  try {
+    await Firebase.initializeApp(
+      options: getFirebaseOptions(),
+    ).timeout(const Duration(seconds: 5));
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      debugPrint('[startup] Firebase init failed: $e');
+    }
+  }
 }
 
 /// Singleton accessor for NotificationService used across the app
@@ -81,13 +110,16 @@ NotificationService get notificationService {
 NotificationService? _notificationService;
 
 void _ensureNotificationService() {
-  if (_notificationService == null) {
-    _notificationService = NotificationService();
-  }
+  _notificationService ??= NotificationService();
 }
 
 Future<void> initApiServices() async {
-  // Initialize notification service (FCM + local notifications)
+  if (kIsWeb) return;
+
   _ensureNotificationService();
-  await _notificationService!.initialize();
+  try {
+    await _notificationService!.initialize();
+  } catch (e) {
+    debugPrint('[startup] Notification service initialization skipped: $e');
+  }
 }

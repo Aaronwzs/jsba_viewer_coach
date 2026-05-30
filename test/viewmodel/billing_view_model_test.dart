@@ -160,6 +160,7 @@ void main() {
           invoiceId: any(named: 'invoiceId'),
           paymentMethod: any(named: 'paymentMethod'),
           paymentReference: any(named: 'paymentReference'),
+          userId: any(named: 'userId'),
         )).thenAnswer((_) async => {});
 
         await viewModel.loadInvoicesForPlayerIds(['p1']);
@@ -175,6 +176,7 @@ void main() {
           invoiceId: 'inv1',
           paymentMethod: 'bank',
           paymentReference: 'REF123',
+          userId: any(named: 'userId'),
         )).called(1);
       });
 
@@ -183,6 +185,7 @@ void main() {
           invoiceId: any(named: 'invoiceId'),
           paymentMethod: any(named: 'paymentMethod'),
           paymentReference: any(named: 'paymentReference'),
+          userId: any(named: 'userId'),
         )).thenThrow(Exception('Mark failed'));
 
         final result = await viewModel.markAsPaid(

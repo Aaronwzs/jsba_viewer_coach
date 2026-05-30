@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/viewmodel/app_view_model.dart';
+import 'package:jsba_app/app/viewmodel/assessment_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/coach_view_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
@@ -27,15 +28,18 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) {
-          final vm = AuthViewModel();
-          // Fire auth resolution eagerly — on web reload the SplashScreen
-          // guard is bypassed by auto_route URL restore, so no widget will
-          // call checkAuth() unless we start it here.
-          vm.checkAuth();
-          return vm;
-        }),
+        ChangeNotifierProvider(
+          create: (_) {
+            final vm = AuthViewModel();
+            // Fire auth resolution eagerly — on web reload the SplashScreen
+            // guard is bypassed by auto_route URL restore, so no widget will
+            // call checkAuth() unless we start it here.
+            vm.checkAuth();
+            return vm;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => AppViewModel()),
+        ChangeNotifierProvider(create: (_) => AssessmentViewModel()),
         ChangeNotifierProvider(create: (_) => CoachViewModel()),
         ChangeNotifierProvider(create: (_) => ParentViewModel()),
         ChangeNotifierProvider(create: (_) => AnnouncementViewModel()),
@@ -131,37 +135,36 @@ class _PwaBannersState extends State<_PwaBanners> {
   /// Wire the onNotificationTap callback so tapping a push notification
   /// in the system tray (background/cold-start) navigates to the relevant page.
   void _wireNotificationTap() {
-    starter_handler.notificationService.onNotificationTap = (
-      NotificationItemModel notification,
-    ) {
-      if (!mounted) return;
+    starter_handler.notificationService.onNotificationTap =
+        (NotificationItemModel notification) {
+          if (!mounted) return;
 
-      String? path;
-      switch (notification.referenceCollection) {
-        case 'announcements':
-          path = '/announcement-details/${notification.referenceId}';
-        case 'invoices':
-          path = '/invoice-details/${notification.referenceId}';
-        case 'receipts':
-          path = '/receipt-details/${notification.referenceId}';
-        case 'training':
-          path = '/class-detail/${notification.referenceId}';
-        case 'court_signups':
-          path = '/open-court-detail/${notification.referenceId}';
-        case 'kid_availability':
-          // Navigate to the open court detail or general dashboard
-          path = '/open-court-detail/${notification.referenceId}';
-        case 'feedbacks':
-          path = '/feedback-report';
-        default:
-          path = null;
-      }
+          String? path;
+          switch (notification.referenceCollection) {
+            case 'announcements':
+              path = '/announcement-details/${notification.referenceId}';
+            case 'invoices':
+              path = '/invoice-details/${notification.referenceId}';
+            case 'receipts':
+              path = '/receipt-details/${notification.referenceId}';
+            case 'training':
+              path = '/class-detail/${notification.referenceId}';
+            case 'court_signups':
+              path = '/open-court-detail/${notification.referenceId}';
+            case 'kid_availability':
+              // Navigate to the open court detail or general dashboard
+              path = '/open-court-detail/${notification.referenceId}';
+            case 'feedbacks':
+              path = '/feedback-report';
+            default:
+              path = null;
+          }
 
-      if (path == null) return;
-      if (!mounted) return;
+          if (path == null) return;
+          if (!mounted) return;
 
-      context.router.pushPath(path);
-    };
+          context.router.pushPath(path);
+        };
   }
 
   void _onPwaStateChanged() {

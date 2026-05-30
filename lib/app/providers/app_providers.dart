@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:jsba_app/app/viewmodel/app_view_model.dart';
+import 'package:jsba_app/app/viewmodel/assessment_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/open_court_view_model.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
@@ -26,6 +27,7 @@ class ResponsiveInfo extends ChangeNotifier {
 List<SingleChildWidget> appProviders = [
   ChangeNotifierProvider(create: (_) => AuthViewModel()),
   ChangeNotifierProvider(create: (_) => AppViewModel()),
+  ChangeNotifierProvider(create: (_) => AssessmentViewModel()),
   ChangeNotifierProvider(create: (_) => OpenCourtViewModel()),
   ChangeNotifierProvider(create: (_) => ResponsiveInfo()),
 ];

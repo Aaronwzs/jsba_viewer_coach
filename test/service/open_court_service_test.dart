@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/service/open_court_service.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 import '../helpers/model_factories.dart';

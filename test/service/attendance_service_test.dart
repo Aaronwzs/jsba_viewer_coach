@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jsba_app/app/service/attendance_service.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
 
