@@ -16,9 +16,16 @@ void _log(String msg) {
 }
 
 class AuthViewModel extends ChangeNotifier {
-  final AuthService _authService;
-  final DatabaseService _databaseService;
-  final NotificationService _notificationService;
+  /// Services are lazily initialized via `late` so the constructor never
+  /// throws — even if Firebase hasn't finished initializing yet (e.g. on
+  /// web when CDN scripts are slow). The first Firebase call inside
+  /// [checkAuth] or [signIn] is caught by those methods' own try-catch
+  /// blocks, so the ViewModel stays in a valid error state instead of
+  /// crashing the entire Provider tree.
+  late AuthService _authService = AuthService();
+  late DatabaseService _databaseService = DatabaseService();
+  late NotificationService _notificationService =
+      starter_handler.notificationService;
 
   /// Tracks the async auth check so [checkAuth] is idempotent.
   Future<void>? _authCheckFuture;
@@ -27,10 +34,15 @@ class AuthViewModel extends ChangeNotifier {
     AuthService? authService,
     DatabaseService? databaseService,
     NotificationService? notificationService,
-  })  : _authService = authService ?? AuthService(),
-        _databaseService = databaseService ?? DatabaseService(),
-        _notificationService = notificationService ??
-            starter_handler.notificationService;
+  }) {
+    // Override with provided values (used for test mocks).
+    // If nothing is provided, the late lazy initializers above
+    // will run on first access — this avoids synchronous crashes when
+    // Firebase hasn't finished initializing yet (e.g. web startup).
+    if (authService != null) _authService = authService;
+    if (databaseService != null) _databaseService = databaseService;
+    if (notificationService != null) _notificationService = notificationService;
+  }
   // NOTE: checkAuth() is NOT called from the constructor to avoid issues
   // in test environments where mock bindings aren't set up yet.
   // It is called from the Provider create callback in app.dart, so it
@@ -50,7 +62,11 @@ class AuthViewModel extends ChangeNotifier {
   bool get isViewer => _currentUser?.role == 'Viewer';
 
   User? getCurrentUser() {
-    return _authService.currentUser;
+    try {
+      return _authService.currentUser;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> loadUser(String uid) async {
@@ -65,8 +81,8 @@ class AuthViewModel extends ChangeNotifier {
     return _authCheckFuture!;
   }
 
-  /// Internal auth resolution logic. Extracted so both constructor and
-  /// idempotent [checkAuth] share the same implementation.
+  /// Internal auth resolution logic. Called by [checkAuth] (which is
+  /// idempotent and safe to call from SplashScreen or Provider create).
   Future<void> _executeCheckAuth() async {
     _isLoading = true;
     _error = null;

@@ -36,7 +36,7 @@ class AcademyDashboardPage extends StatelessWidget {
         showLoginButton: true,
         showFaqButton: true,
         onLoginPressed: () {
-          context.router.pushPath('/login-landing');
+          context.router.push(const LoginLandingRoute());
         },
         onFaqPressed: () {
           context.router.push(const FaqRoute());

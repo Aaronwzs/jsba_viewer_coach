@@ -31,6 +31,9 @@
   <title>JSBA Badminton Academy</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Firebase JS SDK — Preloaded explicitly instead of relying on FlutterFire's
+       dynamic CDN import, which can fail when ad-blockers, CSP, or slow
+       networks block the gstatic.com dynamic import. -->
   <!-- PWA installation handling -->
   <script>
     // Track if user has dismissed install prompt
@@ -122,6 +125,11 @@
     <img class="splash-logo" src="icons/splash_logo.png" alt="JSBA Logo" />
     <div class="spinner"></div>
   </div>
+
+  <!-- Firebase JS SDK — loaded explicitly to avoid relying on FlutterFire's
+       dynamic import, which can fail under ad-blockers, CSP, or slow networks. -->
+  <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js"></script>
 
   <script src="flutter_bootstrap.js" async></script>
 </body>

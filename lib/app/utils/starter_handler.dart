@@ -56,12 +56,12 @@ FirebaseOptions getFirebaseOptions() {
 }
 
 /// Hard cap: init() must not block runApp() for more than this on web.
-/// The 8s JS loader safety net in flutter_bootstrap.js still covers the
-/// "Flutter didn't start" case, and the 5s splash timeout handles
-/// "Flutter started but auth hangs".
-const Duration _kInitTimeout = Duration(seconds: 6);
+/// Increased from 6s to 15s to give Firebase JS SDK CDN scripts enough
+/// time to load on slow connections. The SplashScreen 5s safety timer
+/// still handles the "auth hangs" case independently.
+const Duration _kInitTimeout = Duration(seconds: 15);
 
-/// Initialize app services. On web, races against a 3-second timeout so
+/// Initialize app services. On web, races against a 15-second timeout so
 /// the app always renders even if Firebase or SharedPreferences hang.
 /// On mobile, must complete fully before runApp().
 Future<void> init() async {
@@ -93,7 +93,7 @@ Future<void> _initFirebase() async {
   try {
     await Firebase.initializeApp(
       options: getFirebaseOptions(),
-    ).timeout(const Duration(seconds: 5));
+    );
   } catch (e) {
     if (!e.toString().contains('duplicate-app')) {
       debugPrint('[startup] Firebase init failed: $e');
