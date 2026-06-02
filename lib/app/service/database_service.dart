@@ -12,8 +12,10 @@ class DatabaseService {
 
   Future<UserModel> ensureUserDocumentExists(String uid) async {
     try {
+      print('[DBG ensureUserDocumentExists] START uid=$uid');
       final docRef = _db.collection('users').doc(uid);
       final docSnapshot = await docRef.get();
+      print('[DBG ensureUserDocumentExists] docSnapshot.exists=${docSnapshot.exists}');
 
       if (!docSnapshot.exists) {
         // Get current user from Firebase Auth
@@ -32,6 +34,7 @@ class DatabaseService {
 
         // Create the document
         await docRef.set(userData);
+        print('[DBG ensureUserDocumentExists] doc created');
 
         return UserModel(
           uid: uid,
@@ -40,11 +43,31 @@ class DatabaseService {
           role: userData['role'] as String,
         );
       } else {
-        // Document exists — return it
-        final data = docSnapshot.data()!;
+        // Document exists — return it. Guard against null data on web.
+        final data = docSnapshot.data();
+        if (data == null || data.isEmpty) {
+          print('[DBG ensureUserDocumentExists] doc exists but data is null/empty — recreating');
+          final currentUser = _auth.currentUser;
+          final userData = {
+            'email': currentUser?.email ?? '',
+            'name': currentUser?.displayName ?? 'Admin User',
+            'role': 'admin',
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          await docRef.set(userData, SetOptions(merge: true));
+          return UserModel(
+            uid: uid,
+            email: userData['email'] as String,
+            name: userData['name'] as String,
+            role: userData['role'] as String,
+          );
+        }
+        print('[DBG ensureUserDocumentExists] doc exists with data — keys=${data.keys.toList()}');
         return UserModel.fromMap(data, uid);
       }
-    } catch (e) {
+    } catch (e, st) {
+      print('[DBG ensureUserDocumentExists] ERROR: $e');
+      print('[DBG ensureUserDocumentExists] STACK: $st');
       throw Exception('Failed to ensure user document: $e');
     }
   }
@@ -73,7 +96,9 @@ class DatabaseService {
   Future<UserModel?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return null;
-    return UserModel.fromMap(doc.data()!, uid);
+    final data = doc.data();
+    if (data == null || data.isEmpty) return null;
+    return UserModel.fromMap(data, uid);
   }
 
   /// Get user by phone number from Firestore (returns null if not found)

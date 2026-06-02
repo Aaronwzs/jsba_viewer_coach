@@ -87,8 +87,15 @@ class TrainingService {
     // Get training details before updating
     final trainingDoc = await _db.collection('trainings').doc(id).get();
     final trainingData = trainingDoc.data();
-    final playerIds =
-        (trainingData?['playerIds'] as List<dynamic>?)?.cast<String>() ?? [];
+    final rawPlayerIds = trainingData?['playerIds'];
+    final List<String> playerIds = [];
+    if (rawPlayerIds is List) {
+      for (final e in rawPlayerIds) {
+        if (e != null) {
+          playerIds.add(e.toString());
+        }
+      }
+    }
     final className = trainingData?['className'] as String? ?? 'Training';
 
     await _db.collection('trainings').doc(id).update({'status': status});

@@ -64,10 +64,24 @@ class AnnouncementModel {
       expiresAt = expiresAtField;
     }
 
-    List<String> imageUrls = [];
+    final List<String> imageUrls = [];
     final imageUrlsField = map['imageUrls'];
     if (imageUrlsField is List) {
-      imageUrls = imageUrlsField.cast<String>();
+      for (final e in imageUrlsField) {
+        if (e != null) {
+          imageUrls.add(e.toString());
+        }
+      }
+    }
+
+    final List<String> viewerIds = [];
+    final viewerIdsField = map['viewerIds'];
+    if (viewerIdsField is List) {
+      for (final e in viewerIdsField) {
+        if (e != null) {
+          viewerIds.add(e.toString());
+        }
+      }
     }
 
     return AnnouncementModel(
@@ -82,7 +96,7 @@ class AnnouncementModel {
       createdAt: createdAt ?? DateTime.now(),
       createdBy: map['createdBy'] as String? ?? '',
       createdByName: map['createdByName'] as String?,
-      viewerIds: (map['viewerIds'] as List<dynamic>?)?.cast<String>() ?? [],
+      viewerIds: viewerIds,
       isPinned: map['isPinned'] as bool? ?? false,
       expiresAt: expiresAt,
     );

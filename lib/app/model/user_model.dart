@@ -67,10 +67,15 @@ class UserModel {
       }
     }
 
-    final deviceTokensList = (map['deviceTokens'] as List<dynamic>?)
-            ?.map((e) => e as String)
-            .toList() ??
-        [];
+    final rawDeviceTokens = map['deviceTokens'];
+    final List<String> deviceTokensList = [];
+    if (rawDeviceTokens is List) {
+      for (final e in rawDeviceTokens) {
+        if (e != null) {
+          deviceTokensList.add(e.toString());
+        }
+      }
+    }
 
     return UserModel(
       uid: uid,
