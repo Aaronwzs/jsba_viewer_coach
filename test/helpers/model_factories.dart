@@ -5,6 +5,7 @@ import 'package:jsba_app/app/model/availability_model.dart';
 import 'package:jsba_app/app/model/coach_payout_model.dart';
 import 'package:jsba_app/app/model/feedback_model.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
+import 'package:jsba_app/app/model/notification_item_model.dart';
 import 'package:jsba_app/app/model/open_court_model.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/model/receipt_model.dart';
@@ -278,6 +279,28 @@ class TestModelFactory {
       billingName: billingName,
       billingLogoUrl: billingLogoUrl,
       duitNowQrUrl: duitNowQrUrl,
+    );
+  }
+
+  static NotificationItemModel createNotification({
+    String id = 'notif1',
+    String type = 'announcement',
+    String title = 'Test Notification',
+    String body = 'Test notification body',
+    bool isRead = false,
+    DateTime? createdAt,
+    String? referenceId,
+    String? referenceCollection,
+  }) {
+    return NotificationItemModel(
+      id: id,
+      type: type,
+      title: title,
+      body: body,
+      isRead: isRead,
+      createdAt: createdAt ?? _now,
+      referenceId: referenceId,
+      referenceCollection: referenceCollection,
     );
   }
 }

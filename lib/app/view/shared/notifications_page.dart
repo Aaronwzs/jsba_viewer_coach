@@ -2,9 +2,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/service/notification_service.dart';
+import 'package:jsba_app/app/utils/starter_handler.dart' as starter_handler;
 import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
 import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/model/notification_item_model.dart';
+import 'package:jsba_app/app/widgets/notification_card.dart';
 
 @RoutePage()
 class NotificationsPage extends StatefulWidget {
@@ -15,6 +18,11 @@ class NotificationsPage extends StatefulWidget {
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
+  /// True after the user grants push permission or dismisses the banner.
+  /// Defaults to `false` (banner visible) on every page load so we don't
+  /// silently consume permission state — the user must opt in explicitly.
+  bool _pushPromptHandled = false;
+
   @override
   void initState() {
     super.initState();
@@ -88,18 +96,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
           return ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: notifVM.notifications.length,
+            itemCount: notifVM.notifications.length + 1,
             itemBuilder: (context, index) {
-              return _NotificationCard(
-                notification: notifVM.notifications[index],
+              if (index == 0) {
+                return _PushPermissionBanner(
+                  onHandled: () => setState(() => _pushPromptHandled = true),
+                  hidden: _pushPromptHandled,
+                );
+              }
+              final notification = notifVM.notifications[index - 1];
+              return NotificationCard(
+                notification: notification,
                 onTap: () {
-                  notifVM.markAsRead(
-                    notifVM.notifications[index].id,
-                  );
-                  _navigateToNotification(
-                    context,
-                    notifVM.notifications[index],
-                  );
+                  notifVM.markAsRead(notification.id);
+                  _navigateToNotification(context, notification);
                 },
               );
             },
@@ -142,165 +152,141 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 }
 
-class _NotificationCard extends StatelessWidget {
-  final NotificationItemModel notification;
-  final VoidCallback onTap;
-
-  const _NotificationCard({
-    required this.notification,
-    required this.onTap,
+/// Banner shown above the notification list to prompt the user to enable
+/// push notifications. Web Push best practice is to ask permission after
+/// the user shows interest (e.g. by clicking "Enable"), not on first app
+/// load — see [NotificationService.enablePushNotifications].
+class _PushPermissionBanner extends StatefulWidget {
+  const _PushPermissionBanner({
+    required this.onHandled,
+    required this.hidden,
   });
+
+  /// Called when the user has either granted permission (hide the banner)
+  /// or dismissed it (also hide the banner).
+  final VoidCallback onHandled;
+
+  /// When true, the banner is not rendered. The parent rebuilds with
+  /// `hidden: true` after a successful enable or dismiss action.
+  final bool hidden;
+
+  @override
+  State<_PushPermissionBanner> createState() => _PushPermissionBannerState();
+}
+
+class _PushPermissionBannerState extends State<_PushPermissionBanner> {
+  bool _busy = false;
+  PushPermissionResult? _result;
+
+  NotificationService get _service => starter_handler.notificationService;
+
+  Future<void> _onEnable() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final result = await _service.enablePushNotifications();
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _result = result;
+    });
+    if (result == PushPermissionResult.granted) {
+      widget.onHandled();
+    }
+  }
+
+  void _onDismiss() {
+    widget.onHandled();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = notification.isRead ? Colors.white : Colors.blue[50];
-    final icon = NotificationViewModel.getNotificationIcon(notification.type);
-    final typeLabel =
-        NotificationViewModel.getNotificationTypeLabel(notification.type);
+    if (widget.hidden) return const SizedBox.shrink();
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: notification.isRead ? 0 : 2,
-      color: bgColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: notification.isRead
-            ? BorderSide.none
-            : BorderSide(color: Colors.blue[200]!, width: 0.5),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _getIconBgColor(notification.type),
-                  borderRadius: BorderRadius.circular(10),
+    // After the user taps Enable and gets denied, the browser will not
+    // re-prompt from JS. Tell them how to fix it in browser settings.
+    if (_result == PushPermissionResult.denied) {
+      return _bannerContainer(
+        color: Colors.orange[50]!,
+        borderColor: Colors.orange[200]!,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.notifications_off, color: Colors.orange[800], size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Notifications are blocked',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-                child: Text(
-                  icon,
-                  style: const TextStyle(fontSize: 20),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: _onDismiss,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getIconBgColor(notification.type)
-                                .withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            typeLabel,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: _getIconBgColor(notification.type),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        if (!notification.isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.blue,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      notification.title,
-                      style: TextStyle(
-                        fontWeight:
-                            notification.isRead ? FontWeight.normal : FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      notification.body,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 13,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatDate(notification.createdAt),
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'To get push notifications, allow them in your browser\'s site settings, then reload this page.',
+              style: TextStyle(color: Colors.grey[800], fontSize: 12),
+            ),
+          ],
         ),
+      );
+    }
+
+    return _bannerContainer(
+      color: Colors.blue[50]!,
+      borderColor: Colors.blue[200]!,
+      child: Row(
+        children: [
+          Icon(Icons.notifications_active, color: Colors.blue[800], size: 20),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Get push notifications when you\'re not in the app',
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
+          TextButton(
+            onPressed: _busy ? null : _onEnable,
+            child: _busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Enable'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: _busy ? null : _onDismiss,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
       ),
     );
   }
 
-  Color _getIconBgColor(String type) {
-    switch (type) {
-      case 'announcement':
-        return Colors.orange[100]!;
-      case 'invoice':
-      case 'receipt':
-        return Colors.green[100]!;
-      case 'payment_due':
-        return Colors.red[100]!;
-      case 'availability':
-        return Colors.purple[100]!;
-      case 'session':
-      case 'training':
-        return Colors.blue[100]!;
-      case 'attendance':
-        return Colors.teal[100]!;
-      case 'feedback':
-        return Colors.indigo[100]!;
-      default:
-        return Colors.grey[100]!;
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      if (difference.inHours == 0) {
-        if (difference.inMinutes == 0) return 'Just now';
-        return '${difference.inMinutes}m ago';
-      }
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
+  Widget _bannerContainer({
+    required Color color,
+    required Color borderColor,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor, width: 0.5),
+      ),
+      child: child,
+    );
   }
 }

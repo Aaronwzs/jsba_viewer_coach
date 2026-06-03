@@ -72,4 +72,5 @@ class ResponsiveHelper {
   static bool isWideScreen(BuildContext context) {
     return MediaQuery.sizeOf(context).width > 700;
   }
+
 }

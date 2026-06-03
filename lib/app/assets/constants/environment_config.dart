@@ -37,4 +37,18 @@ class EnvValues {
     'IMGBB_API_KEY',
     defaultValue: '',
   );
+
+  /// FCM Web Push VAPID public key. Required when calling
+  /// `FirebaseMessaging.getToken(vapidKey: ...)` on web to subscribe the
+  /// browser to push messages. Inject via `--dart-define-from-file` using the
+  /// `webVapidKey` key in `env/{environment}-env.json`. The corresponding
+  /// private key lives in `functions/.env` and is used by the Cloud Functions
+  /// to sign push messages — never commit the private key to git.
+  ///
+  /// **Security note:** the VAPID key pair was previously shared in chat. The
+  /// private key should be rotated in Firebase Console as soon as possible.
+  static const String webVapidKey = String.fromEnvironment(
+    'webVapidKey',
+    defaultValue: '',
+  );
 }

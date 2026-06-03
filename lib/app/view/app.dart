@@ -139,6 +139,19 @@ class _PwaBannersState extends State<_PwaBanners> {
         (NotificationItemModel notification) {
           if (!mounted) return;
 
+          // Best-effort: mark the matching notification(s) as read in the
+          // in-app feed. The data payload only carries the entity reference
+          // (referenceCollection + referenceId), not the Firestore doc ID,
+          // so we use the by-reference helper. No-op if the VM is not
+          // listening for the current user yet.
+          if (notification.referenceCollection != null &&
+              notification.referenceId != null) {
+            context.read<NotificationViewModel>().markAsReadByReference(
+                  referenceCollection: notification.referenceCollection,
+                  referenceId: notification.referenceId,
+                );
+          }
+
           String? path;
           switch (notification.referenceCollection) {
             case 'announcements':

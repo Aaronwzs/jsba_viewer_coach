@@ -8,6 +8,7 @@
     "description": "JSBA Badminton Academy - Premier badminton training management app",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "gcm_sender_id": "713373958841",
     "icons": [
         {
             "src": "icons/Icon-192.png",

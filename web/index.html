@@ -130,6 +130,25 @@
        (firebase-app.js / firebase-auth.js) — it conflicts with the modular
        API and causes dart2js interop type-cast errors. -->
 
+  <!-- FCM service worker registration. MUST live in a separate inline <script>
+       block from flutter_bootstrap.js. Per flutterfire/firebase_messaging#17837,
+       bundling the registration inside the Flutter bootstrap script causes
+       the service worker to be registered AFTER the page has loaded, which
+       breaks the first background-message delivery on iOS Safari PWA. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then(function (registration) {
+            console.log('FCM service worker registered with scope:', registration.scope);
+          })
+          .catch(function (err) {
+            console.warn('FCM service worker registration failed:', err);
+          });
+      });
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

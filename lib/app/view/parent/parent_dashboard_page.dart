@@ -8,9 +8,10 @@ import 'package:jsba_app/app/viewmodel/notification_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
+import 'package:jsba_app/app/widgets/announcement_images.dart';
+import 'package:jsba_app/app/widgets/notification_card.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/model/notification_item_model.dart';
-
 
 @RoutePage()
 class ParentDashboardPage extends StatefulWidget {
@@ -150,10 +151,9 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               children: [
                 Text(
                   'Recent Notifications',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.router.pushPath('/notifications'),
@@ -166,92 +166,26 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
               ],
             ),
             const SizedBox(height: 12),
-            ...recent.map((notification) => _buildNotificationCard(
-                  context,
-                  notification,
-                  notifVM,
-                )),
+            ...recent.map(
+              (notification) => NotificationCard(
+                notification: notification,
+                compact: true,
+                onTap: () {
+                  notifVM.markAsRead(notification.id);
+                  _navigateToNotification(context, notification);
+                },
+              ),
+            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildNotificationCard(
+  void _navigateToNotification(
     BuildContext context,
     NotificationItemModel notification,
-    NotificationViewModel notifVM,
   ) {
-    final icon = NotificationViewModel.getNotificationIcon(notification.type);
-    final bgColor = notification.isRead ? Colors.white : Colors.blue[50];
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: notification.isRead
-            ? Border.all(color: Colors.transparent, width: 0)
-            : Border.all(color: Colors.blue[200]!, width: 0.5),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          notifVM.markAsRead(notification.id);
-          _navigateToNotification(context, notification);
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Text(icon, style: const TextStyle(fontSize: 18)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      notification.title,
-                      style: TextStyle(
-                        fontWeight: notification.isRead
-                            ? FontWeight.normal
-                            : FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      notification.body,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (!notification.isRead)
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToNotification(
-      BuildContext context, NotificationItemModel notification) {
     final refId = notification.referenceId;
     final refCollection = notification.referenceCollection;
 
@@ -455,7 +389,7 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
         typeIcon = Icons.update;
         break;
       case AnnouncementType.general:
-      typeColor = AppTheme.primaryColor;
+        typeColor = AppTheme.primaryColor;
         typeIcon = Icons.info;
     }
 
@@ -532,57 +466,7 @@ class _ParentDashboardPageState extends State<ParentDashboardPage> {
           if (announcement.hasImages)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: ResponsiveHelper.getDeviceType(context) ==
-                              DeviceType.web
-                          ? MediaQuery.sizeOf(context).width * 0.4
-                          : double.infinity,
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: 210 / 297, // A4 Portrait Aspect Ratio
-                      child: PageView.builder(
-                        itemCount: announcement.imageUrls.length,
-                        itemBuilder: (context, index) {
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              image: DecorationImage(
-                                image: NetworkImage(
-                                  announcement.imageUrls[index],
-                                ),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  if (announcement.imageUrls.length > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          announcement.imageUrls.length,
-                          (index) => Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey[400],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              child: AnnouncementImages(imageUrls: announcement.imageUrls),
             ),
           Padding(
             padding: const EdgeInsets.all(12),

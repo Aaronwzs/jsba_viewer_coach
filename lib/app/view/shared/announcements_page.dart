@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/viewmodel/announcement_view_model.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
-import 'package:jsba_app/app/utils/responsive_helper.dart';
+import 'package:jsba_app/app/widgets/announcement_images.dart';
 
 @RoutePage()
 class AnnouncementsPage extends StatefulWidget {
@@ -302,53 +302,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                   ),
                   if (announcement.hasImages) ...[
                     const SizedBox(height: 12),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: ResponsiveHelper.getDeviceType(context) ==
-                                DeviceType.web
-                            ? MediaQuery.sizeOf(context).width * 0.4
-                            : double.infinity,
-                      ),
-                      child: AspectRatio(
-                        aspectRatio: 210 / 297, // A4 Aspect Ratio
-                        child: PageView.builder(
-                          itemCount: announcement.imageUrls.length,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                    announcement.imageUrls[index],
-                                  ),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    if (announcement.imageUrls.length > 1)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(
-                            announcement.imageUrls.length,
-                            (index) => Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 2),
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    AnnouncementImages(imageUrls: announcement.imageUrls),
                   ],
                   const SizedBox(height: 12),
                   Row(
@@ -517,62 +471,14 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       ),
                       if (announcement.hasImages) ...[
                         const SizedBox(height: 24),
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: ResponsiveHelper.getDeviceType(context) ==
-                                    DeviceType.web
-                                ? MediaQuery.sizeOf(context).width * 0.4
-                                : double.infinity,
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 210 / 297, // A4 aspect ratio
-                            child: PageView.builder(
-                              itemCount: announcement.imageUrls.length,
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  onTap: () => _openFullImageViewer(
-                                    context,
-                                    announcement.imageUrls,
-                                    index,
-                                  ),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      image: DecorationImage(
-                                        image: NetworkImage(
-                                          announcement.imageUrls[index],
-                                        ),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                        AnnouncementImages(
+                          imageUrls: announcement.imageUrls,
+                          onImageTap: (index) => _openFullImageViewer(
+                            context,
+                            announcement.imageUrls,
+                            index,
                           ),
                         ),
-                        if (announcement.imageUrls.length > 1)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: List.generate(
-                                announcement.imageUrls.length,
-                                (index) => Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.grey[400],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                       ],
                       const SizedBox(height: 24),
                       Text(
@@ -838,7 +744,10 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
             Positioned(
               bottom: MediaQuery.of(context).padding.bottom + 24,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(20),

@@ -113,6 +113,58 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
 
+  /// Mark every unread notification matching the given reference as read.
+  ///
+  /// Used when the user taps a push notification: the data payload contains
+  /// the `referenceCollection` and `referenceId` (pointing at the related
+  /// entity — invoice, announcement, etc.) but NOT the Firestore document
+  /// ID of the notification itself. We can't update a single doc by ID, so
+  /// we update all unread docs that share the same reference. If the same
+  /// reference has been updated multiple times (multiple notifications),
+  /// they are all marked as read — which is the desired behaviour.
+  ///
+  /// No-op if [_userId] is null, [referenceCollection] is null/empty, or
+  /// [referenceId] is null/empty.
+  Future<void> markAsReadByReference({
+    String? referenceCollection,
+    String? referenceId,
+  }) async {
+    if (_userId == null) return;
+    if (referenceCollection == null || referenceCollection.isEmpty) return;
+    if (referenceId == null || referenceId.isEmpty) return;
+
+    try {
+      final matching = await _db
+          .collection('users')
+          .doc(_userId)
+          .collection('notifications')
+          .where('referenceCollection', isEqualTo: referenceCollection)
+          .where('referenceId', isEqualTo: referenceId)
+          .where('isRead', isEqualTo: false)
+          .get();
+
+      if (matching.docs.isEmpty) return;
+
+      final batch = _db.batch();
+      for (final doc in matching.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+      await batch.commit();
+
+      // Optimistic local update — mark every matching notification as read.
+      _notifications = _notifications
+          .map((n) =>
+              n.referenceCollection == referenceCollection &&
+                  n.referenceId == referenceId
+              ? n.copyWith(isRead: true)
+              : n)
+          .toList();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error marking notifications as read by reference: $e');
+    }
+  }
+
   /// Mark all notifications as read
   Future<void> markAllAsRead() async {
     if (_userId == null) return;

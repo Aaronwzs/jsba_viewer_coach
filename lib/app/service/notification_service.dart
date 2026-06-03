@@ -4,7 +4,25 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:jsba_app/app/assets/constants/environment_config.dart';
 import 'package:jsba_app/app/model/notification_item_model.dart';
+
+/// Result of a user-initiated "Enable push notifications" action.
+enum PushPermissionResult {
+  /// User granted notification permission.
+  granted,
+
+  /// User denied notification permission. The browser will NOT re-prompt
+  /// from JS — the user must manually unblock notifications in browser
+  /// settings. The UI should show a "blocked" state with a link to those
+  /// settings.
+  denied,
+
+  /// Notification permission is not supported on this platform/configuration
+  /// (e.g. iOS Safari PWA not yet added to home screen, or notifications
+  /// blocked at the OS level).
+  unsupported,
+}
 
 class NotificationService {
   FirebaseMessaging get _fcm => FirebaseMessaging.instance;
@@ -23,6 +41,11 @@ class NotificationService {
 
   /// Initialize notification channels and listeners.
   /// Call once at app startup.
+  ///
+  /// NOTE: This method intentionally does NOT request notification permission.
+  /// Web Push best practice is to ask permission contextually (e.g. after the
+  /// user taps "Enable notifications" in the UI) — not on first app load.
+  /// See [enablePushNotifications] for the user-initiated permission flow.
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -47,9 +70,6 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
-    // Request notification permissions
-    await requestPermissions();
-
     // Listen for foreground messages from FCM
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
@@ -66,7 +86,13 @@ class NotificationService {
     debugPrint('NotificationService initialized');
   }
 
-  /// Request notification permissions (iOS shows dialog, Android 13+ shows runtime prompt)
+  /// Request notification permissions (iOS shows dialog, Android 13+ shows runtime prompt).
+  ///
+  /// On web this triggers the browser's permission prompt if (and only if) the
+  /// current state is `default`. If permission has already been granted or
+  /// denied, the call returns immediately without prompting. This makes it
+  /// safe to call from a user-initiated "Enable notifications" button without
+  /// pre-checking the state.
   Future<NotificationSettings> requestPermissions() async {
     return _fcm.requestPermission(
       alert: true,
@@ -77,6 +103,39 @@ class NotificationService {
     );
   }
 
+  /// Result of a user-initiated "Enable push notifications" action.
+  ///
+  /// User-initiated permission request. Call this from an "Enable
+  /// notifications" button — do NOT call it automatically on app load.
+  ///
+  /// Returns whether the user granted permission. The caller should update
+  /// the UI to hide a permission banner on [PushPermissionResult.granted], or
+  /// show a "blocked" state with a link to browser settings on
+  /// [PushPermissionResult.denied].
+  Future<PushPermissionResult> enablePushNotifications() async {
+    if (!_firebaseAvailable) {
+      debugPrint('NotificationService: enablePushNotifications skipped — Firebase not initialized');
+      return PushPermissionResult.unsupported;
+    }
+    try {
+      final settings = await requestPermissions();
+      switch (settings.authorizationStatus) {
+        case AuthorizationStatus.authorized:
+        case AuthorizationStatus.provisional:
+          return PushPermissionResult.granted;
+        case AuthorizationStatus.denied:
+          return PushPermissionResult.denied;
+        case AuthorizationStatus.notDetermined:
+          // User dismissed the dialog without choosing. Treat as not-granted
+          // but the browser may still re-prompt on a future request.
+          return PushPermissionResult.denied;
+      }
+    } catch (e) {
+      debugPrint('Error requesting push permission: $e');
+      return PushPermissionResult.unsupported;
+    }
+  }
+
   /// Get the FCM device token
   Future<String?> getDeviceToken() async {
     if (!_firebaseAvailable) {
@@ -84,11 +143,29 @@ class NotificationService {
       return null;
     }
     try {
-      return await _fcm.getToken();
+      // On web, FCM requires the VAPID public key to subscribe the browser
+      // to push messages. On iOS/Android, native APNs/FCM auto-registration
+      // handles token issuance and VAPID is not applicable.
+      return await _fcm.getToken(vapidKey: resolveVapidKey());
     } catch (e) {
       debugPrint('Error getting FCM token: $e');
       return null;
     }
+  }
+
+  /// Resolves the FCM VAPID public key for the current platform.
+  ///
+  /// Returns the web VAPID key from [EnvValues] when running on web, or `null`
+  /// on native platforms. Returns `null` on web as well if the key has not been
+  /// configured (i.e. the build was run without `--dart-define=webVapidKey=...`).
+  ///
+  /// Exposed for testability — pass [webVapidKeyOverride] to simulate env
+  /// values in unit tests.
+  @visibleForTesting
+  static String? resolveVapidKey({String? webVapidKeyOverride}) {
+    if (!kIsWeb) return null;
+    final key = webVapidKeyOverride ?? EnvValues.webVapidKey;
+    return key.isEmpty ? null : key;
   }
 
   /// Listen for token refresh and call the callback when a new token is issued
@@ -214,8 +291,20 @@ class NotificationService {
     return parentIds.toList();
   }
 
-  /// Handle a foreground FCM message — show local notification
+  /// Handle a foreground FCM message.
+  ///
+  /// On iOS/Android, show a local notification (the OS notification tray is
+  /// the only place the user can see the message while the app is open).
+  ///
+  /// On web, suppress the local notification: the PWA is already visible and
+  /// the in-app feed (Firestore stream in [NotificationViewModel]) will
+  /// update with the new notification card automatically. Showing a system
+  /// notification on top of an open PWA is jarring and bad UX.
   void _handleForegroundMessage(RemoteMessage message) {
+    if (kIsWeb) {
+      debugPrint('NotificationService: foreground message on web — relying on in-app feed');
+      return;
+    }
     final notification = message.notification;
     if (notification != null) {
       _showLocalNotification(
