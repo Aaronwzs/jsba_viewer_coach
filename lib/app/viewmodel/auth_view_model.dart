@@ -511,6 +511,19 @@ class AuthViewModel extends ChangeNotifier {
   String? get currentEmail => _authService.currentEmail;
   bool get hasEmailProvider => false;
 
+  /// Reloads the Firebase Auth user and checks `emailVerified`.
+  /// Returns `true` if the current user's email is confirmed verified.
+  Future<bool> checkEmailVerification() async {
+    try {
+      final user = _authService.currentUser;
+      if (user == null) return false;
+      await user.reload();
+      return user.emailVerified;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> changeEmail({
     required String password,
     required String newEmail,
