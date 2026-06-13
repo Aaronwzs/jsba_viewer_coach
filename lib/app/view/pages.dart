@@ -59,3 +59,4 @@ export 'package:jsba_app/app/view/shared/edit_profile_page.dart';
 export 'package:jsba_app/app/view/shared/change_password_page.dart';
 export 'package:jsba_app/app/view/shared/faq_page.dart';
 export 'package:jsba_app/app/view/shared/feedback_report_page.dart';
+export 'package:jsba_app/app/view/shared/blog_webview_page.dart';

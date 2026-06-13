@@ -40,6 +40,9 @@ dependencies:
   google_nav_bar: ^5.0.7
   smooth_page_indicator: ^1.2.1
   
+  # WebView
+  webview_flutter: ^4.10.0
+
   # Utils
   url_launcher: ^6.3.1
   lottie: ^3.3.1

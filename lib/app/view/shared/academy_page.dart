@@ -1,8 +1,12 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/assets/router/app_router.dart';
 import 'package:jsba_app/app/utils/responsive_helper.dart';
+
+const _blogUrl = 'https://juniorshuttlers.blogspot.com/?m=0';
 
 class AcademyContent extends StatelessWidget {
   const AcademyContent({super.key});
@@ -15,6 +19,8 @@ class AcademyContent extends StatelessWidget {
         children: const [
           _HeroBanner(),
           _OverlapAboutCard(),
+          SizedBox(height: 20),
+          _JourneySection(),
           SizedBox(height: 20),
           _QuickLinksSection(),
           SizedBox(height: 20),
@@ -51,6 +57,8 @@ class AcademyPage extends StatelessWidget {
             children: [
               _HeroBanner(),
               _OverlapAboutCard(),
+              const SizedBox(height: 20),
+              _JourneySection(),
               const SizedBox(height: 20),
               _QuickLinksSection(),
               const SizedBox(height: 20),
@@ -270,6 +278,107 @@ class _OverlapAboutCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JourneySection extends StatelessWidget {
+  const _JourneySection();
+
+  @override
+  Widget build(BuildContext context) {
+    final horizontalPadding = ResponsiveHelper.getHorizontalPadding(context);
+    final maxWidth = ResponsiveHelper.getContentMaxWidth(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey.shade200, width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () {
+                if (kIsWeb) {
+                  launchUrl(Uri.parse(_blogUrl),
+                      mode: LaunchMode.externalApplication);
+                } else {
+                  context.router.push(
+                    BlogWebViewRoute(
+                      title: 'Our Journey',
+                      url: _blogUrl,
+                    ),
+                  );
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.auto_stories_outlined,
+                        color: AppTheme.primaryColor,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'OUR JOURNEY',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primaryColor,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Follow Coach Aaron & Ryan\'s badminton days and the family\'s quest to break the national player curse.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: Colors.grey.shade400,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

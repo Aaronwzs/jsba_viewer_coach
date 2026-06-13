@@ -36,21 +36,25 @@ if (!window._flutter) {
 _flutter.buildConfig = {"engineRevision":"3452d735bd38224ef2db85ca763d862d6326b17f","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
 
+// Safety net: force-remove loader after 8 seconds if Flutter hasn't started
+setTimeout(function() {
+  var loader = document.getElementById('loading_indicator');
+  if (loader) {
+    loader.classList.add('fade-out');
+    setTimeout(function() { loader.remove(); }, 400);
+  }
+}, 8000);
+
 _flutter.loader.load({
   onEntrypointLoaded: async function(engineInitializer) {
     const appRunner = await engineInitializer.initializeEngine();
+    await appRunner.runApp();
     
     // Smooth fade out of the loader to reveal the app
-    const loader = document.getElementById('loading_indicator');
+    var loader = document.getElementById('loading_indicator');
     if (loader) {
       loader.classList.add('fade-out');
-      
-      // Wait for CSS transition (400ms) to complete before removing the DOM element
-      setTimeout(() => {
-        loader.remove();
-      }, 400);
+      setTimeout(function() { loader.remove(); }, 400);
     }
-    
-    await appRunner.runApp();
   }
 });

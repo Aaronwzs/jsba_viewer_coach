@@ -79,5 +79,6 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: ClassDetailRoute.page, path: '/class-detail/:trainingId'),
     AutoRoute(page: FaqRoute.page, path: '/faq'),
     AutoRoute(page: FeedbackReportRoute.page, path: '/feedback-report'),
+    AutoRoute(page: BlogWebViewRoute.page, path: '/blog-journey'),
   ];
 }

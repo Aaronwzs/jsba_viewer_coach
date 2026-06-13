@@ -93,33 +93,32 @@ class AnnouncementsRoute extends PageRouteInfo<void> {
 /// generated route for
 /// [AttendancePage]
 class AttendanceRoute extends PageRouteInfo<AttendanceRouteArgs> {
-  AttendanceRoute({
-    Key? key,
-    required String trainingId,
-    List<PageRouteInfo>? children,
-  }) : super(
-         AttendanceRoute.name,
-         args: AttendanceRouteArgs(key: key, trainingId: trainingId),
-         initialChildren: children,
-       );
+  AttendanceRoute({Key? key, String? trainingId, List<PageRouteInfo>? children})
+    : super(
+        AttendanceRoute.name,
+        args: AttendanceRouteArgs(key: key, trainingId: trainingId),
+        initialChildren: children,
+      );
 
   static const String name = 'AttendanceRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      final args = data.argsAs<AttendanceRouteArgs>();
+      final args = data.argsAs<AttendanceRouteArgs>(
+        orElse: () => const AttendanceRouteArgs(),
+      );
       return AttendancePage(key: args.key, trainingId: args.trainingId);
     },
   );
 }
 
 class AttendanceRouteArgs {
-  const AttendanceRouteArgs({this.key, required this.trainingId});
+  const AttendanceRouteArgs({this.key, this.trainingId});
 
   final Key? key;
 
-  final String trainingId;
+  final String? trainingId;
 
   @override
   String toString() {
@@ -135,6 +134,70 @@ class AttendanceRouteArgs {
 
   @override
   int get hashCode => key.hashCode ^ trainingId.hashCode;
+}
+
+/// generated route for
+/// [BlogWebViewPage]
+class BlogWebViewRoute extends PageRouteInfo<BlogWebViewRouteArgs> {
+  BlogWebViewRoute({
+    Key? key,
+    String title = 'Our Journey',
+    String url = 'https://juniorshuttlers.blogspot.com/?m=0',
+    List<PageRouteInfo>? children,
+  }) : super(
+         BlogWebViewRoute.name,
+         args: BlogWebViewRouteArgs(key: key, title: title, url: url),
+         rawPathParams: {'title': title, 'url': url},
+         initialChildren: children,
+       );
+
+  static const String name = 'BlogWebViewRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<BlogWebViewRouteArgs>(
+        orElse: () => BlogWebViewRouteArgs(
+          title: pathParams.getString('title', 'Our Journey'),
+          url: pathParams.getString(
+            'url',
+            'https://juniorshuttlers.blogspot.com/?m=0',
+          ),
+        ),
+      );
+      return BlogWebViewPage(key: args.key, title: args.title, url: args.url);
+    },
+  );
+}
+
+class BlogWebViewRouteArgs {
+  const BlogWebViewRouteArgs({
+    this.key,
+    this.title = 'Our Journey',
+    this.url = 'https://juniorshuttlers.blogspot.com/?m=0',
+  });
+
+  final Key? key;
+
+  final String title;
+
+  final String url;
+
+  @override
+  String toString() {
+    return 'BlogWebViewRouteArgs{key: $key, title: $title, url: $url}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! BlogWebViewRouteArgs) return false;
+    return key == other.key && title == other.title && url == other.url;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ title.hashCode ^ url.hashCode;
 }
 
 /// generated route for
