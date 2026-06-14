@@ -25,6 +25,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   final List<File> _filesToUpload = [];
   final List<String> _uploadedUrls = [];
   bool _isUploading = false;
+  String? _uploadError;
 
   @override
   Widget build(BuildContext context) {
@@ -460,13 +461,23 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   }
 
   Future<void> _uploadFileAndUpdate(File file, StateSetter setDialogState) async {
-    setDialogState(() => _isUploading = true);
-    final storage = StorageService();
-    final url = await storage.uploadImage(file);
     setDialogState(() {
-      if (url != null) _uploadedUrls.add(url);
-      _isUploading = false;
+      _isUploading = true;
+      _uploadError = null;
     });
+    final storage = StorageService();
+    try {
+      final url = await storage.uploadImage(file);
+      setDialogState(() {
+        _uploadedUrls.add(url);
+        _isUploading = false;
+      });
+    } catch (e) {
+      setDialogState(() {
+        _uploadError = e.toString();
+        _isUploading = false;
+      });
+    }
   }
 
   void _showUploadOptions(StateSetter setDialogState, BuildContext dialogContext) {
@@ -516,6 +527,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     _filesToUpload.clear();
     _uploadedUrls.clear();
     _isUploading = false;
+    _uploadError = null;
 
     showDialog(
       context: context,
@@ -702,16 +714,22 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                       ],
                     ),
                   ),
-                if (!_isUploading && _filesToUpload.length > _uploadedUrls.length && _uploadedUrls.isNotEmpty)
+                if (!_isUploading && _uploadError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(Icons.error_outline, color: Colors.red, size: 16),
+                        ),
                         const SizedBox(width: 6),
-                        Text(
-                          'Some files failed. Tap to retry.',
-                          style: TextStyle(color: Colors.red[700], fontSize: 13),
+                        Expanded(
+                          child: Text(
+                            _uploadError!,
+                            style: TextStyle(color: Colors.red[700], fontSize: 13),
+                          ),
                         ),
                       ],
                     ),

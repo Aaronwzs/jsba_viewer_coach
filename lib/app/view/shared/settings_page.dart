@@ -2089,14 +2089,14 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
 
     if (selectedImage != null) {
       final storageService = StorageService();
-      final uploadedUrl = await storageService.uploadImage(selectedImage!);
-      if (uploadedUrl != null) {
+      try {
+        final uploadedUrl = await storageService.uploadImage(selectedImage!);
         imageUrl = uploadedUrl;
-      } else {
+      } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to upload image'),
+            SnackBar(
+              content: Text('Failed to upload image: $e'),
               backgroundColor: Colors.red,
             ),
           );
