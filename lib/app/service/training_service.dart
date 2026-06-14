@@ -118,6 +118,9 @@ class TrainingService {
   }
 
   // Get all trainings for a specific player in a given month/year
+  // REQUIRES COMPOSITE INDEX:
+  // Collection: trainings
+  // Fields: playerIds (ARRAY_CONTAINS), date (ASCENDING)
   Future<List<TrainingModel>> getTrainingsForPlayerInMonth(
       String playerId,
       int year,
@@ -150,6 +153,10 @@ class TrainingService {
     return getTrainingsForMonth(DateTime(year, month, 1));
   }
 
+  // Get trainings for multiple players in a given month/year
+  // REQUIRES COMPOSITE INDEX:
+  // Collection: trainings
+  // Fields: playerIds (ARRAY_CONTAINS), date (ASCENDING)
   Future<List<TrainingModel>> getTrainingsForPlayersInMonth(
     List<String> playerIds,
     int year,

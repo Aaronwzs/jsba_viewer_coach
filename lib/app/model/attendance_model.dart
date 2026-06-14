@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:jsba_app/app/model/coach_entry_model.dart';
 
 class AttendanceModel {
   String id;
@@ -8,7 +9,7 @@ class AttendanceModel {
   String attendanceStatus;
   double amountCharge;
   String reasonCharge;
-  String coachComments;
+  List<CoachEntry> coachEntries;
   DateTime createdAt;
 
   AttendanceModel({
@@ -19,9 +20,12 @@ class AttendanceModel {
     required this.attendanceStatus,
     required this.amountCharge,
     required this.reasonCharge,
-    this.coachComments = '',
+    List<CoachEntry>? coachEntries,
     required this.createdAt,
-  });
+  }) : coachEntries = coachEntries ?? [];
+
+  String get coachComments =>
+      coachEntries.map((e) => e.comment).where((c) => c.isNotEmpty).join('\n');
 
   Map<String, dynamic> toJson() => {
         'trainingId': trainingId,
@@ -31,10 +35,31 @@ class AttendanceModel {
         'amountCharge': amountCharge,
         'reasonCharge': reasonCharge,
         'coachComments': coachComments,
+        'coachEntries': coachEntries.map((e) => e.toJson()).toList(),
         'createdAt': Timestamp.fromDate(createdAt),
       };
 
   factory AttendanceModel.fromJson(String id, Map<String, dynamic> json) {
+    final legacyComments = json['coachComments'] as String? ?? '';
+
+    List<CoachEntry> entries;
+    final rawEntries = json['coachEntries'];
+    if (rawEntries is List && rawEntries.isNotEmpty) {
+      entries = rawEntries
+          .whereType<Map<String, dynamic>>()
+          .map((e) => CoachEntry.fromMap(e))
+          .toList();
+    } else if (legacyComments.isNotEmpty) {
+      entries = [
+        CoachEntry(
+          category: CoachCommentCategory.general,
+          comment: legacyComments,
+        ),
+      ];
+    } else {
+      entries = [];
+    }
+
     return AttendanceModel(
       id: id,
       trainingId: json['trainingId'] as String? ?? '',
@@ -43,7 +68,7 @@ class AttendanceModel {
       attendanceStatus: json['attendanceStatus'] as String? ?? 'pending',
       amountCharge: ((json['amountCharge'] as num?) ?? 0).toDouble(),
       reasonCharge: json['reasonCharge'] as String? ?? '',
-      coachComments: json['coachComments'] as String? ?? '',
+      coachEntries: entries,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }

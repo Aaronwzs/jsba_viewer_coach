@@ -4,7 +4,8 @@ import 'package:jsba_app/app/model/attendance_model.dart';
 class AttendanceService {
   final FirebaseFirestore _db;
 
-  AttendanceService({FirebaseFirestore? firestore}) : _db = firestore ?? FirebaseFirestore.instance;
+  AttendanceService({FirebaseFirestore? firestore})
+      : _db = firestore ?? FirebaseFirestore.instance;
 
   Future<void> createAttendanceBatch(
     String trainingId,
@@ -26,6 +27,7 @@ class AttendanceService {
         'amountCharge': price,
         'reasonCharge': '',
         'coachComments': '',
+        'coachEntries': [],
         'createdAt': now,
       });
     }
@@ -56,6 +58,7 @@ class AttendanceService {
         'amountCharge': a.amountCharge,
         'reasonCharge': a.reasonCharge,
         'coachComments': a.coachComments,
+        'coachEntries': a.coachEntries.map((e) => e.toJson()).toList(),
       });
     }
 
@@ -63,7 +66,10 @@ class AttendanceService {
   }
 
   Future<void> updateAttendance(AttendanceModel attendance) async {
-    await _db.collection('attendances').doc(attendance.id).update(attendance.toJson());
+    await _db
+        .collection('attendances')
+        .doc(attendance.id)
+        .update(attendance.toJson());
   }
 
   Future<List<AttendanceModel>> getAttendanceForMonth(
@@ -73,7 +79,6 @@ class AttendanceService {
     final startTs = Timestamp.fromDate(start);
     final endTs = Timestamp.fromDate(end);
 
-    // 🔍 now run filtered query
     final snapshot = await _db
         .collection('attendances')
         .where('createdAt', isGreaterThanOrEqualTo: startTs)
@@ -99,12 +104,52 @@ class AttendanceService {
   ) async {
     final startTs = Timestamp.fromDate(start);
     final endTs = Timestamp.fromDate(end);
+    try {
+      // Try the server-side query first (requires a composite index: playerId + createdAt)
+      final snapshot = await _db
+          .collection('attendances')
+          .where('playerId', isEqualTo: playerId)
+          .where('createdAt', isGreaterThanOrEqualTo: startTs)
+          .where('createdAt', isLessThan: endTs)
+          .get();
 
+      return snapshot.docs
+          .map((doc) => AttendanceModel.fromJson(doc.id, doc.data()))
+          .toList();
+    } catch (e) {
+      // Firestore will throw when a required composite index is missing. Fall back
+      // to a client-side filter to keep the app usable during development.
+      final message = e is Exception ? e.toString() : '';
+      if (message.contains('requires an index') || message.contains('index')) {
+        // Fetch by playerId only and filter by date range client-side.
+        final snapshot = await _db
+            .collection('attendances')
+            .where('playerId', isEqualTo: playerId)
+            .orderBy('createdAt', descending: true)
+            .get();
+
+        final all = snapshot.docs
+            .map((doc) => AttendanceModel.fromJson(doc.id, doc.data()))
+            .toList();
+
+        return all
+            .where((a) => !a.createdAt.isBefore(start) && a.createdAt.isBefore(end))
+            .toList();
+      }
+
+      rethrow;
+    }
+  }
+
+  Future<List<AttendanceModel>> getAttendanceForPlayer(
+    String playerId, {
+    int limit = 30,
+  }) async {
     final snapshot = await _db
         .collection('attendances')
         .where('playerId', isEqualTo: playerId)
-        .where('createdAt', isGreaterThanOrEqualTo: startTs)
-        .where('createdAt', isLessThan: endTs)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .get();
 
     return snapshot.docs

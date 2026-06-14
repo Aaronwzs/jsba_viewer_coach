@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
+import 'package:jsba_app/app/model/coach_entry_model.dart';
 import 'package:jsba_app/app/service/training_service.dart';
 import 'package:jsba_app/app/service/attendance_service.dart';
 import 'package:jsba_app/app/service/player_service.dart';
@@ -344,7 +345,26 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
               ),
             ],
           ),
-          if (attendance.coachComments.isNotEmpty) ...[
+          if (attendance.coachEntries.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...attendance.coachEntries.map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CategoryTag(category: entry.category),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      entry.comment,
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ]
+          else if (attendance.coachComments.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,4 +412,39 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
         return Colors.grey;
     }
   }
+}
+
+class _CategoryTag extends StatelessWidget {
+  final String category;
+
+  const _CategoryTag({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _categoryColor(category);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        CoachCommentCategory.label(category),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  static Color _categoryColor(String category) => switch (category) {
+        CoachCommentCategory.footwork => Colors.blue,
+        CoachCommentCategory.fitness => Colors.orange,
+        CoachCommentCategory.technique => Colors.purple,
+        CoachCommentCategory.matchPlay => Colors.teal,
+        CoachCommentCategory.attitude => Colors.pink,
+        _ => Colors.grey,
+      };
 }

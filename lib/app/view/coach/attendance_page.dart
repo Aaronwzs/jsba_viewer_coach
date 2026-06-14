@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
+import 'package:jsba_app/app/model/coach_entry_model.dart';
 import 'package:jsba_app/app/service/training_service.dart';
 import 'package:jsba_app/app/service/attendance_service.dart';
 import 'package:jsba_app/app/service/player_service.dart';
@@ -30,7 +31,9 @@ class _AttendancePageState extends State<AttendancePage> {
   final _trainingService = TrainingService();
   final _attendanceService = AttendanceService();
   final _playerService = PlayerService();
+
   final _commentControllers = <String, TextEditingController>{};
+  final _selectedCategories = <String, String>{};
 
   TrainingModel? _training;
   List<AttendanceModel> _attendances = [];
@@ -65,19 +68,15 @@ class _AttendancePageState extends State<AttendancePage> {
     _training = await _trainingService.getTrainingById(widget.effectiveTrainingId);
 
     if (_training != null) {
-      // Fetch attendance records for this training, players only
-      // (filter out any coach record where playerId matches coachId)
       final allAttendances = await _attendanceService
           .getAttendanceForTraining(widget.effectiveTrainingId);
 
       final enrolledPlayerIds = _training!.playerIds.toSet();
 
-      // Keep only records whose playerId is in the training's playerIds list
       _attendances = allAttendances
           .where((a) => enrolledPlayerIds.contains(a.playerId))
           .toList();
 
-      // If no player records exist yet, auto-create them from the training's playerIds
       if (_attendances.isEmpty && _training!.playerIds.isNotEmpty) {
         await _attendanceService.createAttendanceBatch(
           _training!.id,
@@ -92,7 +91,6 @@ class _AttendancePageState extends State<AttendancePage> {
             .toList();
       }
 
-      // Fetch only the players enrolled in this training
       if (_training!.playerIds.isNotEmpty) {
         final allPlayers = await _playerService.getPlayers();
         final enrolledIds = _training!.playerIds.toSet();
@@ -102,10 +100,9 @@ class _AttendancePageState extends State<AttendancePage> {
         };
       }
 
-      // Init comment controllers
       for (final a in _attendances) {
-        _commentControllers[a.id] ??=
-            TextEditingController(text: a.coachComments);
+        _commentControllers[a.id] ??= TextEditingController();
+        _selectedCategories[a.id] ??= CoachCommentCategory.general;
       }
     }
 
@@ -123,11 +120,35 @@ class _AttendancePageState extends State<AttendancePage> {
     });
   }
 
+  void _addEntry(AttendanceModel a) {
+    final controller = _commentControllers[a.id];
+    if (controller == null || controller.text.trim().isEmpty) return;
+
+    setState(() {
+      a.coachEntries.add(CoachEntry(
+        category: _selectedCategories[a.id] ?? CoachCommentCategory.general,
+        comment: controller.text.trim(),
+      ));
+      controller.clear();
+    });
+  }
+
+  void _removeEntry(AttendanceModel a, int index) {
+    setState(() {
+      a.coachEntries.removeAt(index);
+    });
+  }
+
   Future<void> _saveAttendance() async {
-    // Flush comment controllers into models
     for (final a in _attendances) {
-      final c = _commentControllers[a.id];
-      if (c != null) a.coachComments = c.text;
+      final controller = _commentControllers[a.id];
+      if (controller != null && controller.text.trim().isNotEmpty) {
+        a.coachEntries.add(CoachEntry(
+          category: _selectedCategories[a.id] ?? CoachCommentCategory.general,
+          comment: controller.text.trim(),
+        ));
+        controller.clear();
+      }
     }
 
     setState(() => _isSaving = true);
@@ -156,16 +177,12 @@ class _AttendancePageState extends State<AttendancePage> {
     }
   }
 
-  // ── Counts ────────────────────────────────────────────────────────────────
-
   int get _presentCount =>
       _attendances.where((a) => a.attendanceStatus == 'attended').length;
   int get _absentCount =>
       _attendances.where((a) => a.attendanceStatus == 'absent').length;
   int get _pendingCount =>
       _attendances.where((a) => a.attendanceStatus == 'pending').length;
-
-  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -208,10 +225,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
     return Column(
       children: [
-        // Summary header — always visible, rebuilds with setState
         _buildSummaryHeader(isDark),
-
-        // Player list
         Expanded(
           child: _attendances.isEmpty
               ? Center(
@@ -262,7 +276,6 @@ class _AttendancePageState extends State<AttendancePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Training info
           Row(
             children: [
               Expanded(
@@ -294,7 +307,6 @@ class _AttendancePageState extends State<AttendancePage> {
             ],
           ),
           const SizedBox(height: 12),
-          // Status chips
           Row(
             children: [
               _buildChip('Present', _presentCount, Colors.green),
@@ -361,7 +373,6 @@ class _AttendancePageState extends State<AttendancePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Player row
           Row(
             children: [
               _buildAvatar(player),
@@ -384,13 +395,10 @@ class _AttendancePageState extends State<AttendancePage> {
                   ],
                 ),
               ),
-              // Charge badge
               _buildChargeBadge(a),
             ],
           ),
           const SizedBox(height: 12),
-
-          // Status toggle: Pending → Present / Absent
           Row(
             children: [
               _buildStatusBtn(a, 'attended', 'Present', Colors.green),
@@ -400,13 +408,129 @@ class _AttendancePageState extends State<AttendancePage> {
               _buildStatusBtn(a, 'pending', 'Pending', Colors.orange),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          _buildExistingEntries(a),
+          if (a.coachEntries.isNotEmpty) const SizedBox(height: 8),
+          _buildCategorySelector(a),
+          const SizedBox(height: 6),
+          _buildCommentInput(a),
+        ],
+      ),
+    );
+  }
 
-          // Comment field
-          TextField(
+  Widget _buildExistingEntries(AttendanceModel a) {
+    if (a.coachEntries.isEmpty) return const SizedBox.shrink();
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: a.coachEntries.asMap().entries.map((entry) {
+        final index = entry.key;
+        final coachEntry = entry.value;
+        return _buildEntryChip(a, coachEntry, index);
+      }).toList(),
+    );
+  }
+
+  Widget _buildEntryChip(AttendanceModel a, CoachEntry entry, int index) {
+    final color = _categoryColor(entry.category);
+    final label = CoachCommentCategory.label(entry.category);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: Text(
+              entry.comment,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => _removeEntry(a, index),
+            child: Icon(Icons.close, size: 14, color: Colors.grey.shade500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategorySelector(AttendanceModel a) {
+    final selected = _selectedCategories[a.id] ?? CoachCommentCategory.general;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: CoachCommentCategory.all.map((cat) {
+          final isSelected = selected == cat;
+          final color = _categoryColor(cat);
+          return Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedCategories[a.id] = cat),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected ? color : color.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected ? color : color.withValues(alpha: 0.4),
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  CoachCommentCategory.label(cat),
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : color,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCommentInput(AttendanceModel a) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: TextField(
             controller: _commentControllers[a.id],
             decoration: InputDecoration(
-              hintText: 'Add comment...',
+              hintText: 'Add comment for ${CoachCommentCategory.label(_selectedCategories[a.id] ?? CoachCommentCategory.general)}...',
               hintStyle:
                   TextStyle(fontSize: 13, color: Colors.grey.shade400),
               border: OutlineInputBorder(
@@ -425,11 +549,29 @@ class _AttendancePageState extends State<AttendancePage> {
             ),
             maxLines: 2,
             style: const TextStyle(fontSize: 13),
+            onSubmitted: (_) => _addEntry(a),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          onPressed: () => _addEntry(a),
+          icon: const Icon(Icons.add_circle, color: AppTheme.primaryColor),
+          iconSize: 28,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      ],
     );
   }
+
+  Color _categoryColor(String category) => switch (category) {
+        CoachCommentCategory.footwork => Colors.blue,
+        CoachCommentCategory.fitness => Colors.orange,
+        CoachCommentCategory.technique => Colors.purple,
+        CoachCommentCategory.matchPlay => Colors.teal,
+        CoachCommentCategory.attitude => Colors.pink,
+        _ => Colors.grey,
+      };
 
   Widget _buildAvatar(PlayerModel? player) {
     final initial = (player?.name.isNotEmpty == true)

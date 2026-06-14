@@ -55,5 +55,102 @@ void main() {
       final list = await service.getTrainingsForMonth(DateTime(2024, 6, 1));
       expect(list.any((t) => t.className == 'June Class'), true);
     });
+
+    test('getTrainingsForPlayersInMonth returns trainings for multiple players in month', () async {
+      final t1 = TrainingModel(
+        id: '',
+        className: 'Class A',
+        playerIds: ['p1'],
+        date: DateTime(2024, 6, 5),
+        dayOfWeek: 'Wednesday',
+        venue: 'Desa',
+        startTime: '10:00',
+        classType: 'group',
+        level: 'Beginner',
+        durationMinutes: 60,
+        price: 12.0,
+      );
+      final t2 = TrainingModel(
+        id: '',
+        className: 'Class B',
+        playerIds: ['p2'],
+        date: DateTime(2024, 6, 10),
+        dayOfWeek: 'Monday',
+        venue: 'Desa',
+        startTime: '10:00',
+        classType: 'group',
+        level: 'Beginner',
+        durationMinutes: 60,
+        price: 12.0,
+      );
+      final t3 = TrainingModel(
+        id: '',
+        className: 'Class C',
+        playerIds: ['p1', 'p2'],
+        date: DateTime(2024, 6, 15),
+        dayOfWeek: 'Saturday',
+        venue: 'Desa',
+        startTime: '10:00',
+        classType: 'group',
+        level: 'Beginner',
+        durationMinutes: 60,
+        price: 12.0,
+      );
+      final t4 = TrainingModel(
+        id: '',
+        className: 'July Class',
+        playerIds: ['p1'],
+        date: DateTime(2024, 7, 5),
+        dayOfWeek: 'Friday',
+        venue: 'Desa',
+        startTime: '10:00',
+        classType: 'group',
+        level: 'Beginner',
+        durationMinutes: 60,
+        price: 12.0,
+      );
+
+      await service.addTraining(t1);
+      await service.addTraining(t2);
+      await service.addTraining(t3);
+      await service.addTraining(t4);
+
+      final list = await service.getTrainingsForPlayersInMonth(['p1', 'p2'], 2024, 6);
+
+      expect(list.length, 3);
+      expect(list.map((t) => t.className), containsAll(['Class A', 'Class B', 'Class C']));
+      expect(list.map((t) => t.className), isNot(contains('July Class')));
+
+      final dates = list.map((t) => t.date).toList();
+      expect(dates, equals([...dates]..sort((a, b) => a.compareTo(b))));
+    });
+
+    test('getTrainingsForPlayersInMonth returns empty for empty playerIds', () async {
+      final list = await service.getTrainingsForPlayersInMonth([], 2024, 6);
+      expect(list, isEmpty);
+    });
+
+    test('getTrainingsForPlayersInMonth deduplicates trainings across players', () async {
+      final t1 = TrainingModel(
+        id: '',
+        className: 'Shared Class',
+        playerIds: ['p1', 'p2'],
+        date: DateTime(2024, 6, 5),
+        dayOfWeek: 'Wednesday',
+        venue: 'Desa',
+        startTime: '10:00',
+        classType: 'group',
+        level: 'Beginner',
+        durationMinutes: 60,
+        price: 12.0,
+      );
+
+      await service.addTraining(t1);
+
+      final list = await service.getTrainingsForPlayersInMonth(['p1', 'p2'], 2024, 6);
+
+      expect(list.length, 1);
+      expect(list.first.className, 'Shared Class');
+    });
   });
 }

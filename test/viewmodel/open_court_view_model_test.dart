@@ -470,5 +470,75 @@ void main() {
         expect(viewModel.errorMessage, isNull);
       });
     });
+
+    group('loadMyClasses', () {
+      test('loads trainings for playerIds in selected month', () async {
+        final training1 = TestModelFactory.createTraining(
+          id: 't1',
+          className: 'Class A',
+          playerIds: ['p1', 'p2'],
+          date: DateTime(2024, 6, 15),
+        );
+        final training2 = TestModelFactory.createTraining(
+          id: 't2',
+          className: 'Class B',
+          playerIds: ['p1'],
+          date: DateTime(2024, 6, 20),
+        );
+
+        when(() => trainingService.getTrainingsForPlayersInMonth(
+          ['p1', 'p2'],
+          2024,
+          6,
+        )).thenAnswer((_) async => [training1, training2]);
+
+        viewModel.setSelectedMonth(DateTime(2024, 6));
+        await viewModel.loadMyClasses(['p1', 'p2']);
+
+        expect(viewModel.isLoading, false);
+        expect(viewModel.myTrainings.length, 2);
+        expect(viewModel.myTrainings.map((t) => t.id), containsAll(['t1', 't2']));
+        verify(() => trainingService.getTrainingsForPlayersInMonth(
+          ['p1', 'p2'],
+          2024,
+          6,
+        )).called(1);
+      });
+
+      test('returns empty list when playerIds is empty', () async {
+        when(() => trainingService.getTrainingsForPlayersInMonth([], any(), any()))
+            .thenAnswer((_) async => []);
+
+        await viewModel.loadMyClasses([]);
+
+        expect(viewModel.myTrainings, isEmpty);
+        verify(() => trainingService.getTrainingsForPlayersInMonth([], any(), any())).called(1);
+      });
+
+      test('sets error on failure', () async {
+        when(() => trainingService.getTrainingsForPlayersInMonth(any(), any(), any()))
+            .thenThrow(Exception('Training load error'));
+
+        viewModel.setSelectedMonth(DateTime(2024, 6));
+        await viewModel.loadMyClasses(['p1']);
+
+        expect(viewModel.errorMessage, contains('Training load error'));
+        expect(viewModel.isLoading, false);
+      });
+
+      test('uses selected month for query', () async {
+        when(() => trainingService.getTrainingsForPlayersInMonth(any(), any(), any()))
+            .thenAnswer((_) async => []);
+
+        viewModel.setSelectedMonth(DateTime(2024, 9));
+        await viewModel.loadMyClasses(['p1']);
+
+        verify(() => trainingService.getTrainingsForPlayersInMonth(
+          ['p1'],
+          2024,
+          9,
+        )).called(1);
+      });
+    });
   });
 }

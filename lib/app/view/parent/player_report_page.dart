@@ -110,6 +110,8 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
                 const SizedBox(height: 24),
                 _buildPlayerProgressSection(assessmentVM, metricDefinitions),
                 const SizedBox(height: 24),
+                _buildAiSummarySection(parentVM),
+                const SizedBox(height: 24),
                 if (!isSelf && player.status == PlayerStatus.pending)
                   _buildPendingNotice(),
               ],
@@ -517,6 +519,185 @@ class _PlayerReportPageState extends State<PlayerReportPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildAiSummarySection(ParentViewModel parentVM) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'AI Improvement Summary',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 6),
+            Icon(Icons.auto_awesome,
+                size: 18, color: AppTheme.primaryColor),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (parentVM.isGeneratingSummary)
+          const _ReportCard(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (parentVM.summaryError != null)
+          _ReportCard(
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, size: 40, color: Colors.red.shade300),
+                const SizedBox(height: 12),
+                Text(
+                  parentVM.summaryError!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: () =>
+                      parentVM.generateAiSummary(widget.playerId),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          )
+        else if (parentVM.aiSummary == null)
+          _ReportCard(
+            child: Column(
+              children: [
+                Icon(Icons.auto_awesome_outlined,
+                    size: 48, color: Colors.grey.shade300),
+                const SizedBox(height: 12),
+                const Text(
+                  'Get an AI-powered summary of your child\'s progress based on coach observations.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () =>
+                      parentVM.generateAiSummary(widget.playerId),
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  label: const Text('Generate Summary'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          _ReportCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ..._parseSummarySections(parentVM.aiSummary!),
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        parentVM.generateAiSummary(widget.playerId),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Regenerate'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<Widget> _parseSummarySections(String summary) {
+    final widgets = <Widget>[];
+    final sections = summary.split(RegExp(r'^## ', multiLine: true))
+        .where((s) => s.trim().isNotEmpty);
+
+    for (final section in sections) {
+      final lines = section.split('\n');
+      final title = lines.first.trim();
+      final content = lines.skip(1).join('\n').trim();
+
+      if (content.isEmpty) continue;
+
+      final color = _sectionColor(title);
+      final icon = _sectionIcon(title);
+
+      widgets.add(
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                content,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade800,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widgets.isEmpty) {
+      widgets.add(Text(
+        summary,
+        style: TextStyle(fontSize: 13, color: Colors.grey.shade800, height: 1.5),
+      ));
+    }
+
+    return widgets;
+  }
+
+  Color _sectionColor(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('strength')) return Colors.green;
+    if (lower.contains('improve') || lower.contains('area')) return Colors.orange;
+    if (lower.contains('suggest') || lower.contains('home') || lower.contains('practice')) return Colors.blue;
+    return AppTheme.primaryColor;
+  }
+
+  IconData _sectionIcon(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('strength')) return Icons.thumb_up_outlined;
+    if (lower.contains('improve') || lower.contains('area')) return Icons.trending_up;
+    if (lower.contains('suggest') || lower.contains('home') || lower.contains('practice')) return Icons.lightbulb_outline;
+    return Icons.info_outline;
   }
 
   Widget _buildPendingNotice() {

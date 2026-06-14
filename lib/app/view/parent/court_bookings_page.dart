@@ -48,10 +48,6 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authVM = context.read<AuthViewModel>();
-      if (authVM.currentUser != null) {
-        context.read<ParentViewModel>().loadMyKids(authVM.currentUser!.uid);
-      }
       context.read<OpenCourtViewModel>().loadAvailableSessions();
     });
   }
@@ -75,25 +71,39 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
     }
   }
 
+  Future<void> _ensureKidsLoaded() async {
+    final authVM = context.read<AuthViewModel>();
+    final parentVM = context.read<ParentViewModel>();
+    if (authVM.currentUser != null && !parentVM.isLoading && parentVM.selfPlayer == null && parentVM.allKids.isEmpty) {
+      await parentVM.loadMyKids(authVM.currentUser!.uid);
+    }
+  }
+
   void _loadMyClassesData() {
     final parentVM = context.read<ParentViewModel>();
     final openCourtVM = context.read<OpenCourtViewModel>();
 
-    final allPlayerIds = <String>[];
-    if (parentVM.selfPlayer != null && parentVM.selfPlayer!.id.isNotEmpty) {
-      allPlayerIds.add(parentVM.selfPlayer!.id);
+    if (parentVM.isLoading) {
+      return;
     }
-    for (final kid in parentVM.allKids) {
-      if (kid.id.isNotEmpty) {
-        allPlayerIds.add(kid.id);
+
+    _ensureKidsLoaded().then((_) {
+      final allPlayerIds = <String>[];
+      if (parentVM.selfPlayer != null && parentVM.selfPlayer!.id.isNotEmpty) {
+        allPlayerIds.add(parentVM.selfPlayer!.id);
       }
-    }
+      for (final kid in parentVM.allKids) {
+        if (kid.id.isNotEmpty) {
+          allPlayerIds.add(kid.id);
+        }
+      }
 
-    debugPrint('DEBUG _loadMyClassesData: playerIds=$allPlayerIds, selectedMonth=${openCourtVM.selectedMonth}');
+      debugPrint('DEBUG _loadMyClassesData: playerIds=$allPlayerIds, selectedMonth=${openCourtVM.selectedMonth}');
 
-    if (allPlayerIds.isNotEmpty) {
-      openCourtVM.loadMyClasses(allPlayerIds);
-    }
+      if (allPlayerIds.isNotEmpty) {
+        openCourtVM.loadMyClasses(allPlayerIds);
+      }
+    });
   }
 
   @override
@@ -298,8 +308,16 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
       return const Center(child: Text('Please log in'));
     }
 
+    if (parentVM.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     if (openCourtVM.isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (openCourtVM.errorMessage != null) {
+      return _buildMyClassesError(openCourtVM, parentVM);
     }
 
     final allPlayerIds = <String>[];
@@ -318,12 +336,79 @@ class _CourtBookingsPageState extends State<CourtBookingsPage>
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
-              await openCourtVM.loadMyClasses(allPlayerIds);
+              await _ensureKidsLoaded();
+              final refreshedPlayerIds = <String>[];
+              if (parentVM.selfPlayer != null && parentVM.selfPlayer!.id.isNotEmpty) {
+                refreshedPlayerIds.add(parentVM.selfPlayer!.id);
+              }
+              for (final kid in parentVM.allKids) {
+                if (kid.id.isNotEmpty) {
+                  refreshedPlayerIds.add(kid.id);
+                }
+              }
+              await openCourtVM.loadMyClasses(refreshedPlayerIds);
             },
             child: _buildMyClassesList(openCourtVM),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMyClassesError(OpenCourtViewModel openCourtVM, ParentViewModel parentVM) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.5,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load classes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  openCourtVM.errorMessage!,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _ensureKidsLoaded();
+                    final refreshedPlayerIds = <String>[];
+                    if (parentVM.selfPlayer != null && parentVM.selfPlayer!.id.isNotEmpty) {
+                      refreshedPlayerIds.add(parentVM.selfPlayer!.id);
+                    }
+                    for (final kid in parentVM.allKids) {
+                      if (kid.id.isNotEmpty) {
+                        refreshedPlayerIds.add(kid.id);
+                      }
+                    }
+                    await openCourtVM.loadMyClasses(refreshedPlayerIds);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:jsba_app/app/model/academy_settings_model.dart';
 import 'package:jsba_app/app/model/announcement_model.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
 import 'package:jsba_app/app/model/availability_model.dart';
+import 'package:jsba_app/app/model/coach_entry_model.dart';
 import 'package:jsba_app/app/model/coach_payout_model.dart';
 import 'package:jsba_app/app/model/feedback_model.dart';
 import 'package:jsba_app/app/model/invoice_model.dart';
@@ -109,7 +110,7 @@ class TestModelFactory {
     String attendanceStatus = 'pending',
     double amountCharge = 10.0,
     String reasonCharge = '',
-    String coachComments = '',
+    List<CoachEntry> coachEntries = const [],
   }) {
     return AttendanceModel(
       id: id,
@@ -118,7 +119,7 @@ class TestModelFactory {
       attendanceStatus: attendanceStatus,
       amountCharge: amountCharge,
       reasonCharge: reasonCharge,
-      coachComments: coachComments,
+      coachEntries: coachEntries,
       createdAt: _now,
     );
   }

@@ -22,10 +22,13 @@
           "configurations": {
             "android": "1:713373958841:android:370efa41d508b0fcfc9168",
             "ios": "1:713373958841:ios:dd3a9c4f8a1b03e5fc9168"
-          }
         }
       }
+      }
     }
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
   },
   "functions": {
     "source": "functions",

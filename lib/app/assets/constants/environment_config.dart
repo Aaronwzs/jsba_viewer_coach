@@ -38,6 +38,11 @@ class EnvValues {
     defaultValue: '',
   );
 
+static const String geminiApiKey = String.fromEnvironment(
+     'GEMINI_API_KEY',
+     defaultValue: '',
+   );
+
   /// FCM Web Push VAPID public key. Required when calling
   /// `FirebaseMessaging.getToken(vapidKey: ...)` on web to subscribe the
   /// browser to push messages. Inject via `--dart-define-from-file` using the

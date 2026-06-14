@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:jsba_app/app/service/player_service.dart';
+import 'package:jsba_app/app/service/attendance_service.dart';
+import 'package:jsba_app/app/service/gemini_summary_service.dart';
 import 'package:jsba_app/app/model/player_model.dart';
 import 'package:jsba_app/app/model/training_model.dart';
 
 class ParentViewModel extends ChangeNotifier {
   final PlayerService _playerService;
+  final AttendanceService _attendanceService;
+  final GeminiSummaryService _geminiService;
 
-  ParentViewModel({PlayerService? playerService})
-      : _playerService = playerService ?? PlayerService();
+  ParentViewModel({
+    PlayerService? playerService,
+    AttendanceService? attendanceService,
+    GeminiSummaryService? geminiService,
+  })  : _playerService = playerService ?? PlayerService(),
+        _attendanceService = attendanceService ?? AttendanceService(),
+        _geminiService = geminiService ?? GeminiSummaryService();
 
   List<PlayerModel> _myKids = [];
   List<PlayerModel> _pendingKids = [];
@@ -15,6 +24,10 @@ class ParentViewModel extends ChangeNotifier {
   final List<TrainingModel> _upcomingSessions = [];
   bool _isLoading = false;
   String? _error;
+
+  String? _aiSummary;
+  bool _isGeneratingSummary = false;
+  String? _summaryError;
 
   List<PlayerModel> get myKids => _myKids;
   List<PlayerModel> get pendingKids => _pendingKids;
@@ -24,6 +37,10 @@ class ParentViewModel extends ChangeNotifier {
   List<TrainingModel> get upcomingSessions => _upcomingSessions;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  String? get aiSummary => _aiSummary;
+  bool get isGeneratingSummary => _isGeneratingSummary;
+  String? get summaryError => _summaryError;
 
   Future<void> loadMyKids(String parentId) async {
     _isLoading = true;
@@ -50,6 +67,50 @@ class ParentViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> generateAiSummary(String playerId) async {
+    _isGeneratingSummary = true;
+    _summaryError = null;
+    notifyListeners();
+
+    try {
+      final threeMonthsAgo = DateTime.now().subtract(const Duration(days: 90));
+      final now = DateTime.now();
+
+      final attendances = await _attendanceService
+          .getAttendanceForPlayerInMonth(playerId, threeMonthsAgo, now);
+
+      final allPlayers = [..._myKids, ..._pendingKids];
+      final player = _selfPlayer?.id == playerId
+          ? _selfPlayer!
+          : allPlayers.where((p) => p.id == playerId).firstOrNull;
+
+      if (player == null) {
+        _summaryError = 'Player not found';
+        _isGeneratingSummary = false;
+        notifyListeners();
+        return;
+      }
+
+      final summary = await _geminiService.generatePlayerSummary(
+        player: player,
+        attendances: attendances,
+      );
+
+      _aiSummary = summary;
+    } catch (e) {
+      _summaryError = e.toString();
+    }
+
+    _isGeneratingSummary = false;
+    notifyListeners();
+  }
+
+  void clearAiSummary() {
+    _aiSummary = null;
+    _summaryError = null;
+    notifyListeners();
+  }
+
   Future<bool> addSelf(
     String parentId,
     String name,
@@ -63,7 +124,6 @@ class ParentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // If ageYear not provided, compute it from age
       final computedAgeYear = ageYear ?? DateTime.now().year - age;
 
       final player = PlayerModel(
@@ -97,7 +157,6 @@ class ParentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Ensure ageYear is set — compute from age if missing
       final ageYear = player.ageYear ?? DateTime.now().year - player.age;
 
       final newPlayer = PlayerModel(

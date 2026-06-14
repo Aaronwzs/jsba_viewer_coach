@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:jsba_app/app/service/attendance_service.dart';
 import 'package:jsba_app/app/model/attendance_model.dart';
+import 'package:jsba_app/app/model/coach_entry_model.dart';
 
 void main() {
   group('AttendanceService', () {
@@ -40,7 +41,12 @@ void main() {
         attendanceStatus: 'present',
         amountCharge: a.amountCharge,
         reasonCharge: a.reasonCharge,
-        coachComments: 'ok',
+        coachEntries: [
+          CoachEntry(
+            category: CoachCommentCategory.general,
+            comment: 'ok',
+          ),
+        ],
         createdAt: a.createdAt,
       )).toList();
 
