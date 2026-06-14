@@ -25,7 +25,7 @@ jobs:
 
       - name: Build Flutter Web (Production)
         if: github.ref == 'refs/heads/main'
-        run: flutter build web --dart-define-from-file=env/production-env.json
+        run: flutter build web --dart-define-from-file=env/production-env.json --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
 
 
 
