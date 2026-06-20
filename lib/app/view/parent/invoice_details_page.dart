@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:intl/intl.dart';
@@ -22,8 +23,9 @@ class InvoiceDetailsPage extends StatefulWidget {
 }
 
 class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
-  final List<File> _filesToUpload = [];
+  final List<XFile> _filesToUpload = [];
   final List<String> _uploadedUrls = [];
+  final Map<String, Uint8List> _previewBytes = {};
   bool _isUploading = false;
   String? _uploadError;
 
@@ -301,11 +303,14 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
 
   bool _isImageUrl(String url) {
     final lower = url.toLowerCase();
-    return lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.png') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.webp');
+    final path = Uri.tryParse(lower)?.path ?? lower;
+    if (path.endsWith('.pdf')) return false;
+    return lower.contains('ik.imagekit.io') ||
+        path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.png') ||
+        path.endsWith('.gif') ||
+        path.endsWith('.webp');
   }
 
   String _fileNameFromUrl(String url) {
@@ -316,13 +321,13 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     }
   }
 
-  bool _isImageFile(File file) {
-    final ext = file.path.toLowerCase();
-    return ext.endsWith('.jpg') ||
-        ext.endsWith('.jpeg') ||
-        ext.endsWith('.png') ||
-        ext.endsWith('.gif') ||
-        ext.endsWith('.webp');
+  bool _isImageFile(XFile file) {
+    final name = file.name.toLowerCase();
+    return name.endsWith('.jpg') ||
+        name.endsWith('.jpeg') ||
+        name.endsWith('.png') ||
+        name.endsWith('.gif') ||
+        name.endsWith('.webp');
   }
 
   Widget _buildPendingNotice(InvoiceModel invoice) {
@@ -354,31 +359,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
               'Method: ${_paymentMethodLabel(invoice.paymentMethod)}',
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
-          if (invoice.paymentReference != null && invoice.paymentReference!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: _isImageUrl(invoice.paymentReference!)
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        invoice.paymentReference!,
-                        height: 160,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return const SizedBox(
-                            height: 160,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildFileRefTile(invoice.paymentReference!);
-                        },
-                      ),
-                    )
-                  : _buildFileRefTile(invoice.paymentReference!),
-            ),
+          ..._buildReferenceProofs(_receiptUrls(invoice)),
           const SizedBox(height: 8),
           Text(
             'Tap "Change Payment Method" below to update',
@@ -390,19 +371,76 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
   }
 
   Widget _buildFileRefTile(String url) {
-    return Row(
-      children: [
-        const Icon(Icons.insert_drive_file_outlined, size: 20, color: Colors.blue),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            _fileNameFromUrl(url),
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            overflow: TextOverflow.ellipsis,
-          ),
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.tryParse(url);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blue.shade200),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.picture_as_pdf, size: 18, color: Colors.red),
+            const SizedBox(width: 6),
+            Text(
+              _fileNameFromUrl(url),
+              style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.open_in_new, size: 14, color: Colors.blue.shade400),
+          ],
+        ),
+      ),
     );
+  }
+
+  List<String> _receiptUrls(InvoiceModel invoice) {
+    if (invoice.receiptUrls.isNotEmpty) return invoice.receiptUrls;
+    final reference = invoice.paymentReference;
+    if (reference == null || reference.isEmpty) return [];
+    return reference
+        .split(',')
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
+  }
+
+  List<Widget> _buildReferenceProofs(List<String> urls) {
+    return urls.map((url) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
+        child: _isImageUrl(url)
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  url,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const SizedBox(
+                      height: 160,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildFileRefTile(url);
+                  },
+                ),
+              )
+            : _buildFileRefTile(url),
+      );
+    }).toList();
   }
 
   Widget _buildPaidNotice(InvoiceModel invoice) {
@@ -443,6 +481,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
               'Method: ${_paymentMethodLabel(receipt.paymentMethod)}',
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
+            ..._buildReferenceProofs(_receiptUrls(invoice)),
           ],
         ],
       ),
@@ -460,14 +499,15 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     }
   }
 
-  Future<void> _uploadFileAndUpdate(File file, StateSetter setDialogState) async {
+  Future<void> _uploadFileAndUpdate(XFile file, StateSetter setDialogState) async {
     setDialogState(() {
       _isUploading = true;
       _uploadError = null;
     });
     final storage = StorageService();
     try {
-      final url = await storage.uploadImage(file);
+      final bytes = await file.readAsBytes();
+      final url = await storage.uploadImage(bytes, fileName: file.name);
       setDialogState(() {
         _uploadedUrls.add(url);
         _isUploading = false;
@@ -484,39 +524,63 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     showModalBottomSheet(
       context: dialogContext,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Add Image'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final xFile = await openFile(acceptedTypeGroups: [
-                  XTypeGroup(label: 'image', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']),
-                ]);
-                if (xFile == null) return;
-                final file = File(xFile.path);
-                setDialogState(() => _filesToUpload.add(file));
-                _uploadFileAndUpdate(file, setDialogState);
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.image),
+                  title: const Text('Add Image'),
+                  enabled: _uploadedUrls.isEmpty,
+                  onTap: _uploadedUrls.isEmpty
+                      ? () async {
+                          Navigator.pop(ctx);
+                          final xFile = await openFile(acceptedTypeGroups: [
+                            XTypeGroup(label: 'image', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']),
+                          ]);
+                          if (xFile == null) return;
+                          final bytes = await xFile.readAsBytes();
+                          if (dialogContext.mounted) {
+                            setDialogState(() {
+                              _filesToUpload.add(xFile);
+                              _previewBytes[xFile.path] = bytes;
+                            });
+                            _uploadFileAndUpdate(xFile, setDialogState);
+                          }
+                        }
+                      : null,
+                ),
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf),
+                  title: const Text('Add PDF'),
+                  enabled: _uploadedUrls.isEmpty,
+                  onTap: _uploadedUrls.isEmpty
+                      ? () async {
+                          Navigator.pop(ctx);
+                          final xFile = await openFile(acceptedTypeGroups: [
+                            XTypeGroup(label: 'PDF', extensions: ['pdf']),
+                          ]);
+                          if (xFile == null) return;
+                          final bytes = await xFile.readAsBytes();
+                          if (dialogContext.mounted) {
+                            setDialogState(() {
+                              _filesToUpload.add(xFile);
+                              _previewBytes[xFile.path] = bytes;
+                            });
+                            _uploadFileAndUpdate(xFile, setDialogState);
+                          }
+                        }
+                      : null,
+                ),
+                if (_uploadedUrls.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Only one proof file is allowed',
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf),
-              title: const Text('Add PDF'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final xFile = await openFile(acceptedTypeGroups: [
-                  XTypeGroup(label: 'PDF', extensions: ['pdf']),
-                ]);
-                if (xFile == null) return;
-                final file = File(xFile.path);
-                setDialogState(() => _filesToUpload.add(file));
-                _uploadFileAndUpdate(file, setDialogState);
-              },
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -525,6 +589,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
     final isResubmit = invoice.status == 'sent';
     String selectedMethod = invoice.paymentMethod ?? 'e-wallet';
     _filesToUpload.clear();
+    _previewBytes.clear();
     _uploadedUrls.clear();
     _isUploading = false;
     _uploadError = null;
@@ -586,8 +651,13 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                             children: [
                               SizedBox(
                                 width: 80,
-                                child: _isImageFile(file)
-                                    ? Image.file(file, width: 80, height: 80, fit: BoxFit.cover)
+                                child: _isImageFile(file) && _previewBytes.containsKey(file.path)
+                                    ? Image.memory(
+                                        _previewBytes[file.path]!,
+                                        width: 80,
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                      )
                                     : Container(
                                         color: Colors.grey[100],
                                         child: const Center(
@@ -602,7 +672,7 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      file.path.split('/').last,
+                                      file.name,
                                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 2,
@@ -624,7 +694,8 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () => setDialogState(() {
-                                    _filesToUpload.removeAt(index);
+                                    final removed = _filesToUpload.removeAt(index);
+                                    _previewBytes.remove(removed.path);
                                     if (index < _uploadedUrls.length) {
                                       _uploadedUrls.removeAt(index);
                                     }
@@ -748,12 +819,11 @@ class _InvoiceDetailsPageState extends State<InvoiceDetailsPage> {
                   : () async {
                       Navigator.pop(dialogContext);
                       final billingVM = context.read<BillingViewModel>();
-                      final ref = _uploadedUrls.join(',');
                       final authVM = context.read<AuthViewModel>();
                       final success = await billingVM.markAsPaid(
                         invoiceId: invoice.id,
                         paymentMethod: selectedMethod,
-                        paymentReference: ref,
+                        receiptUrls: _uploadedUrls,
                         userId: authVM.currentUser?.uid,
                       );
 

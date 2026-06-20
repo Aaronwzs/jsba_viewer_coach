@@ -192,6 +192,7 @@ class BillingService {
     required String invoiceId,
     required String paymentMethod,
     String? paymentReference,
+    List<String> receiptUrls = const [],
     /// The user ID to send a confirmation notification to
     required String userId,
   }) async {
@@ -203,7 +204,9 @@ class BillingService {
 
     await _db.collection('invoices').doc(invoiceId).update({
       'paymentMethod': paymentMethod,
-      'paymentReference': paymentReference,
+      'paymentReference':
+          receiptUrls.isNotEmpty ? receiptUrls.first : paymentReference,
+      'receiptUrls': receiptUrls,
       'status': 'sent',
       'sentAt': Timestamp.fromDate(DateTime.now()),
     });

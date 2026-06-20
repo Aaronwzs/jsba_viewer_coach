@@ -3,7 +3,7 @@
   "showDebugOverlay": false,
   "firebaseProjectId": "juniorshuttlers",
   "appFlavor": "production"
-  ,"IMGBB_API_KEY": "469f15014c3c074cd77a8708f094c1e0"
+  ,"IMAGEKIT_PRIVATE_KEY": ""
   ,"webVapidKey": ""
   ,"GEMINI_API_KEY": ""
 }

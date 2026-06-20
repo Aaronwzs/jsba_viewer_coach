@@ -121,6 +121,7 @@ class InvoiceModel {
   final DateTime? paidAt;
   final String? paymentMethod;
   final String? paymentReference;
+  final List<String> receiptUrls;
   final String? receiptId;
   final String currency;
   final Map<String, dynamic> customFields;
@@ -156,6 +157,7 @@ class InvoiceModel {
     this.paidAt,
     this.paymentMethod,
     this.paymentReference,
+    this.receiptUrls = const [],
     this.receiptId,
     this.currency = 'RM',
     this.customFields = const {},
@@ -188,6 +190,7 @@ class InvoiceModel {
     'paidAt': paidAt != null ? Timestamp.fromDate(paidAt!) : null,
     'paymentMethod': paymentMethod,
     'paymentReference': paymentReference,
+    'receiptUrls': receiptUrls,
     'receiptId': receiptId,
     'currency': currency,
     'customFields': customFields,
@@ -237,6 +240,11 @@ class InvoiceModel {
         .map((e) => e as String)
         .toList();
 
+    final receiptUrlsList = (map['receiptUrls'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
     return InvoiceModel(
       id: id,
       invoiceNumber: map['invoiceNumber'] as String? ?? '',
@@ -258,6 +266,7 @@ class InvoiceModel {
       paidAt: paidAt,
       paymentMethod: map['paymentMethod'] as String?,
       paymentReference: map['paymentReference'] as String?,
+      receiptUrls: receiptUrlsList,
       receiptId: map['receiptId'] as String?,
       currency: map['currency'] as String? ?? 'RM',
       customFields: Map<String, dynamic>.from(

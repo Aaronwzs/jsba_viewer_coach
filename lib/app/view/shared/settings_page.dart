@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1623,10 +1623,12 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
   late TextEditingController parentNameController;
   late TextEditingController parentPhoneController;
   late TextEditingController parentEmailController;
-  late String selectedLevel;
-  File? selectedImage;
+  late String selectedLevel = 'Beginner';
+  Uint8List? selectedImageBytes;
+  String? selectedImageName;
   final formKey = GlobalKey<FormState>();
   bool _isSaving = false;
+  bool _showParentInfo = false;
 
   @override
   void initState() {
@@ -1699,19 +1701,6 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     }
   }
 
-  void _onAgeYearChanged() {
-    final yearStr = ageYearController.text;
-    if (yearStr.length == 4) {
-      final ageYear = int.tryParse(yearStr);
-      if (ageYear != null && ageYear > 1900 && ageYear <= DateTime.now().year) {
-        ageController.text = (DateTime.now().year - ageYear).toString();
-        return;
-      }
-    }
-    if (yearStr.isEmpty) {
-      ageController.clear();
-    }
-  }
 
   Widget _buildSection(String title, List<Widget> children) {
     return Container(
@@ -1755,6 +1744,8 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
               color: Colors.grey.shade700,
             ),
           ),
+          const SizedBox(height: 6),
+          field,
         ],
       ),
     );
@@ -1762,8 +1753,6 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    final age = int.tryParse(ageController.text) ?? widget.player.computedAge;
-    final needsParentInfo = !widget.player.isSelf && age < 20;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -1802,8 +1791,8 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                     CircleAvatar(
                       radius: 44,
                       backgroundColor: Colors.grey[200],
-                      backgroundImage: selectedImage != null
-                          ? FileImage(selectedImage!)
+                      backgroundImage: selectedImageBytes != null
+                          ? MemoryImage(selectedImageBytes!)
                           : (widget.player.imageUrl != null &&
                                     widget.player.imageUrl!.isNotEmpty
                                 ? CachedNetworkImageProvider(
@@ -1811,7 +1800,7 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                                   )
                                 : null),
                       child:
-                          selectedImage == null &&
+                          selectedImageBytes == null &&
                               (widget.player.imageUrl == null ||
                                   widget.player.imageUrl!.isEmpty)
                           ? Icon(
@@ -1884,46 +1873,8 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                     },
                   ),
                 ),
-                _buildFieldWithTitle(
-                  'Birth Year',
-                  TextFormField(
-                    controller: ageYearController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. 2015',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    onChanged: (_) {
-                      _onAgeYearChanged();
-                      setState(() {});
-                    },
-                  ),
-                ),
-                _buildFieldWithTitle(
-                  'Skill Level',
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedLevel,
-                    decoration: const InputDecoration(
-                      hintText: 'Select level',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                    items: ['B3', 'Intermediate', 'Advanced']
-                        .map((l) => DropdownMenuItem(value: l, child: Text(l)))
-                        .toList(),
-                    onChanged: (v) => setState(
-                      () => selectedLevel = v ?? 'B3',
-                    ),
-                  ),
-                ),
               ]),
+              const SizedBox(height: 12),
               _buildSection('Contact Information', [
                 _buildFieldWithTitle(
                   'Phone Number',
@@ -1941,7 +1892,19 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
                   ),
                 ),
               ]),
-              if (needsParentInfo)
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('Show Parent/Guardian Info'),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: _showParentInfo,
+                    onChanged: (v) => setState(() => _showParentInfo = v),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (_showParentInfo)
                 _buildSection('Parent/Guardian Information', [
                   _buildFieldWithTitle(
                     'Parent Name',
@@ -2017,6 +1980,15 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
   }
 
   Future<void> _pickImage() async {
+    if (selectedImageBytes != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Only one image is allowed. Please save or remove the current one to upload a new one.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -2062,20 +2034,23 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
     );
     if (cropped == null) return;
 
-    setState(() => selectedImage = cropped);
+    if (!mounted) return;
+    final bytes = await cropped.readAsBytes();
+    setState(() {
+      selectedImageBytes = bytes;
+      selectedImageName = 'profile.png';
+    });
   }
 
   Future<void> _savePlayer() async {
     if (!formKey.currentState!.validate()) return;
 
     final age = int.parse(ageController.text.trim());
-    if (age < 20 &&
-        !widget.player.isSelf &&
-        parentNameController.text.trim().isEmpty) {
+    if (age < 20 && _showParentInfo && parentNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Parent/guardian name is required for players under 20',
+            'Parent/guardian name is required when parent info is enabled',
           ),
           backgroundColor: Colors.orange,
         ),
@@ -2087,10 +2062,13 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
 
     String? imageUrl = widget.player.imageUrl;
 
-    if (selectedImage != null) {
+    if (selectedImageBytes != null) {
       final storageService = StorageService();
       try {
-        final uploadedUrl = await storageService.uploadImage(selectedImage!);
+        final uploadedUrl = await storageService.uploadImage(
+          selectedImageBytes!,
+          fileName: selectedImageName,
+        );
         imageUrl = uploadedUrl;
       } catch (e) {
         if (mounted) {
@@ -2119,13 +2097,13 @@ class _EditPlayerSheetContentState extends State<_EditPlayerSheetContent> {
       createdAt: widget.player.createdAt,
       isActive: widget.player.isActive,
       parentId: widget.player.parentId,
-      parentName: age < 20 && !widget.player.isSelf
+      parentName: _showParentInfo && parentNameController.text.trim().isNotEmpty
           ? parentNameController.text.trim()
           : null,
-      parentPhone: age < 20 && !widget.player.isSelf
+      parentPhone: _showParentInfo && parentPhoneController.text.trim().isNotEmpty
           ? parentPhoneController.text.trim()
           : null,
-      parentEmail: age < 20 && !widget.player.isSelf
+      parentEmail: _showParentInfo && parentEmailController.text.trim().isNotEmpty
           ? parentEmailController.text.trim()
           : null,
       status: widget.player.status,

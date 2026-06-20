@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -131,7 +132,10 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -187,11 +191,14 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
 
   bool _isImageUrl(String url) {
     final lower = url.toLowerCase();
-    return lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.png') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.webp');
+    final path = Uri.tryParse(lower)?.path ?? lower;
+    if (path.endsWith('.pdf')) return false;
+    return lower.contains('ik.imagekit.io') ||
+        path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.png') ||
+        path.endsWith('.gif') ||
+        path.endsWith('.webp');
   }
 
   String _fileNameFromUrl(String url) {
@@ -202,65 +209,83 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
     }
   }
 
-  List<Widget> _buildReferenceProofs(String ref) {
-    final urls = ref.split(',').map((u) => u.trim()).where((u) => u.isNotEmpty).toList();
+  List<String> _receiptUrls(ReceiptModel receipt) {
+    if (receipt.receiptUrls.isNotEmpty) return receipt.receiptUrls;
+    final reference = receipt.paymentReference;
+    if (reference == null || reference.isEmpty) return [];
+    return reference
+        .split(',')
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
+  }
+
+  List<Widget> _buildReferenceProofs(List<String> urls) {
     return urls.map((url) {
-      if (_isImageUrl(url)) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              url,
-              height: 160,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return const SizedBox(
-                  height: 160,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Row(
-                  children: [
-                    const Icon(Icons.broken_image, size: 20, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(url, style: TextStyle(fontSize: 12, color: Colors.grey[600]), overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      }
       return Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          children: [
-            const Icon(Icons.insert_drive_file_outlined, size: 20, color: Colors.blue),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _fileNameFromUrl(url),
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.only(top: 8, bottom: 8),
+        child: _isImageUrl(url)
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  url,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const SizedBox(
+                      height: 160,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildFileRefTile(url);
+                  },
+                ),
+              )
+            : _buildFileRefTile(url),
       );
     }).toList();
   }
 
+  Widget _buildFileRefTile(String url) {
+    return GestureDetector(
+      onTap: () async {
+        final uri = Uri.tryParse(url);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.picture_as_pdf, size: 18, color: Colors.red),
+            const SizedBox(width: 6),
+            Text(
+              _fileNameFromUrl(url),
+              style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.open_in_new, size: 14, color: Colors.blue.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPaymentDetailsCard(ReceiptModel receipt) {
-    final methodLabel = {
-      'e-wallet': 'E-Wallet',
-      'bank': 'Bank',
-    }[receipt.paymentMethod] ?? receipt.paymentMethod.toUpperCase();
+    final methodLabel =
+        {'e-wallet': 'E-Wallet', 'bank': 'Bank'}[receipt.paymentMethod] ??
+        receipt.paymentMethod.toUpperCase();
 
     return Card(
       child: Padding(
@@ -283,15 +308,15 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
                 ),
               ],
             ),
-            if (receipt.paymentReference != null && receipt.paymentReference!.isNotEmpty) ...[
+            if (_receiptUrls(receipt).isNotEmpty) ...[
               const SizedBox(height: 8),
               const Text(
                 'Reference Proof',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 6),
-              ..._buildReferenceProofs(receipt.paymentReference!),
             ],
+            ..._buildReferenceProofs(_receiptUrls(receipt)),
           ],
         ),
       ),
@@ -339,10 +364,7 @@ class _ReceiptDetailsPageState extends State<ReceiptDetailsPage> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(
-              receipt.notes!,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
+            Text(receipt.notes!, style: TextStyle(color: Colors.grey[600])),
           ],
         ),
       ),

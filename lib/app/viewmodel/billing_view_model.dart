@@ -91,6 +91,7 @@ class BillingViewModel extends ChangeNotifier {
     required String invoiceId,
     required String paymentMethod,
     String? paymentReference,
+    List<String> receiptUrls = const [],
     String? userId,
   }) async {
     _isLoading = true;
@@ -102,6 +103,7 @@ class BillingViewModel extends ChangeNotifier {
         invoiceId: invoiceId,
         paymentMethod: paymentMethod,
         paymentReference: paymentReference,
+        receiptUrls: receiptUrls,
         userId: userId ?? '',
       );
 
@@ -128,7 +130,9 @@ class BillingViewModel extends ChangeNotifier {
           sentAt: DateTime.now(),
           paidAt: invoice.paidAt,
           paymentMethod: paymentMethod,
-          paymentReference: paymentReference,
+          paymentReference:
+              receiptUrls.isNotEmpty ? receiptUrls.first : paymentReference,
+          receiptUrls: receiptUrls,
           receiptId: invoice.receiptId,
           currency: invoice.currency,
           customFields: invoice.customFields,

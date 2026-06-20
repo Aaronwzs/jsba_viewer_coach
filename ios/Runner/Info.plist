@@ -73,5 +73,9 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>JSBA App needs camera access to take photos for profile pictures and payment receipts</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>JSBA App needs photo library access to select images for profile pictures and payment receipts</string>
 </dict>
 </plist>

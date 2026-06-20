@@ -1,9 +1,10 @@
-import 'dart:io';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter/material.dart';
 
 class ImageCropHelper {
-  static Future<File?> cropImage({
+  /// Crops an image from [sourcePath] and returns the cropped result.
+  /// Works on both native and web.
+  static Future<CroppedFile?> cropImage({
     required String sourcePath,
     required BuildContext context,
   }) async {
@@ -35,9 +36,6 @@ class ImageCropHelper {
       ],
     );
 
-    if (croppedFile != null) {
-      return File(croppedFile.path);
-    }
-    return null;
+    return croppedFile;
   }
 }

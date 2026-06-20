@@ -33,15 +33,28 @@ class EnvValues {
     'firebaseProjectId',
     defaultValue: 'juniorshuttlers',
   );
-  static const String imgbbApiKey = String.fromEnvironment(
-    'IMGBB_API_KEY',
+
+  /// ImageKit private key used by [StorageService] to upload images.
+  ///
+  /// ⚠️ Security warning: this key is compiled into the app binary via
+  /// `--dart-define-from-file`. ImageKit private keys are server-side secrets;
+  /// embedding one in a client app means it can be extracted from the compiled
+  /// artifact. This is the same trust model the previous imgBB integration used,
+  /// but for production apps consider moving uploads to a backend endpoint
+  /// (e.g., Firebase Cloud Function) that holds the private key and returns only
+  /// the public URL to the client.
+  ///
+  /// Inject via `--dart-define-from-file` using the `IMAGEKIT_PRIVATE_KEY` key
+  /// in `env/{environment}-env.json`. Never commit the real key to git.
+  static const String imageKitPrivateKey = String.fromEnvironment(
+    'IMAGEKIT_PRIVATE_KEY',
     defaultValue: '',
   );
 
-static const String geminiApiKey = String.fromEnvironment(
-     'GEMINI_API_KEY',
-     defaultValue: '',
-   );
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
 
   /// FCM Web Push VAPID public key. Required when calling
   /// `FirebaseMessaging.getToken(vapidKey: ...)` on web to subscribe the

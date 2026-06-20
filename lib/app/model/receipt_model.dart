@@ -9,6 +9,7 @@ class ReceiptModel {
   final double amountPaid;
   final String paymentMethod;
   final String? paymentReference;
+  final List<String> receiptUrls;
   final DateTime issuedAt;
   final String? notes;
   final String currency;
@@ -31,6 +32,7 @@ class ReceiptModel {
     required this.amountPaid,
     required this.paymentMethod,
     this.paymentReference,
+    this.receiptUrls = const [],
     required this.issuedAt,
     this.notes,
     this.currency = 'RM',
@@ -51,6 +53,7 @@ class ReceiptModel {
     'amountPaid': amountPaid,
     'paymentMethod': paymentMethod,
     'paymentReference': paymentReference,
+    'receiptUrls': receiptUrls,
     'issuedAt': Timestamp.fromDate(issuedAt),
     'notes': notes,
     'currency': currency,
@@ -78,6 +81,11 @@ class ReceiptModel {
         .map((e) => e as String)
         .toList();
 
+    final receiptUrlsList = (map['receiptUrls'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
     return ReceiptModel(
       id: id,
       receiptNumber: map['receiptNumber'] as String? ?? '',
@@ -87,6 +95,7 @@ class ReceiptModel {
       amountPaid: (map['amountPaid'] as num?)?.toDouble() ?? 0.0,
       paymentMethod: map['paymentMethod'] as String? ?? '',
       paymentReference: map['paymentReference'] as String?,
+      receiptUrls: receiptUrlsList,
       issuedAt: issuedAt,
       notes: map['notes'] as String?,
       currency: map['currency'] as String? ?? 'RM',
