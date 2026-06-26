@@ -129,17 +129,16 @@ class TrainingService {
       int month,
       ) async {
     final startDate = DateTime(year, month, 1);
-    final endDate = DateTime(year, month + 1, 0); // Last day of month
+    final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
 
     final snapshot = await _db
         .collection('trainings')
         .where('playerIds', arrayContains: playerId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .get();
 
     final trainings = snapshot.docs
         .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
+        .where((t) => !t.date.isBefore(startDate) && !t.date.isAfter(endDate))
         .toList();
     trainings.sort((a, b) => b.date.compareTo(a.date));
     return trainings;
@@ -173,12 +172,12 @@ class TrainingService {
       final snapshot = await _db
           .collection('trainings')
           .where('playerIds', arrayContains: playerId)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
           .get();
 
       for (final doc in snapshot.docs) {
         final training = TrainingModel.fromMap(doc.data(), id: doc.id);
+        // Filter by date in-memory to avoid needing a composite index
+        if (training.date.isBefore(startDate) || training.date.isAfter(endDate)) continue;
         trainingMap[training.id] = training;
       }
     }
