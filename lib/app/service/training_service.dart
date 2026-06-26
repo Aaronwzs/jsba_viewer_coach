@@ -14,11 +14,14 @@ class TrainingService {
   Stream<List<TrainingModel>> getAllTrainings() {
     return _db
         .collection('trainings')
-        .orderBy('date', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
-        .toList());
+        .map((snapshot) {
+      final trainings = snapshot.docs
+          .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
+          .toList();
+      trainings.sort((a, b) => a.date.compareTo(b.date));
+      return trainings;
+    });
   }
 
   // Get trainings for a specific month
@@ -30,12 +33,13 @@ class TrainingService {
         .collection('trainings')
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
-        .orderBy('date')
         .get();
 
-    return snapshot.docs
+    final trainings = snapshot.docs
         .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
         .toList();
+    trainings.sort((a, b) => a.date.compareTo(b.date));
+    return trainings;
   }
 
   // Get trainings for a specific date
@@ -47,12 +51,13 @@ class TrainingService {
         .collection('trainings')
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-        .orderBy('date')
         .get();
 
-    return snapshot.docs
+    final trainings = snapshot.docs
         .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
         .toList();
+    trainings.sort((a, b) => a.date.compareTo(b.date));
+    return trainings;
   }
 
   // Get single training by ID
@@ -118,9 +123,6 @@ class TrainingService {
   }
 
   // Get all trainings for a specific player in a given month/year
-  // REQUIRES COMPOSITE INDEX:
-  // Collection: trainings
-  // Fields: playerIds (ARRAY_CONTAINS), date (ASCENDING)
   Future<List<TrainingModel>> getTrainingsForPlayerInMonth(
       String playerId,
       int year,
@@ -134,12 +136,13 @@ class TrainingService {
         .where('playerIds', arrayContains: playerId)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-        .orderBy('date', descending: true)
         .get();
 
-    return snapshot.docs
+    final trainings = snapshot.docs
         .map((doc) => TrainingModel.fromMap(doc.data(), id: doc.id))
         .toList();
+    trainings.sort((a, b) => b.date.compareTo(a.date));
+    return trainings;
 
   }
   // Get trainings for today
@@ -154,9 +157,6 @@ class TrainingService {
   }
 
   // Get trainings for multiple players in a given month/year
-  // REQUIRES COMPOSITE INDEX:
-  // Collection: trainings
-  // Fields: playerIds (ARRAY_CONTAINS), date (ASCENDING)
   Future<List<TrainingModel>> getTrainingsForPlayersInMonth(
     List<String> playerIds,
     int year,
@@ -175,7 +175,6 @@ class TrainingService {
           .where('playerIds', arrayContains: playerId)
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-          .orderBy('date')
           .get();
 
       for (final doc in snapshot.docs) {
