@@ -1,36 +1,19 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jsba_app/app/service/academy_settings_service.dart';
-import 'package:jsba_app/app/service/billing_service.dart';
-import 'package:jsba_app/app/service/pdf_doc_service.dart';
+import 'package:jsba_app/app/model/user_payment_model.dart';
+import 'package:jsba_app/app/service/user_payment_service.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:mocktail/mocktail.dart';
-import '../helpers/model_factories.dart';
 
-class MockBillingService extends Mock implements BillingService {}
-class MockPdfService extends Mock implements PdfService {}
-class MockAcademySettingsService extends Mock implements AcademySettingsService {}
-class MockDio extends Mock implements Dio {}
+class MockUserPaymentService extends Mock implements UserPaymentService {}
 
 void main() {
   group('BillingViewModel', () {
-    late MockBillingService billingService;
-    late MockPdfService pdfService;
-    late MockAcademySettingsService academySettingsService;
-    late MockDio dio;
+    late MockUserPaymentService userPaymentService;
     late BillingViewModel viewModel;
 
     setUp(() {
-      billingService = MockBillingService();
-      pdfService = MockPdfService();
-      academySettingsService = MockAcademySettingsService();
-      dio = MockDio();
-      viewModel = BillingViewModel(
-        billingService: billingService,
-        pdfService: pdfService,
-        academySettingsService: academySettingsService,
-        dio: dio,
-      );
+      userPaymentService = MockUserPaymentService();
+      viewModel = BillingViewModel(userPaymentService: userPaymentService);
     });
 
     group('setSelectedMonth', () {
@@ -49,41 +32,50 @@ void main() {
     });
 
     group('loadInvoicesForPlayerIds', () {
-      test('loads and filters invoices by selected month', () async {
+      test('loads and filters userPayments by selected month', () async {
         viewModel.setSelectedMonth(DateTime(2024, 6));
 
-        final invoiceJune = TestModelFactory.createInvoice(
-          id: 'inv1',
-          billingYear: 2024,
-          billingMonth: 6,
+        final paymentJune = UserPaymentModel(
+          id: 'up1',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'pending',
+          billingPeriodKey: '2024-06',
+          createdAt: DateTime(2024, 6, 15),
         );
-        final invoiceJuly = TestModelFactory.createInvoice(
-          id: 'inv2',
-          billingYear: 2024,
-          billingMonth: 7,
-        );
-        final receiptJune = TestModelFactory.createReceipt(
-          id: 'rec1',
-          billingYear: 2024,
-          billingMonth: 6,
+        final paymentJuly = UserPaymentModel(
+          id: 'up2',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'pending',
+          billingPeriodKey: '2024-07',
+          createdAt: DateTime(2024, 7, 15),
         );
 
-        when(() => billingService.getInvoicesForPlayerIds(['p1']))
-            .thenAnswer((_) async => [invoiceJune, invoiceJuly]);
-        when(() => billingService.getReceiptsForPlayerIds(['p1']))
-            .thenAnswer((_) async => [receiptJune]);
+        when(() => userPaymentService.getUserPaymentsForPeriod(['p1'], 2024, 6))
+            .thenAnswer((_) async => [paymentJune]);
+        when(() => userPaymentService.getUserPaymentsForPeriod(['p1'], 2024, 7))
+            .thenAnswer((_) async => [paymentJuly]);
 
         await viewModel.loadInvoicesForPlayerIds(['p1']);
 
         expect(viewModel.isLoading, false);
-        expect(viewModel.invoices.length, 1);
-        expect(viewModel.invoices.first.id, 'inv1');
-        expect(viewModel.receipts.length, 1);
-        expect(viewModel.receipts.first.id, 'rec1');
+        expect(viewModel.userPayments.length, 1);
+        expect(viewModel.userPayments.first.id, 'up1');
+
+        viewModel.setSelectedMonth(DateTime(2024, 7));
+        await viewModel.loadInvoicesForPlayerIds(['p1']);
+        expect(viewModel.userPayments.first.id, 'up2');
       });
 
       test('sets error on failure', () async {
-        when(() => billingService.getInvoicesForPlayerIds(any()))
+        when(() => userPaymentService.getUserPaymentsForPeriod(any(), any(), any()))
             .thenThrow(Exception('Network error'));
 
         await viewModel.loadInvoicesForPlayerIds(['p1']);
@@ -93,9 +85,9 @@ void main() {
       });
 
       test('sets isLoading during load', () async {
-        when(() => billingService.getInvoicesForPlayerIds(any()))
+        when(() => userPaymentService.getUserPaymentsForPeriod(any(), any(), any()))
             .thenAnswer((_) async => []);
-        when(() => billingService.getReceiptsForPlayerIds(any()))
+        when(() => userPaymentService.getUserPaymentsForPeriod(any(), any(), any()))
             .thenAnswer((_) async => []);
 
         final future = viewModel.loadInvoicesForPlayerIds(['p1']);
@@ -105,146 +97,102 @@ void main() {
       });
     });
 
-    group('unpaidInvoices / paidInvoices', () {
+    group('pendingPayments / approvedPayments / rejectedPayments', () {
       test('filter correctly', () async {
         viewModel.setSelectedMonth(DateTime(2024, 6));
 
-        final paidInvoice = TestModelFactory.createInvoice(
-          id: 'inv1',
-          status: 'paid',
-          billingYear: 2024,
-          billingMonth: 6,
+        final pendingPayment = UserPaymentModel(
+          id: 'up1',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'pending',
+          billingPeriodKey: '2024-06',
+          createdAt: DateTime(2024, 6, 15),
         );
-        final unpaidInvoice = TestModelFactory.createInvoice(
-          id: 'inv2',
-          status: 'draft',
-          billingYear: 2024,
-          billingMonth: 6,
+        final approvedPayment = UserPaymentModel(
+          id: 'up2',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'approved',
+          billingPeriodKey: '2024-06',
+          createdAt: DateTime(2024, 6, 15),
         );
-        final sentInvoice = TestModelFactory.createInvoice(
-          id: 'inv3',
-          status: 'sent',
-          billingYear: 2024,
-          billingMonth: 6,
+        final rejectedPayment = UserPaymentModel(
+          id: 'up3',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'rejected',
+          billingPeriodKey: '2024-06',
+          createdAt: DateTime(2024, 6, 15),
         );
 
-        when(() => billingService.getInvoicesForPlayerIds(any()))
-            .thenAnswer((_) async => [paidInvoice, unpaidInvoice, sentInvoice]);
-        when(() => billingService.getReceiptsForPlayerIds(any()))
-            .thenAnswer((_) async => []);
+        when(() => userPaymentService.getUserPaymentsForPeriod(['p1'], 2024, 6))
+            .thenAnswer((_) async => [pendingPayment, approvedPayment, rejectedPayment]);
 
         await viewModel.loadInvoicesForPlayerIds(['p1']);
 
-        expect(viewModel.paidInvoices.length, 1);
-        expect(viewModel.paidInvoices.first.id, 'inv1');
-        expect(viewModel.unpaidInvoices.length, 2);
-        expect(viewModel.unpaidInvoices.map((i) => i.id),
-            containsAll(['inv2', 'inv3']));
+        expect(viewModel.pendingPayments.length, 1);
+        expect(viewModel.pendingPayments.first.id, 'up1');
+        expect(viewModel.approvedPayments.length, 1);
+        expect(viewModel.approvedPayments.first.id, 'up2');
+        expect(viewModel.rejectedPayments.length, 1);
+        expect(viewModel.rejectedPayments.first.id, 'up3');
       });
     });
 
-    group('markAsPaid', () {
-      test('updates invoice status locally and calls service', () async {
+    group('cancelUserPayment', () {
+      test('removes payment from list on success', () async {
         viewModel.setSelectedMonth(DateTime(2024, 6));
-        final invoice = TestModelFactory.createInvoice(
-          id: 'inv1',
-          billingYear: 2024,
-          billingMonth: 6,
+
+        final payment = UserPaymentModel(
+          id: 'up1',
+          playerId: 'p1',
+          playerName: 'Alice',
+          parentId: 'parent1',
+          amount: 100.0,
+          paymentMethod: 'bank',
+          paymentStatus: 'pending',
+          billingPeriodKey: '2024-06',
+          createdAt: DateTime(2024, 6, 15),
         );
 
-        when(() => billingService.getInvoicesForPlayerIds(any()))
-            .thenAnswer((_) async => [invoice]);
-        when(() => billingService.getReceiptsForPlayerIds(any()))
-            .thenAnswer((_) async => []);
-        when(() => billingService.markInvoiceAsCustomerPaid(
-          invoiceId: any(named: 'invoiceId'),
-          paymentMethod: any(named: 'paymentMethod'),
-          paymentReference: any(named: 'paymentReference'),
-          userId: any(named: 'userId'),
-        )).thenAnswer((_) async => {});
+        when(() => userPaymentService.getUserPaymentsForPeriod(['p1'], 2024, 6))
+            .thenAnswer((_) async => [payment]);
+        when(() => userPaymentService.cancelPayment('up1'))
+            .thenAnswer((_) async {});
 
         await viewModel.loadInvoicesForPlayerIds(['p1']);
-        final result = await viewModel.markAsPaid(
-          invoiceId: 'inv1',
-          paymentMethod: 'bank',
-          paymentReference: 'REF123',
-        );
+        final result = await viewModel.cancelUserPayment('up1');
 
         expect(result, true);
-        expect(viewModel.isLoading, false);
-        verify(() => billingService.markInvoiceAsCustomerPaid(
-          invoiceId: 'inv1',
-          paymentMethod: 'bank',
-          paymentReference: 'REF123',
-          userId: any(named: 'userId'),
-        )).called(1);
+        expect(viewModel.userPayments.isEmpty, true);
       });
 
       test('sets error on failure', () async {
-        when(() => billingService.markInvoiceAsCustomerPaid(
-          invoiceId: any(named: 'invoiceId'),
-          paymentMethod: any(named: 'paymentMethod'),
-          paymentReference: any(named: 'paymentReference'),
-          userId: any(named: 'userId'),
-        )).thenThrow(Exception('Mark failed'));
+        when(() => userPaymentService.cancelPayment('up1'))
+            .thenThrow(Exception('Cancel failed'));
 
-        final result = await viewModel.markAsPaid(
-          invoiceId: 'inv1',
-          paymentMethod: 'e-wallet',
-        );
+        final result = await viewModel.cancelUserPayment('up1');
 
         expect(result, false);
-        expect(viewModel.error, contains('Mark failed'));
-        expect(viewModel.isLoading, false);
-      });
-    });
-
-    group('getReceiptForInvoice', () {
-      test('finds receipt by invoice ID', () async {
-        viewModel.setSelectedMonth(DateTime(2024, 6));
-        final invoice = TestModelFactory.createInvoice(
-          id: 'inv1',
-          billingYear: 2024,
-          billingMonth: 6,
-        );
-        final receipt = TestModelFactory.createReceipt(
-          id: 'rec1',
-          invoiceId: 'inv1',
-          billingYear: 2024,
-          billingMonth: 6,
-        );
-
-        when(() => billingService.getInvoicesForPlayerIds(any()))
-            .thenAnswer((_) async => [invoice]);
-        when(() => billingService.getReceiptsForPlayerIds(any()))
-            .thenAnswer((_) async => [receipt]);
-
-        await viewModel.loadInvoicesForPlayerIds(['p1']);
-
-        final found = viewModel.getReceiptForInvoice('inv1');
-        expect(found, isNotNull);
-        expect(found!.id, 'rec1');
-      });
-
-      test('returns null when not found', () {
-        final result = viewModel.getReceiptForInvoice('nonexistent');
-        expect(result, isNull);
+        expect(viewModel.error, contains('Cancel failed'));
       });
     });
 
     group('clearError', () {
       test('resets error', () {
-        viewModel.setSelectedMonth(DateTime(2024, 6));
-
-        when(() => billingService.getInvoicesForPlayerIds(any()))
-            .thenThrow(Exception('Some error'));
-
-        viewModel.loadInvoicesForPlayerIds(['p1']);
-
         viewModel.clearError();
         expect(viewModel.error, isNull);
       });
     });
-
   });
 }

@@ -45,9 +45,8 @@ export 'package:jsba_app/app/view/parent/open_court_detail_page.dart';
 export 'package:jsba_app/app/view/parent/class_detail_page.dart';
 export 'package:jsba_app/app/view/parent/create_booking_page.dart';
 export 'package:jsba_app/app/view/parent/session_slots_page.dart';
-export 'package:jsba_app/app/view/parent/parent_invoices_page.dart';
-export 'package:jsba_app/app/view/parent/invoice_details_page.dart';
-export 'package:jsba_app/app/view/parent/receipt_details_page.dart';
+export 'package:jsba_app/app/view/parent/parent_billing_page.dart';
+export 'package:jsba_app/app/view/parent/user_payment_details_page.dart';
 
 // Shared pages
 export 'package:jsba_app/app/view/shared/announcements_page.dart';

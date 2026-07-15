@@ -33,6 +33,16 @@ class ParentViewModel extends ChangeNotifier {
   List<PlayerModel> get pendingKids => _pendingKids;
   List<PlayerModel> get allKids => [..._myKids, ..._pendingKids];
   PlayerModel? get selfPlayer => _selfPlayer;
+
+  /// Resolves a player's display name from their [id], searching the loaded
+  /// self player, approved kids, and pending kids.
+  String? playerNameById(String id) {
+    if (id.isEmpty) return null;
+    if (_selfPlayer?.id == id) return _selfPlayer!.name;
+    final kid = _myKids.where((p) => p.id == id).firstOrNull ??
+        _pendingKids.where((p) => p.id == id).firstOrNull;
+    return kid?.name;
+  }
   bool get hasSelfAdded => _selfPlayer != null;
   List<TrainingModel> get upcomingSessions => _upcomingSessions;
   bool get isLoading => _isLoading;

@@ -7,8 +7,6 @@ class AttendanceModel {
   String playerId;
   String? coachId;
   String attendanceStatus;
-  double amountCharge;
-  String reasonCharge;
   List<CoachEntry> coachEntries;
   DateTime createdAt;
 
@@ -18,8 +16,6 @@ class AttendanceModel {
     required this.playerId,
     this.coachId,
     required this.attendanceStatus,
-    required this.amountCharge,
-    required this.reasonCharge,
     List<CoachEntry>? coachEntries,
     required this.createdAt,
   }) : coachEntries = coachEntries ?? [];
@@ -32,8 +28,6 @@ class AttendanceModel {
         'playerId': playerId,
         'coachId': coachId,
         'attendanceStatus': attendanceStatus,
-        'amountCharge': amountCharge,
-        'reasonCharge': reasonCharge,
         'coachComments': coachComments,
         'coachEntries': coachEntries.map((e) => e.toJson()).toList(),
         'createdAt': Timestamp.fromDate(createdAt),
@@ -66,8 +60,6 @@ class AttendanceModel {
       playerId: json['playerId'] as String? ?? '',
       coachId: json['coachId'] as String?,
       attendanceStatus: json['attendanceStatus'] as String? ?? 'pending',
-      amountCharge: ((json['amountCharge'] as num?) ?? 0).toDouble(),
-      reasonCharge: json['reasonCharge'] as String? ?? '',
       coachEntries: entries,
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

@@ -202,11 +202,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
           ),
           _buildDetailRow(Icons.trending_up, 'Level', training.level),
           _buildDetailRow(
-            Icons.attach_money,
-            'Price',
-            'RM ${training.price.toStringAsFixed(2)}',
-          ),
-          _buildDetailRow(
             Icons.people,
             'Max Players',
             '${training.getEffectiveMaxPlayers()}',
@@ -376,19 +371,6 @@ class _ClassDetailPageState extends State<ClassDetailPage> {
                     attendance.coachComments,
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                   ),
-                ),
-              ],
-            ),
-          ],
-          if (attendance.reasonCharge.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(Icons.attach_money, size: 14, color: Colors.grey.shade500),
-                const SizedBox(width: 6),
-                Text(
-                  'Charge: ${attendance.reasonCharge}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
                 ),
               ],
             ),

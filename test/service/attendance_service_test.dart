@@ -15,23 +15,22 @@ void main() {
     });
 
     test('createAttendanceBatch creates attendance docs', () async {
-      await service.createAttendanceBatch('t1', ['p1', 'p2'], 10.0);
+      await service.createAttendanceBatch('t1', ['p1', 'p2']);
 
       final snapshot = await firestore.collection('attendances').get();
       expect(snapshot.docs.length, 2);
     });
 
     test('getAttendanceForTraining returns created records', () async {
-      await service.createAttendanceBatch('t2', ['p3'], 5.0);
+      await service.createAttendanceBatch('t2', ['p3']);
       final list = await service.getAttendanceForTraining('t2');
       expect(list.length, 1);
       final a = list.first;
       expect(a.trainingId, 't2');
-      expect(a.amountCharge, 5.0);
     });
 
     test('batchUpdateAttendance updates records', () async {
-      await service.createAttendanceBatch('t3', ['p4'], 7.5);
+      await service.createAttendanceBatch('t3', ['p4']);
       final list = await service.getAttendanceForTraining('t3');
       final updated = list.map((a) => AttendanceModel(
         id: a.id,
@@ -39,8 +38,6 @@ void main() {
         playerId: a.playerId,
         coachId: a.coachId,
         attendanceStatus: 'present',
-        amountCharge: a.amountCharge,
-        reasonCharge: a.reasonCharge,
         coachEntries: [
           CoachEntry(
             category: CoachCommentCategory.general,

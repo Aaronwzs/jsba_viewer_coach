@@ -66,6 +66,12 @@ class PlayerService {
     );
   }
 
+  Future<PlayerModel?> getPlayerById(String id) async {
+    final doc = await _db.collection('players').doc(id).get();
+    if (!doc.exists) return null;
+    return PlayerModel.fromMap(doc.data()!, id: doc.id);
+  }
+
   // Add new player
   Future<void> addPlayer(PlayerModel player) async {
     await _db.collection('players').add(player.toJson());
@@ -101,13 +107,19 @@ class PlayerService {
     if (playerIds.isEmpty) return {};
 
     final Map<String, String> playerNames = {};
-    final snapshot = await _db
-        .collection('players')
-        .where(FieldPath.documentId, whereIn: playerIds)
-        .get();
+    final chunks = _chunkList(playerIds, 30);
 
-    for (final doc in snapshot.docs) {
-      playerNames[doc.id] = doc.data()['name'] as String? ?? 'Unknown';
+    for (final chunk in chunks) {
+      try {
+        final snapshot = await _db
+            .collection('players')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+
+        for (final doc in snapshot.docs) {
+          playerNames[doc.id] = doc.data()['name'] as String? ?? 'Unknown';
+        }
+      } catch (_) {}
     }
 
     return playerNames;
@@ -117,18 +129,32 @@ class PlayerService {
     if (playerIds.isEmpty) return {};
 
     final Map<String, String> playerImages = {};
-    final snapshot = await _db
-        .collection('players')
-        .where(FieldPath.documentId, whereIn: playerIds)
-        .get();
+    final chunks = _chunkList(playerIds, 30);
 
-    for (final doc in snapshot.docs) {
-      final imageUrl = doc.data()['imageUrl'] as String?;
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        playerImages[doc.id] = imageUrl;
-      }
+    for (final chunk in chunks) {
+      try {
+        final snapshot = await _db
+            .collection('players')
+            .where(FieldPath.documentId, whereIn: chunk)
+            .get();
+
+        for (final doc in snapshot.docs) {
+          final imageUrl = doc.data()['imageUrl'] as String?;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            playerImages[doc.id] = imageUrl;
+          }
+        }
+      } catch (_) {}
     }
 
     return playerImages;
+  }
+
+  List<List<String>> _chunkList(List<String> list, int chunkSize) {
+    final chunks = <List<String>>[];
+    for (var i = 0; i < list.length; i += chunkSize) {
+      chunks.add(list.sublist(i, i + chunkSize > list.length ? list.length : i + chunkSize));
+    }
+    return chunks;
   }
 }

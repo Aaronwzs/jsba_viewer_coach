@@ -69,6 +69,25 @@ class TrainingService {
     return null;
   }
 
+  /// Fetches multiple trainings by their IDs (batched in chunks of 30 to
+  /// respect Firestore's `whereIn` limit). Returns them in document-id order.
+  Future<List<TrainingModel>> getTrainingsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final results = <TrainingModel>[];
+    for (var i = 0; i < ids.length; i += 30) {
+      final batch = ids.sublist(i, (i + 30).clamp(0, ids.length));
+      final snapshot = await _db
+          .collection('trainings')
+          .where(FieldPath.documentId, whereIn: batch)
+          .get();
+      for (final doc in snapshot.docs) {
+        results.add(TrainingModel.fromMap(doc.data(), id: doc.id));
+      }
+    }
+    results.sort((a, b) => a.date.compareTo(b.date));
+    return results;
+  }
+
   // Add new training
   Future<String> addTraining(TrainingModel training) async {
     final docRef = _db.collection('trainings').doc();

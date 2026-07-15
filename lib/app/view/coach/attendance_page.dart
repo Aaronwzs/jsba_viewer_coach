@@ -81,7 +81,6 @@ class _AttendancePageState extends State<AttendancePage> {
         await _attendanceService.createAttendanceBatch(
           _training!.id,
           _training!.playerIds,
-          _training!.price,
           coachId: _coachId,
         );
         final refetched = await _attendanceService
@@ -114,8 +113,6 @@ class _AttendancePageState extends State<AttendancePage> {
     setState(() {
       for (final a in _attendances) {
         a.attendanceStatus = 'attended';
-        a.amountCharge = _training!.price;
-        a.reasonCharge = '';
       }
     });
   }
@@ -296,14 +293,6 @@ class _AttendancePageState extends State<AttendancePage> {
                   ],
                 ),
               ),
-              Text(
-                'RM ${t.price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                  fontSize: 15,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -395,7 +384,6 @@ class _AttendancePageState extends State<AttendancePage> {
                   ],
                 ),
               ),
-              _buildChargeBadge(a),
             ],
           ),
           const SizedBox(height: 12),
@@ -601,27 +589,6 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  Widget _buildChargeBadge(AttendanceModel a) {
-    final hasCharge = a.amountCharge > 0;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: hasCharge
-            ? AppTheme.primaryColor.withValues(alpha: 0.1)
-            : Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        'RM ${a.amountCharge.toStringAsFixed(0)}',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-          color: hasCharge ? AppTheme.primaryColor : Colors.grey,
-        ),
-      ),
-    );
-  }
-
   Widget _buildStatusBtn(
       AttendanceModel a, String status, String label, Color color) {
     final isSelected = a.attendanceStatus == status;
@@ -629,16 +596,6 @@ class _AttendancePageState extends State<AttendancePage> {
       child: GestureDetector(
         onTap: () => setState(() {
           a.attendanceStatus = status;
-          if (status == 'attended') {
-            a.amountCharge = _training!.price;
-            a.reasonCharge = '';
-          } else if (status == 'absent') {
-            a.amountCharge = 0;
-            a.reasonCharge = 'Absent';
-          } else {
-            a.amountCharge = 0;
-            a.reasonCharge = '';
-          }
         }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),

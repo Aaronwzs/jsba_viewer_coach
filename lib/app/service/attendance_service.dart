@@ -9,8 +9,7 @@ class AttendanceService {
 
   Future<void> createAttendanceBatch(
     String trainingId,
-    List<String> playerIds,
-    double price, {
+    List<String> playerIds, {
     String? coachId,
   }) async {
     final batch = _db.batch();
@@ -24,8 +23,6 @@ class AttendanceService {
         'playerId': playerId,
         'coachId': coachId,
         'attendanceStatus': 'pending',
-        'amountCharge': price,
-        'reasonCharge': '',
         'coachComments': '',
         'coachEntries': [],
         'createdAt': now,
@@ -48,6 +45,23 @@ class AttendanceService {
         .toList();
   }
 
+  /// Fetches multiple attendance docs by their IDs (batched in chunks of 30).
+  Future<List<AttendanceModel>> getAttendanceByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    final results = <AttendanceModel>[];
+    for (var i = 0; i < ids.length; i += 30) {
+      final batch = ids.sublist(i, (i + 30).clamp(0, ids.length));
+      final snapshot = await _db
+          .collection('attendances')
+          .where(FieldPath.documentId, whereIn: batch)
+          .get();
+      for (final doc in snapshot.docs) {
+        results.add(AttendanceModel.fromJson(doc.id, doc.data()));
+      }
+    }
+    return results;
+  }
+
   Future<void> batchUpdateAttendance(List<AttendanceModel> list) async {
     final batch = _db.batch();
 
@@ -55,8 +69,6 @@ class AttendanceService {
       final ref = _db.collection('attendances').doc(a.id);
       batch.update(ref, {
         'attendanceStatus': a.attendanceStatus,
-        'amountCharge': a.amountCharge,
-        'reasonCharge': a.reasonCharge,
         'coachComments': a.coachComments,
         'coachEntries': a.coachEntries.map((e) => e.toJson()).toList(),
       });

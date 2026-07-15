@@ -2,22 +2,21 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:jsba_app/app/viewmodel/auth_view_model.dart';
 import 'package:jsba_app/app/viewmodel/billing_view_model.dart';
 import 'package:jsba_app/app/viewmodel/parent_view_model.dart';
-import 'package:jsba_app/app/model/invoice_model.dart';
-import 'package:jsba_app/app/model/receipt_model.dart';
-import 'package:jsba_app/app/assets/theme/app_theme.dart';
+import 'package:jsba_app/app/model/user_payment_model.dart';
 import 'package:jsba_app/app/widgets/app_bar_title.dart';
 
 @RoutePage()
-class ParentInvoicesPage extends StatefulWidget {
-  const ParentInvoicesPage({super.key});
+class ParentBillingPage extends StatefulWidget {
+  const ParentBillingPage({super.key});
 
   @override
-  State<ParentInvoicesPage> createState() => _ParentInvoicesPageState();
+  State<ParentBillingPage> createState() => _ParentBillingPageState();
 }
 
-class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
+class _ParentBillingPageState extends State<ParentBillingPage> {
   @override
   void initState() {
     super.initState();
@@ -40,7 +39,15 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
   }
 
   Future<void> _reload() async {
+    final authVM = context.read<AuthViewModel>();
     final parentVM = context.read<ParentViewModel>();
+
+    if (authVM.currentUser?.uid != null && parentVM.allKids.isEmpty) {
+      await parentVM.loadMyKids(authVM.currentUser!.uid);
+    }
+
+    if (!mounted) return;
+
     final allPlayerIds = _buildAllPlayerIds(parentVM);
     if (allPlayerIds.isNotEmpty) {
       await context.read<BillingViewModel>().loadInvoicesForPlayerIds(
@@ -49,9 +56,25 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
     }
   }
 
+  /// Payments awaiting admin approval (status == pending).
+  List<UserPaymentModel> _pendingPayments(BillingViewModel vm) {
+    return vm.userPayments
+        .where((p) => p.paymentStatus == 'pending')
+        .toList();
+  }
+
+  /// Payments that have proof uploaded and are not pending (approved/rejected).
+  List<UserPaymentModel> _uploadedProofPayments(BillingViewModel vm) {
+    return vm.userPayments
+        .where((p) =>
+            p.uploadProof != null && p.paymentStatus != 'pending')
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final billingVM = context.watch<BillingViewModel>();
+    final parentVM = context.watch<ParentViewModel>();
 
     return Scaffold(
       appBar: const AppBarTitle(showBackButton: false),
@@ -69,11 +92,17 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
                 ),
                 children: [
                   _buildMonthSelector(billingVM),
-                  _buildContent(context, billingVM),
+                  _buildContent(context, billingVM, parentVM),
                 ],
               ),
             ),
     );
+  }
+
+  /// Resolves the player's display name from the [UserPaymentModel.playerId]
+  /// using the loaded players, falling back to the stored [UserPaymentModel.playerName].
+  String _playerName(ParentViewModel parentVM, UserPaymentModel payment) {
+    return parentVM.playerNameById(payment.playerId) ?? payment.playerName;
   }
 
   Widget _buildMonthSelector(BillingViewModel billingVM) {
@@ -106,8 +135,15 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
     );
   }
 
-  Widget _buildContent(BuildContext context, BillingViewModel billingVM) {
-    if (billingVM.invoices.isEmpty && billingVM.receipts.isEmpty) {
+  Widget _buildContent(
+    BuildContext context,
+    BillingViewModel billingVM,
+    ParentViewModel parentVM,
+  ) {
+    final pending = _pendingPayments(billingVM);
+    final uploadedProof = _uploadedProofPayments(billingVM);
+
+    if (pending.isEmpty && uploadedProof.isEmpty) {
       return SizedBox(
         height: MediaQuery.of(context).size.height * 0.4,
         child: Center(
@@ -131,39 +167,36 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (billingVM.unpaidInvoices.isNotEmpty) ...[
-            _buildSectionHeader(
-              'Pending Payment',
-              billingVM.unpaidInvoices.length,
-            ),
+          if (pending.isNotEmpty) ...[
+            _buildSectionHeader('Pending Payment', pending.length, Colors.orange),
             const SizedBox(height: 8),
-            ...billingVM.unpaidInvoices.map(
-              (invoice) => _InvoiceTile(invoice: invoice),
+            ...pending.map(
+              (payment) => _UserPaymentTile(
+                payment: payment,
+                playerName: _playerName(parentVM, payment),
+                sectionType: 'pending',
+              ),
             ),
             const SizedBox(height: 24),
           ],
-          if (billingVM.paidInvoices.isNotEmpty) ...[
-            _buildSectionHeader('Paid', billingVM.paidInvoices.length),
+          if (uploadedProof.isNotEmpty) ...[
+            _buildSectionHeader('Uploaded Proof', uploadedProof.length, Colors.blue),
             const SizedBox(height: 8),
-            ...billingVM.paidInvoices.map(
-              (invoice) => _InvoiceTile(invoice: invoice),
+            ...uploadedProof.map(
+              (payment) => _UserPaymentTile(
+                payment: payment,
+                playerName: _playerName(parentVM, payment),
+                sectionType: 'uploaded',
+              ),
             ),
             const SizedBox(height: 24),
-          ],
-          if (billingVM.receipts.isNotEmpty) ...[
-            _buildSectionHeader('Receipts', billingVM.receipts.length),
-            const SizedBox(height: 8),
-            ...billingVM.receipts.map(
-              (receipt) => _ReceiptTile(receipt: receipt),
-            ),
-            const SizedBox(height: 16),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title, int count) {
+  Widget _buildSectionHeader(String title, int count, Color color) {
     return Row(
       children: [
         Text(
@@ -174,13 +207,13 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             '$count',
             style: TextStyle(
-              color: AppTheme.primaryColor,
+              color: color,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -191,50 +224,61 @@ class _ParentInvoicesPageState extends State<ParentInvoicesPage> {
   }
 }
 
-class _InvoiceTile extends StatelessWidget {
-  final InvoiceModel invoice;
+class _UserPaymentTile extends StatelessWidget {
+  final UserPaymentModel payment;
+  final String playerName;
+  final String sectionType; // 'pending' or 'uploaded'
 
-  const _InvoiceTile({required this.invoice});
+  const _UserPaymentTile({
+    required this.payment,
+    required this.playerName,
+    required this.sectionType,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = invoice.status == 'paid'
-        ? Colors.green
-        : (invoice.status == 'sent' ? Colors.blue : Colors.orange);
-    final statusLabel = invoice.status == 'paid'
-        ? 'PAID'
-        : (invoice.status == 'sent' ? 'AWAITING APPROVAL' : 'UNPAID');
+    final status = payment.paymentStatus;
+    final isUploaded = sectionType == 'uploaded';
+    final accentColor = isUploaded ? Colors.blue : Colors.orange;
+
+    final statusLabel = switch (status) {
+      'approved' => 'APPROVED',
+      'rejected' => 'REJECTED',
+      'pending' => 'PENDING',
+      _ => 'NOT UPLOADED',
+    };
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         onTap: () {
-          context.router.pushPath('/invoice-details/${invoice.id}');
+          context.router.pushPath('/user-payment-details/${payment.id}');
         },
         leading: Container(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
+            color: accentColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
-            invoice.status == 'paid' ? Icons.check_circle : Icons.receipt_long,
-            color: statusColor,
+            isUploaded ? Icons.check_circle : Icons.hourglass_top,
+            color: accentColor,
           ),
         ),
         title: Text(
-          invoice.billToName ?? invoice.playerName,
+          playerName,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(invoice.invoiceNumber),
             Text(
-              DateFormat(
-                'MMM yyyy',
-              ).format(DateTime(invoice.billingYear, invoice.billingMonth)),
+              '${payment.attendanceIds.length} session${payment.attendanceIds.length == 1 ? '' : 's'}'
+              '${payment.isInvoice ? ' · Invoiced' : ''}',
+            ),
+            Text(
+              DateFormat('MMM d, yyyy').format(payment.createdAt),
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
@@ -244,81 +288,24 @@ class _InvoiceTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${invoice.currency} ${invoice.totalAmount.toStringAsFixed(2)}',
+              '${payment.currency} ${payment.totalAmt > 0 ? payment.totalAmt : payment.amount.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
+                color: accentColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 statusLabel,
                 style: TextStyle(
-                  color: statusColor,
+                  color: accentColor,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ],
-        ),
-        isThreeLine: true,
-      ),
-    );
-  }
-}
-
-class _ReceiptTile extends StatelessWidget {
-  final ReceiptModel receipt;
-
-  const _ReceiptTile({required this.receipt});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        onTap: () {
-          context.router.pushPath('/receipt-details/${receipt.id}');
-        },
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.description, color: Colors.green),
-        ),
-        title: Text(
-          receipt.billToName ?? receipt.playerName ?? 'Receipt',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(receipt.receiptNumber),
-            Text(
-              DateFormat('MMM d, yyyy').format(receipt.issuedAt),
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${receipt.currency} ${receipt.amountPaid.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              receipt.paymentMethod.toUpperCase(),
-              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
             ),
           ],
         ),

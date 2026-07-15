@@ -42,7 +42,7 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(page: MyReportsRoute.page, maintainState: false),
         AutoRoute(page: CourtBookingsRoute.page, maintainState: false),
-        AutoRoute(page: ParentInvoicesRoute.page, maintainState: false),
+        AutoRoute(page: ParentBillingRoute.page, maintainState: false),
         AutoRoute(page: SettingsRoute.page, maintainState: false),
       ],
     ),
@@ -65,8 +65,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: PlayerReportRoute.page, path: '/player-report/:id'),
     AutoRoute(page: CreateBookingRoute.page, path: '/create-booking'),
     AutoRoute(page: SessionSlotsRoute.page, path: '/session-slots'),
-    AutoRoute(page: InvoiceDetailsRoute.page, path: '/invoice-details/:id'),
-    AutoRoute(page: ReceiptDetailsRoute.page, path: '/receipt-details/:id'),
+    AutoRoute(page: UserPaymentDetailsRoute.page, path: '/user-payment-details/:id'),
     AutoRoute(page: AnnouncementsRoute.page, path: '/announcements'),
     AutoRoute(
       page: AnnouncementDetailsRoute.page,

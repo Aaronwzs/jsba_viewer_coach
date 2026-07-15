@@ -218,18 +218,53 @@ class ChangePasswordRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [ChildDetailsPage]
-class ChildDetailsRoute extends PageRouteInfo<void> {
-  const ChildDetailsRoute({List<PageRouteInfo>? children})
-    : super(ChildDetailsRoute.name, initialChildren: children);
+class ChildDetailsRoute extends PageRouteInfo<ChildDetailsRouteArgs> {
+  ChildDetailsRoute({
+    Key? key,
+    required String id,
+    List<PageRouteInfo>? children,
+  }) : super(
+         ChildDetailsRoute.name,
+         args: ChildDetailsRouteArgs(key: key, id: id),
+         rawPathParams: {'id': id},
+         initialChildren: children,
+       );
 
   static const String name = 'ChildDetailsRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const ChildDetailsPage();
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<ChildDetailsRouteArgs>(
+        orElse: () => ChildDetailsRouteArgs(id: pathParams.getString('id')),
+      );
+      return ChildDetailsPage(key: args.key, id: args.id);
     },
   );
+}
+
+class ChildDetailsRouteArgs {
+  const ChildDetailsRouteArgs({this.key, required this.id});
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'ChildDetailsRouteArgs{key: $key, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ChildDetailsRouteArgs) return false;
+    return key == other.key && id == other.id;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ id.hashCode;
 }
 
 /// generated route for
@@ -472,57 +507,6 @@ class FirstTimeLoginRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [InvoiceDetailsPage]
-class InvoiceDetailsRoute extends PageRouteInfo<InvoiceDetailsRouteArgs> {
-  InvoiceDetailsRoute({
-    Key? key,
-    required String id,
-    List<PageRouteInfo>? children,
-  }) : super(
-         InvoiceDetailsRoute.name,
-         args: InvoiceDetailsRouteArgs(key: key, id: id),
-         rawPathParams: {'id': id},
-         initialChildren: children,
-       );
-
-  static const String name = 'InvoiceDetailsRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<InvoiceDetailsRouteArgs>(
-        orElse: () => InvoiceDetailsRouteArgs(id: pathParams.getString('id')),
-      );
-      return InvoiceDetailsPage(key: args.key, id: args.id);
-    },
-  );
-}
-
-class InvoiceDetailsRouteArgs {
-  const InvoiceDetailsRouteArgs({this.key, required this.id});
-
-  final Key? key;
-
-  final String id;
-
-  @override
-  String toString() {
-    return 'InvoiceDetailsRouteArgs{key: $key, id: $id}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! InvoiceDetailsRouteArgs) return false;
-    return key == other.key && id == other.id;
-  }
-
-  @override
-  int get hashCode => key.hashCode ^ id.hashCode;
-}
-
-/// generated route for
 /// [LoginLandingPage]
 class LoginLandingRoute extends PageRouteInfo<void> {
   const LoginLandingRoute({List<PageRouteInfo>? children})
@@ -697,6 +681,22 @@ class OtpRouteArgs {
 }
 
 /// generated route for
+/// [ParentBillingPage]
+class ParentBillingRoute extends PageRouteInfo<void> {
+  const ParentBillingRoute({List<PageRouteInfo>? children})
+    : super(ParentBillingRoute.name, initialChildren: children);
+
+  static const String name = 'ParentBillingRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const ParentBillingPage();
+    },
+  );
+}
+
+/// generated route for
 /// [ParentDashboardPage]
 class ParentDashboardRoute extends PageRouteInfo<void> {
   const ParentDashboardRoute({List<PageRouteInfo>? children})
@@ -708,22 +708,6 @@ class ParentDashboardRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return const ParentDashboardPage();
-    },
-  );
-}
-
-/// generated route for
-/// [ParentInvoicesPage]
-class ParentInvoicesRoute extends PageRouteInfo<void> {
-  const ParentInvoicesRoute({List<PageRouteInfo>? children})
-    : super(ParentInvoicesRoute.name, initialChildren: children);
-
-  static const String name = 'ParentInvoicesRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return const ParentInvoicesPage();
     },
   );
 }
@@ -762,18 +746,53 @@ class PhoneSignInRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [PlayerDetailsPage]
-class PlayerDetailsRoute extends PageRouteInfo<void> {
-  const PlayerDetailsRoute({List<PageRouteInfo>? children})
-    : super(PlayerDetailsRoute.name, initialChildren: children);
+class PlayerDetailsRoute extends PageRouteInfo<PlayerDetailsRouteArgs> {
+  PlayerDetailsRoute({
+    Key? key,
+    required String id,
+    List<PageRouteInfo>? children,
+  }) : super(
+         PlayerDetailsRoute.name,
+         args: PlayerDetailsRouteArgs(key: key, id: id),
+         rawPathParams: {'id': id},
+         initialChildren: children,
+       );
 
   static const String name = 'PlayerDetailsRoute';
 
   static PageInfo page = PageInfo(
     name,
     builder: (data) {
-      return const PlayerDetailsPage();
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<PlayerDetailsRouteArgs>(
+        orElse: () => PlayerDetailsRouteArgs(id: pathParams.getString('id')),
+      );
+      return PlayerDetailsPage(key: args.key, id: args.id);
     },
   );
+}
+
+class PlayerDetailsRouteArgs {
+  const PlayerDetailsRouteArgs({this.key, required this.id});
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'PlayerDetailsRouteArgs{key: $key, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! PlayerDetailsRouteArgs) return false;
+    return key == other.key && id == other.id;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ id.hashCode;
 }
 
 /// generated route for
@@ -853,57 +872,6 @@ class ProfileRoute extends PageRouteInfo<void> {
       return const ProfilePage();
     },
   );
-}
-
-/// generated route for
-/// [ReceiptDetailsPage]
-class ReceiptDetailsRoute extends PageRouteInfo<ReceiptDetailsRouteArgs> {
-  ReceiptDetailsRoute({
-    Key? key,
-    required String id,
-    List<PageRouteInfo>? children,
-  }) : super(
-         ReceiptDetailsRoute.name,
-         args: ReceiptDetailsRouteArgs(key: key, id: id),
-         rawPathParams: {'id': id},
-         initialChildren: children,
-       );
-
-  static const String name = 'ReceiptDetailsRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      final pathParams = data.inheritedPathParams;
-      final args = data.argsAs<ReceiptDetailsRouteArgs>(
-        orElse: () => ReceiptDetailsRouteArgs(id: pathParams.getString('id')),
-      );
-      return ReceiptDetailsPage(key: args.key, id: args.id);
-    },
-  );
-}
-
-class ReceiptDetailsRouteArgs {
-  const ReceiptDetailsRouteArgs({this.key, required this.id});
-
-  final Key? key;
-
-  final String id;
-
-  @override
-  String toString() {
-    return 'ReceiptDetailsRouteArgs{key: $key, id: $id}';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! ReceiptDetailsRouteArgs) return false;
-    return key == other.key && id == other.id;
-  }
-
-  @override
-  int get hashCode => key.hashCode ^ id.hashCode;
 }
 
 /// generated route for
@@ -1069,6 +1037,59 @@ class SplashScreenRoute extends PageRouteInfo<void> {
       return const SplashScreenPage();
     },
   );
+}
+
+/// generated route for
+/// [UserPaymentDetailsPage]
+class UserPaymentDetailsRoute
+    extends PageRouteInfo<UserPaymentDetailsRouteArgs> {
+  UserPaymentDetailsRoute({
+    Key? key,
+    required String id,
+    List<PageRouteInfo>? children,
+  }) : super(
+         UserPaymentDetailsRoute.name,
+         args: UserPaymentDetailsRouteArgs(key: key, id: id),
+         rawPathParams: {'id': id},
+         initialChildren: children,
+       );
+
+  static const String name = 'UserPaymentDetailsRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<UserPaymentDetailsRouteArgs>(
+        orElse: () =>
+            UserPaymentDetailsRouteArgs(id: pathParams.getString('id')),
+      );
+      return UserPaymentDetailsPage(key: args.key, id: args.id);
+    },
+  );
+}
+
+class UserPaymentDetailsRouteArgs {
+  const UserPaymentDetailsRouteArgs({this.key, required this.id});
+
+  final Key? key;
+
+  final String id;
+
+  @override
+  String toString() {
+    return 'UserPaymentDetailsRouteArgs{key: $key, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! UserPaymentDetailsRouteArgs) return false;
+    return key == other.key && id == other.id;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ id.hashCode;
 }
 
 /// generated route for

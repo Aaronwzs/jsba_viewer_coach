@@ -25,7 +25,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 10.0,
       );
 
       final id = await service.addTraining(training);
@@ -48,7 +47,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
 
       await service.addTraining(t1);
@@ -68,7 +66,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
       final t2 = TrainingModel(
         id: '',
@@ -81,7 +78,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
       final t3 = TrainingModel(
         id: '',
@@ -94,7 +90,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
       final t4 = TrainingModel(
         id: '',
@@ -107,7 +102,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
 
       await service.addTraining(t1);
@@ -142,7 +136,6 @@ void main() {
         classType: 'group',
         level: 'Beginner',
         durationMinutes: 60,
-        price: 12.0,
       );
 
       await service.addTraining(t1);

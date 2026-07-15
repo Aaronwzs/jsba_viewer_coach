@@ -64,7 +64,6 @@ class TestModelFactory {
     String classType = 'group',
     String level = 'Beginner',
     int durationMinutes = 60,
-    double price = 10.0,
     String? coachId,
   }) {
     return TrainingModel(
@@ -78,7 +77,6 @@ class TestModelFactory {
       classType: classType,
       level: level,
       durationMinutes: durationMinutes,
-      price: price,
       coachId: coachId,
     );
   }
@@ -108,8 +106,6 @@ class TestModelFactory {
     String trainingId = 't1',
     String playerId = 'p1',
     String attendanceStatus = 'pending',
-    double amountCharge = 10.0,
-    String reasonCharge = '',
     List<CoachEntry> coachEntries = const [],
   }) {
     return AttendanceModel(
@@ -117,8 +113,6 @@ class TestModelFactory {
       trainingId: trainingId,
       playerId: playerId,
       attendanceStatus: attendanceStatus,
-      amountCharge: amountCharge,
-      reasonCharge: reasonCharge,
       coachEntries: coachEntries,
       createdAt: _now,
     );

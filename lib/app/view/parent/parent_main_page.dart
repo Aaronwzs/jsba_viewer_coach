@@ -22,7 +22,7 @@ class _ParentMainPageState extends State<ParentMainPage> {
         ParentDashboardRoute(),
         MyReportsRoute(),
         CourtBookingsRoute(),
-        ParentInvoicesRoute(),
+        ParentBillingRoute(),
         SettingsRoute(),
       ],
       builder: (context, child) {

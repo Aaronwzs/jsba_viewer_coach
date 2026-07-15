@@ -114,27 +114,36 @@ class BillingService {
   ) async {
     if (playerIds.isEmpty) return [];
 
-    final byPlayerId = _db
-        .collection('invoices')
-        .where('playerId', whereIn: playerIds)
-        .get();
-
-    final byPlayerIds = _db
-        .collection('invoices')
-        .where('playerIds', arrayContainsAny: playerIds)
-        .get();
-
-    final results = await Future.wait([byPlayerId, byPlayerIds]);
-
     final seen = <String>{};
     final invoices = <InvoiceModel>[];
+    final chunks = _chunkList(playerIds, 30);
 
-    for (final snapshot in results) {
-      for (final doc in snapshot.docs) {
-        if (seen.add(doc.id)) {
-          invoices.add(InvoiceModel.fromMap(doc.data(), id: doc.id));
+    for (final chunk in chunks) {
+      try {
+        final byPlayerId = await _db
+            .collection('invoices')
+            .where('playerId', whereIn: chunk)
+            .get();
+
+        for (final doc in byPlayerId.docs) {
+          if (seen.add(doc.id)) {
+            invoices.add(InvoiceModel.fromMap(doc.data(), id: doc.id));
+          }
         }
-      }
+      } catch (_) {}
+
+      try {
+        final byPlayerIds = await _db
+            .collection('invoices')
+            .where('playerIds', arrayContainsAny: chunk)
+            .get();
+
+        for (final doc in byPlayerIds.docs) {
+          if (seen.add(doc.id)) {
+            invoices.add(InvoiceModel.fromMap(doc.data(), id: doc.id));
+          }
+        }
+      } catch (_) {}
     }
 
     invoices.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -161,31 +170,48 @@ class BillingService {
   ) async {
     if (playerIds.isEmpty) return [];
 
-    final byPlayerId = _db
-        .collection('receipts')
-        .where('playerId', whereIn: playerIds)
-        .get();
-
-    final byPlayerIds = _db
-        .collection('receipts')
-        .where('playerIds', arrayContainsAny: playerIds)
-        .get();
-
-    final results = await Future.wait([byPlayerId, byPlayerIds]);
-
     final seen = <String>{};
     final receipts = <ReceiptModel>[];
+    final chunks = _chunkList(playerIds, 30);
 
-    for (final snapshot in results) {
-      for (final doc in snapshot.docs) {
-        if (seen.add(doc.id)) {
-          receipts.add(ReceiptModel.fromMap(doc.data(), id: doc.id));
+    for (final chunk in chunks) {
+      try {
+        final byPlayerId = await _db
+            .collection('receipts')
+            .where('playerId', whereIn: chunk)
+            .get();
+
+        for (final doc in byPlayerId.docs) {
+          if (seen.add(doc.id)) {
+            receipts.add(ReceiptModel.fromMap(doc.data(), id: doc.id));
+          }
         }
-      }
+      } catch (_) {}
+
+      try {
+        final byPlayerIds = await _db
+            .collection('receipts')
+            .where('playerIds', arrayContainsAny: chunk)
+            .get();
+
+        for (final doc in byPlayerIds.docs) {
+          if (seen.add(doc.id)) {
+            receipts.add(ReceiptModel.fromMap(doc.data(), id: doc.id));
+          }
+        }
+      } catch (_) {}
     }
 
     receipts.sort((a, b) => b.issuedAt.compareTo(a.issuedAt));
     return receipts;
+  }
+
+  List<List<String>> _chunkList(List<String> list, int chunkSize) {
+    final chunks = <List<String>>[];
+    for (var i = 0; i < list.length; i += chunkSize) {
+      chunks.add(list.sublist(i, i + chunkSize > list.length ? list.length : i + chunkSize));
+    }
+    return chunks;
   }
 
   Future<void> markInvoiceAsCustomerPaid({

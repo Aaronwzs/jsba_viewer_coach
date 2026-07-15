@@ -112,7 +112,7 @@ class _PayoutDetailsPageState extends State<PayoutDetailsPage> {
         if (price is num) return price.toDouble();
       }
     }
-    return t.price;
+    return 0.0;
   }
 
   double _computeTotal() {

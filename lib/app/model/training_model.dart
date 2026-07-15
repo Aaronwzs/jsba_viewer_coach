@@ -13,7 +13,6 @@ class TrainingModel {
   final String classType;
   final String level;
   final int durationMinutes;
-  final double price;
   final int? maxPlayers;
   final String? coachId;
   final List<String> promotionPackageIds;
@@ -116,7 +115,6 @@ class TrainingModel {
     required this.classType,
     required this.level,
     required this.durationMinutes,
-    required this.price,
     this.maxPlayers,
     this.coachId,
     this.promotionPackageIds = const [],
@@ -134,7 +132,6 @@ class TrainingModel {
     'classType': classType,
     'level': level,
     'durationMinutes': durationMinutes,
-    'price': price,
     'maxPlayers': maxPlayers,
     'coachId': coachId,
     if (promotionPackageIds.isNotEmpty)
@@ -170,7 +167,6 @@ class TrainingModel {
       classType: map['classType'] as String? ?? 'group',
       level: map['level'] as String? ?? 'Beginner',
       durationMinutes: (map['durationMinutes'] as num?)?.toInt() ?? 60,
-      price: (map['price'] as num?)?.toDouble() ?? 0.0,
       maxPlayers: map['maxPlayers'] as int?,
       coachId: map['coachId'] as String?,
       promotionPackageIds: List<String>.from(map['promotionPackageIds'] ?? []),

@@ -1,84 +1,73 @@
-import 'dart:typed_data';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:jsba_app/app/model/invoice_model.dart';
-import 'package:jsba_app/app/model/invoice_profile_model.dart';
-import 'package:jsba_app/app/model/receipt_model.dart';
-import 'package:jsba_app/app/service/academy_settings_service.dart';
-import 'package:jsba_app/app/service/billing_service.dart';
-import 'package:jsba_app/app/service/pdf_doc_service.dart';
+import 'package:jsba_app/app/model/training_model.dart';
+import 'package:jsba_app/app/model/user_payment_model.dart';
+import 'package:jsba_app/app/service/attendance_service.dart';
+import 'package:jsba_app/app/service/training_service.dart';
+import 'package:jsba_app/app/service/user_payment_service.dart';
 
 class BillingViewModel extends ChangeNotifier {
-  final BillingService _billingService;
-  final PdfService _pdfService;
-  final AcademySettingsService _academySettingsService;
-  final Dio _dio;
+  final UserPaymentService _userPaymentService;
+  AttendanceService? _attendanceServiceInstance;
+  TrainingService? _trainingServiceInstance;
 
   BillingViewModel({
-    BillingService? billingService,
-    PdfService? pdfService,
-    AcademySettingsService? academySettingsService,
-    Dio? dio,
-  })  : _billingService = billingService ?? BillingService(),
-        _pdfService = pdfService ?? PdfService(),
-        _academySettingsService =
-            academySettingsService ?? AcademySettingsService(),
-        _dio = dio ?? Dio();
+    UserPaymentService? userPaymentService,
+    AttendanceService? attendanceService,
+    TrainingService? trainingService,
+  }) : _userPaymentService = userPaymentService ?? UserPaymentService() {
+    _attendanceServiceInstance = attendanceService;
+    _trainingServiceInstance = trainingService;
+  }
 
-  List<InvoiceModel> _invoices = [];
-  List<ReceiptModel> _receipts = [];
+  AttendanceService get _attendanceService =>
+      _attendanceServiceInstance ??= AttendanceService();
+  TrainingService get _trainingService =>
+      _trainingServiceInstance ??= TrainingService();
+
+  List<UserPaymentModel> _userPayments = [];
   DateTime _selectedMonth = DateTime.now();
   bool _isLoading = false;
   String? _error;
-  InvoiceProfile _invoiceProfile = InvoiceProfile.empty();
-  Uint8List? _logoBytes;
-  Uint8List? _duitNowQrBytes;
 
-  List<InvoiceModel> get invoices => _invoices;
-  List<ReceiptModel> get receipts => _receipts;
+  List<UserPaymentModel> get userPayments => _userPayments;
   DateTime get selectedMonth => _selectedMonth;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  InvoiceProfile get invoiceProfile => _invoiceProfile;
 
-  List<InvoiceModel> get unpaidInvoices =>
-      _invoices.where((i) => i.status != 'paid').toList();
+  List<UserPaymentModel> get pendingPayments =>
+      _userPayments.where((p) => p.paymentStatus == 'pending').toList();
 
-  List<InvoiceModel> get paidInvoices =>
-      _invoices.where((i) => i.status == 'paid').toList();
+  List<UserPaymentModel> get approvedPayments =>
+      _userPayments.where((p) => p.paymentStatus == 'approved').toList();
+
+  List<UserPaymentModel> get rejectedPayments =>
+      _userPayments.where((p) => p.paymentStatus == 'rejected').toList();
+
+  /// Payments that have no uploaded proof yet. These appear in a separate
+  /// "Not Uploaded" section before any approval workflow begins.
+  List<UserPaymentModel> get notUploadedPayments => _userPayments
+      .where((p) => p.uploadProof == null && p.paymentStatus != 'rejected')
+      .toList();
 
   void setSelectedMonth(DateTime month) {
     _selectedMonth = DateTime(month.year, month.month);
     notifyListeners();
   }
 
+  /// Gets the player IDs for the current user, queries the userPayments
+  /// collection filtered by those player IDs, then filters by the selected
+  /// month.
   Future<void> loadInvoicesForPlayerIds(List<String> playerIds) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final allInvoices = await _billingService.getInvoicesForPlayerIds(
+      _userPayments = await _userPaymentService.getUserPaymentsForPeriod(
         playerIds,
+        _selectedMonth.year,
+        _selectedMonth.month,
       );
-      _invoices = allInvoices
-          .where(
-            (i) =>
-                i.billingYear == _selectedMonth.year &&
-                i.billingMonth == _selectedMonth.month,
-          )
-          .toList();
-
-      final allReceipts = await _billingService.getReceiptsForPlayerIds(
-        playerIds,
-      );
-      _receipts = allReceipts
-          .where(
-            (r) =>
-                r.billingPeriodKey ==
-                '${_selectedMonth.year.toString().padLeft(4, '0')}-${_selectedMonth.month.toString().padLeft(2, '0')}',
-          )
-          .toList();
     } catch (e) {
       _error = e.toString();
     }
@@ -87,66 +76,20 @@ class BillingViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> markAsPaid({
-    required String invoiceId,
-    required String paymentMethod,
-    String? paymentReference,
-    List<String> receiptUrls = const [],
-    String? userId,
+  Future<bool> submitUserPayment({
+    required UserPaymentModel payment,
+    required String userId,
   }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      await _billingService.markInvoiceAsCustomerPaid(
-        invoiceId: invoiceId,
-        paymentMethod: paymentMethod,
-        paymentReference: paymentReference,
-        receiptUrls: receiptUrls,
-        userId: userId ?? '',
+      await _userPaymentService.submitPayment(
+        payment: payment,
+        userId: userId,
       );
-
-      final index = _invoices.indexWhere((i) => i.id == invoiceId);
-      if (index != -1) {
-        final invoice = _invoices[index];
-        _invoices[index] = InvoiceModel(
-          id: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          playerId: invoice.playerId,
-          playerName: invoice.playerName,
-          playerPhone: invoice.playerPhone,
-          billingYear: invoice.billingYear,
-          billingMonth: invoice.billingMonth,
-          billingPeriodKey: invoice.billingPeriodKey,
-          lineItems: invoice.lineItems,
-          subTotal: invoice.subTotal,
-          discountAmount: invoice.discountAmount,
-          taxAmount: invoice.taxAmount,
-          totalAmount: invoice.totalAmount,
-          status: 'sent',
-          notes: invoice.notes,
-          createdAt: invoice.createdAt,
-          sentAt: DateTime.now(),
-          paidAt: invoice.paidAt,
-          paymentMethod: paymentMethod,
-          paymentReference:
-              receiptUrls.isNotEmpty ? receiptUrls.first : paymentReference,
-          receiptUrls: receiptUrls,
-          receiptId: invoice.receiptId,
-          currency: invoice.currency,
-          customFields: invoice.customFields,
-          billToName: invoice.billToName,
-          billToPhone: invoice.billToPhone,
-          billToEmail: invoice.billToEmail,
-          billToType: invoice.billToType,
-          billingPlayerName: invoice.billingPlayerName,
-          playerIds: invoice.playerIds,
-          appliedPromotions: invoice.appliedPromotions,
-        );
-      }
-
-      notifyListeners();
+      await loadInvoicesForPlayerIds([payment.playerId]);
       return true;
     } catch (e) {
       _error = e.toString();
@@ -157,74 +100,80 @@ class BillingViewModel extends ChangeNotifier {
     }
   }
 
-  ReceiptModel? getReceiptForInvoice(String invoiceId) {
-    try {
-      return _receipts.firstWhere((r) => r.invoiceId == invoiceId);
-    } catch (_) {
-      return null;
-    }
+  Future<UserPaymentModel?> getUserPaymentById(String id) async {
+    return _userPaymentService.getUserPaymentById(id);
   }
 
-  Future<Uint8List> generateInvoicePdf(InvoiceModel invoice) async {
-    await _ensureProfileLoaded();
-    return _pdfService.generateInvoicePdf(
-      invoice: invoice,
-      profile: _invoiceProfile,
-      logoBytes: _logoBytes,
-      duitNowQrBytes: _duitNowQrBytes,
+  /// Resolves the training sessions for a payment by looking up its
+  /// [attendanceIds] and matching each to its training, filtered to the
+  /// player on the payment. Returns trainings sorted by date.
+  Future<List<TrainingModel>> getSessionsForPayment(
+    UserPaymentModel payment,
+  ) async {
+    if (payment.attendanceIds.isEmpty) return [];
+
+    final attendanceDocs = await _attendanceService.getAttendanceByIds(
+      payment.attendanceIds,
     );
+    final trainingIds = attendanceDocs
+        .where((a) => a.playerId == payment.playerId)
+        .map((a) => a.trainingId)
+        .toSet()
+        .toList();
+
+    if (trainingIds.isEmpty) return [];
+    final trainings = await _trainingService.getTrainingsByIds(trainingIds);
+    trainings.sort((a, b) => a.date.compareTo(b.date));
+    return trainings;
   }
 
-  Future<Uint8List> generateReceiptPdf(ReceiptModel receipt) async {
-    await _ensureProfileLoaded();
-    return _pdfService.generateReceiptPdf(
-      receipt: receipt,
-      profile: _invoiceProfile,
-      logoBytes: _logoBytes,
-      duitNowQrBytes: _duitNowQrBytes,
-    );
-  }
+  Future<bool> cancelUserPayment(String paymentId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
-  Future<void> _ensureProfileLoaded() async {
-    if (_invoiceProfile.name == 'JSBA Badminton Academy' &&
-        _logoBytes == null) {
-      await _loadBillingProfileFromFirebase();
-    }
-  }
-
-  Future<void> _loadBillingProfileFromFirebase() async {
     try {
-      final settings = await _academySettingsService.getSettings();
-      _invoiceProfile = InvoiceProfile.fromAcademySettings(settings);
-
-      if (settings.billingLogoUrl != null &&
-          settings.billingLogoUrl!.isNotEmpty) {
-        try {
-          final response = await _dio.get<List<int>>(
-            settings.billingLogoUrl!,
-            options: Options(responseType: ResponseType.bytes),
-          );
-          if (response.statusCode == 200 && response.data != null) {
-            _logoBytes = Uint8List.fromList(response.data!);
-          }
-        } catch (_) {}
-      }
-
-      if (settings.duitNowQrUrl != null && settings.duitNowQrUrl!.isNotEmpty) {
-        try {
-          final response = await _dio.get<List<int>>(
-            settings.duitNowQrUrl!,
-            options: Options(responseType: ResponseType.bytes),
-          );
-          if (response.statusCode == 200 && response.data != null) {
-            _duitNowQrBytes = Uint8List.fromList(response.data!);
-          }
-        } catch (_) {}
-      }
-
-      notifyListeners();
+      await _userPaymentService.cancelPayment(paymentId);
+      _userPayments.removeWhere((p) => p.id == paymentId);
+      return true;
     } catch (e) {
-      _invoiceProfile = InvoiceProfile.empty();
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Uploads a payment-proof screenshot for the given user payment (parent
+  /// billing flow) by populating [UserPaymentModel.uploadProof], then
+  /// refreshes the list so the record moves out of the "Not Uploaded" section.
+  Future<bool> uploadUserPaymentProof({
+    required String paymentId,
+    required String url,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _userPaymentService.uploadUserPaymentProof(id: paymentId, url: url);
+      final updated = await _userPaymentService.getUserPaymentById(paymentId);
+      if (updated != null) {
+        final index = _userPayments.indexWhere((p) => p.id == paymentId);
+        if (index != -1) {
+          _userPayments[index] = updated;
+        } else {
+          _userPayments.add(updated);
+        }
+      }
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

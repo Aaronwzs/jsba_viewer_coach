@@ -21,6 +21,8 @@ class PlayerModel {
   String? parentEmail;
   String? parentId;
   String? coachId;
+  String? categoryId;
+  String? categoryName;
   String status;
   bool isSelf;
 
@@ -39,6 +41,8 @@ class PlayerModel {
     this.parentEmail,
     this.parentId,
     this.coachId,
+    this.categoryId,
+    this.categoryName,
     this.status = PlayerStatus.pending,
     this.isSelf = false,
   });
@@ -64,6 +68,8 @@ class PlayerModel {
     'parentEmail': parentEmail,
     'parentId': parentId,
     'coachId': coachId,
+    'categoryId': categoryId,
+    'categoryName': categoryName,
     'status': status,
     'isSelf': isSelf,
   };
@@ -105,6 +111,8 @@ class PlayerModel {
       parentEmail: map['parentEmail'] as String?,
       parentId: map['parentId'] as String?,
       coachId: map['coachId'] as String?,
+      categoryId: map['categoryId'] as String?,
+      categoryName: map['categoryName'] as String?,
       status: map['status'] as String? ?? PlayerStatus.pending,
       isSelf: map['isSelf'] as bool? ?? false,
     );
@@ -124,6 +132,8 @@ class PlayerModel {
     parentEmail: null,
     parentId: null,
     coachId: null,
+    categoryId: null,
+    categoryName: null,
     status: PlayerStatus.pending,
     isSelf: false,
   );
